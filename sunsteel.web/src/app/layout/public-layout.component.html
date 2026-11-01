@@ -13,7 +13,7 @@
 
     <div class="flex items-center gap-4 whitespace-nowrap">
       <a [href]="site.tel()" (click)="track('call')" class="hidden items-center gap-2 text-[13px] font-medium min-[1100px]:flex">
-        <ss-icon name="phone" [size]="16" />{{ site.get('Landline') || site.get('Phone1') }}
+        <ss-icon name="phone" [size]="16" />{{ site.get('Phone1') || site.get('Landline') }}
       </a>
       <a routerLink="/admin/login" class="hidden items-center gap-2 text-[13px] font-medium min-[1100px]:flex"><ss-icon name="key" [size]="16" />Admin login</a>
       <button type="button" (click)="req.open.set(true)" class="relative p-2" [attr.aria-label]="'Your request, ' + req.count() + ' items'">
