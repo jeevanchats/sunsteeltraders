@@ -38,6 +38,8 @@ public sealed class SunSteelDbContext : DbContext
     public DbSet<LeadFile> LeadFiles => Set<LeadFile>();
     public DbSet<LeadNote> LeadNotes => Set<LeadNote>();
     public DbSet<ClickEvent> ClickEvents => Set<ClickEvent>();
+    public DbSet<Quote> Quotes => Set<Quote>();
+    public DbSet<QuoteItem> QuoteItems => Set<QuoteItem>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -154,5 +156,28 @@ public sealed class SunSteelDbContext : DbContext
         b.Entity<LeadFile>(e => { e.ToTable("LeadFiles"); e.HasKey(x => x.LeadFileId); });
         b.Entity<LeadNote>(e => { e.ToTable("LeadNotes"); e.HasKey(x => x.LeadNoteId); });
         b.Entity<ClickEvent>(e => { e.ToTable("ClickEvents"); e.HasKey(x => x.ClickEventId); });
+
+        // --- Quotations (015) ------------------------------------------------
+        b.Entity<Quote>(e =>
+        {
+            e.ToTable("Quotes");
+            e.HasKey(x => x.QuoteId);
+            e.HasIndex(x => x.Reference).IsUnique();
+            e.Property(x => x.CuttingCharge).HasPrecision(12, 2);
+            e.Property(x => x.LoadingCharge).HasPrecision(12, 2);
+            e.Property(x => x.UnloadingCharge).HasPrecision(12, 2);
+            e.Property(x => x.TransportCharge).HasPrecision(12, 2);
+            e.Property(x => x.Discount).HasPrecision(12, 2);
+            e.Property(x => x.GstRate).HasPrecision(5, 2);
+            e.Property(x => x.GrandTotal).HasPrecision(14, 2);
+            e.HasMany(x => x.Items).WithOne().HasForeignKey(i => i.QuoteId);
+        });
+        b.Entity<QuoteItem>(e =>
+        {
+            e.ToTable("QuoteItems");
+            e.HasKey(x => x.QuoteItemId);
+            e.Property(x => x.Kg).HasPrecision(12, 2);
+            e.Property(x => x.RatePerKg).HasPrecision(10, 2);
+        });
     }
 }

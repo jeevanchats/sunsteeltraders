@@ -18,3 +18,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 008 | Leads, LeadItems, LeadFiles, LeadNotes, ClickEvents |
 | 009 | AuditLog |
 | 010 | Catalogue seed: 7 silos, 27 materials, 93 products, IS 808 sections, 6 cities. **Generated** by `node database/seed/build-seed.mjs` from `seed/catalog.json` |
+| 015 | Quotes, QuoteItems; SiteSettings QuoteValidDays, QuoteGstRate, QuoteTerms (TO CONFIRM) |

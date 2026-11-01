@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api.config';
 import { ApiResponse } from '../models/api.model';
 import { MediaItem } from '../models/media.model';
 import { Theme } from '../models/site.model';
+import { QuoteTotals } from '../quote/quote-math';
 
 export interface StaffUser {
   userId: number;
@@ -37,6 +38,19 @@ export interface LeadDetail extends Omit<LeadRow, 'itemCount' | 'fileCount'> {
   items: LeadItem[]; files: { leadFileId: number; fileName: string; contentType: string; sizeBytes: number }[];
   notes: { leadNoteId: number; note: string; by?: string | null; createdAt: string }[];
 }
+export interface QuoteItem { description: string; size: string | null; quantity: number; kg: number; ratePerKg: number; amount?: number }
+export interface QuoteRow { quoteId: number; reference: string; status: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
+export interface SaveQuote {
+  customerName: string; company: string | null; gstin: string | null; phone: string; email: string | null; city: string | null; address: string | null;
+  quoteDate: string | null; validDays: number;
+  cuttingCharge: number; loadingCharge: number; unloadingCharge: number; transportCharge: number; discount: number;
+  gstRate: number; interState: boolean; notes: string | null; terms: string | null; items: QuoteItem[];
+}
+export interface QuoteDetail extends SaveQuote {
+  quoteId: number; reference: string; status: string; leadId: number | null; leadReference: string | null; validUntil: string;
+  totals: QuoteTotals; whatsAppUrl: string; createdAt: string;
+}
+export interface QuoteDefaults { validDays: number; gstRate: number; terms: string | null }
 export interface Paged<T> { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number }
 export interface ProductRow { productId: number; slug: string; sku: string; siloKey: string; name: string; grade: string; stockStatus: string; priceNote?: string | null; isPublished: boolean; updatedAt?: string | null }
 export interface Dashboard {
@@ -126,6 +140,40 @@ export class AdminApiService {
 
   leadFile(fileId: number): Observable<Blob> {
     return this.http.get(`${this.base}/lead-files/${fileId}`, { responseType: 'blob' });
+  }
+
+  quotes(q: { status?: string; q?: string; page?: number }): Observable<Paged<QuoteRow>> {
+    const params: Record<string, string> = {};
+    for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== '') params[k] = String(v);
+    return this.http.get<ApiResponse<Paged<QuoteRow>>>(`${this.base}/quotes`, { params }).pipe(map((r) => r.data!));
+  }
+
+  quote(id: number): Observable<QuoteDetail> {
+    return this.http.get<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}`).pipe(map((r) => r.data!));
+  }
+
+  quoteDefaults(): Observable<QuoteDefaults> {
+    return this.http.get<ApiResponse<QuoteDefaults>>(`${this.base}/quotes/defaults`).pipe(map((r) => r.data!));
+  }
+
+  createQuote(body: SaveQuote): Observable<QuoteDetail> {
+    return this.http.post<ApiResponse<QuoteDetail>>(`${this.base}/quotes`, body).pipe(map((r) => r.data!));
+  }
+
+  quoteFromLead(leadId: number): Observable<QuoteDetail> {
+    return this.http.post<ApiResponse<QuoteDetail>>(`${this.base}/quotes/from-lead/${leadId}`, {}).pipe(map((r) => r.data!));
+  }
+
+  updateQuote(id: number, body: SaveQuote): Observable<QuoteDetail> {
+    return this.http.put<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}`, body).pipe(map((r) => r.data!));
+  }
+
+  setQuoteStatus(id: number, status: string): Observable<QuoteDetail> {
+    return this.http.put<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}/status`, { status }).pipe(map((r) => r.data!));
+  }
+
+  quotePdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.base}/quotes/${id}/pdf`, { responseType: 'blob' });
   }
 
   products(silo?: string, q?: string): Observable<Paged<ProductRow>> {

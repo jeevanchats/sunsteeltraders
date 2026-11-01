@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { apiError } from '../../../core/models/api.model';
 import { AdminApiService, LeadDetail, LeadRow, Paged } from '../../../core/services/admin-api.service';
 import { IconComponent } from '../../../shared/icon.component';
@@ -89,6 +90,10 @@ const TYPES = ['RFQ', 'Catalogue', 'Contact', 'Callback'];
               @for (f of d.files; track f.leadFileId) { <button type="button" class="abtn abtn-sm justify-start" (click)="download(f.leadFileId, f.fileName)"><ss-icon name="file" [size]="14" />{{ f.fileName }} · {{ f.sizeBytes / 1024 | number: '1.0-0' }} KB</button> }
             </div>
           }
+          @if (d.type === 'RFQ' || d.items.length) {
+            <button type="button" class="abtn abtn-pri mt-5 w-full justify-center" [disabled]="quoting()" (click)="quote(d.leadId)">
+              <ss-icon name="doc" [size]="14" />{{ quoting() ? 'Creating…' : 'Create quotation' }}</button>
+          }
           <label class="alabel mt-5">Status
             <select class="ainput" [ngModel]="d.status" (ngModelChange)="setStatus(d.leadId, $event)">@for (s of statuses; track s) { <option [value]="s">{{ s }}</option> }</select>
           </label>
@@ -114,8 +119,19 @@ export class LeadsComponent {
   protected readonly type = signal('');
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+  protected readonly quoting = signal(false);
+  private readonly router = inject(Router);
   protected q = '';
   protected note = '';
+
+  /** Draft quotation with this request's customer and lines; staff add today's rates. */
+  protected quote(leadId: number): void {
+    this.quoting.set(true);
+    this.api.quoteFromLead(leadId).subscribe({
+      next: (q) => this.router.navigate(['/admin/quotes', q.quoteId]),
+      error: (e) => { this.quoting.set(false); this.error.set(apiError(e)); },
+    });
+  }
 
   constructor() { this.load(1); }
 

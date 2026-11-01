@@ -74,6 +74,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/leads/leads.component').then((m) => m.LeadsComponent),
       },
       {
+        path: 'quotes',
+        canActivate: [permissionGuard(Perm.LeadManage)],
+        loadComponent: () => import('./features/admin/quotes/quotes.component').then((m) => m.QuotesComponent),
+      },
+      {
+        path: 'quotes/:id',
+        canActivate: [permissionGuard(Perm.LeadManage)],
+        loadComponent: () => import('./features/admin/quotes/quote-edit.component').then((m) => m.QuoteEditComponent),
+      },
+      {
         path: 'stock',
         canActivate: [permissionGuard(Perm.StockManage)],
         loadComponent: () => import('./features/admin/stock/stock.component').then((m) => m.StockComponent),
