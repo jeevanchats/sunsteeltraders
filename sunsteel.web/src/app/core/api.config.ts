@@ -34,5 +34,6 @@ export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 /** Public site origin, for canonical and Open Graph URLs. */
 export const SITE_URL = (cfg.siteUrl || 'http://localhost:4200').replace(/\/$/, '');
 
-/** Upload URLs are stored site-relative (/uploads/...). Behind Nginx that is the same origin; in development the API is elsewhere. */
-export const absUrl = (u: string): string => (u.startsWith('/') ? API_ORIGIN + u : u);
+/** Upload URLs are stored site-relative (/uploads/...). Behind Nginx that is the same origin; in development the API is elsewhere.
+ *  Pictures that ship with the site (/materials/...) are served by the website itself, never by the API. */
+export const absUrl = (u: string): string => (u.startsWith('/') && !u.startsWith('/materials/') ? API_ORIGIN + u : u);

@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api.config';
 import { ApiResponse } from '../models/api.model';
 import { GalleryPublic, SlideCard } from '../models/media.model';
 import { CatalogIndex, City, PageInfo, Policy, Product, ProductCard, SearchHit, Silo } from '../models/catalog.model';
+import { withProductPhoto, withSiloPhoto, withSiloPhotos } from '../catalog/built-in-photos';
 
 const EMPTY_INDEX: CatalogIndex = { silos: [], materials: [], sections: [], leadTimes: [], cities: [] };
 
@@ -24,6 +25,7 @@ export class CatalogService {
   loadIndex(): Observable<CatalogIndex> {
     this.index$ ??= this.http.get<ApiResponse<CatalogIndex>>(`${this.base}/catalog`).pipe(
       map((r) => r.data ?? EMPTY_INDEX),
+      map((i) => ({ ...i, silos: i.silos.map(withSiloPhoto) })),
       catchError(() => of(EMPTY_INDEX)),
       tap((i) => this.index.set(i)),
       shareReplay(1),
@@ -32,15 +34,17 @@ export class CatalogService {
   }
 
   silo(key: string): Observable<Silo> {
-    return this.http.get<ApiResponse<Silo>>(`${this.base}/catalog/silos/${encodeURIComponent(key)}`).pipe(map((r) => r.data!));
+    return this.http.get<ApiResponse<Silo>>(`${this.base}/catalog/silos/${encodeURIComponent(key)}`).pipe(map((r) => withSiloPhotos(r.data!)));
   }
 
   products(): Observable<ProductCard[]> {
-    return this.http.get<ApiResponse<ProductCard[]>>(`${this.base}/catalog/products`).pipe(map((r) => r.data ?? []), catchError(() => of([])));
+    return this.http.get<ApiResponse<ProductCard[]>>(`${this.base}/catalog/products`).pipe(map((r) => (r.data ?? []).map(withProductPhoto)), catchError(() => of([])));
   }
 
   product(siloKey: string, slug: string): Observable<Product> {
-    return this.http.get<ApiResponse<Product>>(`${this.base}/catalog/products/${encodeURIComponent(siloKey)}/${encodeURIComponent(slug)}`).pipe(map((r) => r.data!));
+    return this.http.get<ApiResponse<Product>>(`${this.base}/catalog/products/${encodeURIComponent(siloKey)}/${encodeURIComponent(slug)}`).pipe(
+      map((r) => ({ ...withProductPhoto(r.data!), related: r.data!.related.map(withProductPhoto) })),
+    );
   }
 
   search(q: string, limit = 8): Observable<SearchHit[]> {
@@ -51,7 +55,7 @@ export class CatalogService {
   }
 
   city(slug: string): Observable<City> {
-    return this.http.get<ApiResponse<City>>(`${this.base}/catalog/cities/${encodeURIComponent(slug)}`).pipe(map((r) => r.data!));
+    return this.http.get<ApiResponse<City>>(`${this.base}/catalog/cities/${encodeURIComponent(slug)}`).pipe(map((r) => ({ ...r.data!, popular: r.data!.popular.map(withProductPhoto) })));
   }
 
   /** Visible home-page slides; empty (or null on error) means the site shows its built-in banners. */
