@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { QuoteItemInput, QuoteLookups, QuoteProduct } from '../../../core/services/admin-api.service';
 import { SHAPES, dimFields, lineFigures, materialsFor, resolveHsn } from '../../../core/quote/quote-lines';
+import { lineChecks, lineFieldId } from '../../../core/quote/quote-progress';
 import { ItemType, inr } from '../../../core/quote/quote-math';
 import { lastRates, recentText } from '../../../core/quote/quote-memory';
 import { formatKg } from '../../../core/weight/weight';
@@ -22,139 +23,164 @@ const TYPES: { key: ItemType; label: string }[] = [
   template: `
     @let l = line();
     @let fig = figures();
-    <div class="rounded-lg border border-[#E3E6EB] p-3 sm:p-4">
-      <div class="mb-3 flex flex-wrap items-center gap-2">
-        <b class="w-6 text-[#6B7485]">{{ index() + 1 }}</b>
-        <div class="flex rounded-md border border-[#E3E6EB] p-0.5" role="group" aria-label="Line type">
-          @for (t of types; track t.key) {
-            <button type="button" class="rounded px-2.5 py-1 text-[12.5px]" [class.bg-primary]="l.itemType === t.key" [class.text-on-primary]="l.itemType === t.key"
-              [attr.aria-pressed]="l.itemType === t.key" (click)="setType(t.key)">{{ t.label }}</button>
-          }
+    <div class="ql" [class.ql-ok]="complete()" [class.ql-need]="!complete()">
+      <!-- header: number, what it is, collapse -->
+      <div class="ql-head">
+        <span class="ql-n" [class.ql-n-ok]="complete()">@if (complete()) { ✓ } @else { {{ index() + 1 }} }</span>
+        <div class="min-w-0 flex-1">
+          <b class="ql-title">Line {{ index() + 1 }}@if (summary()) { <span class="font-normal text-[#5B6678]"> · {{ summary() }}</span> }</b>
+          <span class="ql-sub" [class.text-[#B45309]]="!complete()" [class.text-[#1E7A4F]]="complete()">
+            @if (complete()) { <span class="whitespace-nowrap">{{ fmt(fig.kg) }} kg</span>@if (fig.amount !== null) { · <span class="whitespace-nowrap">₹ {{ inr(fig.amount) }}</span> } }
+            @else { {{ needs().length }} to fill: {{ needs()[0].label }}@if (needs().length > 1) { +{{ needs().length - 1 }} more } }
+          </span>
         </div>
-        <span class="flex-1"></span>
-        <button type="button" class="abtn abtn-sm" (click)="duplicated.emit()">Duplicate</button>
-        <button type="button" class="abtn abtn-sm abtn-danger" [disabled]="!canRemove()" (click)="removed.emit()" aria-label="Remove line">Remove</button>
+        @if (complete()) {
+          <button type="button" class="ql-toggle" [attr.aria-expanded]="open()" [attr.aria-label]="open() ? 'Collapse line' : 'Edit line'" (click)="open.set(!open())">{{ open() ? 'Hide' : 'Edit' }}</button>
+        }
       </div>
 
-      @if (l.itemType === 'Calculated') {
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label class="alabel">Shape
-            <select class="ainput" (change)="setShape($any($event.target).value)">
-              <option value="" [selected]="!l.form" disabled>Choose…</option>
-              @for (s of shapes; track s.key) { <option [value]="s.key" [selected]="s.key === l.form">{{ s.label }}</option> }
-            </select></label>
-          <label class="alabel sm:col-span-1 lg:col-span-2">Material
-            <select class="ainput" (change)="setText('materialKey', $event, true)">
-              <option value="" [selected]="!l.materialKey" disabled>Choose…</option>
-              @for (m of materials(); track m.key) { <option [value]="m.key" [selected]="m.key === l.materialKey">{{ m.name }} ({{ m.density }})</option> }
-            </select></label>
-          <label class="alabel">Cut length (mm)
-            <input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="l.lengthMm || ''" (input)="setNum('lengthMm', $event)" /></label>
-
-          @for (f of dims(); track f[0]) {
-            <label class="alabel">{{ f[1] }} (mm)
-              <input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv(f[0])" (input)="setDim(f[0], $event)" /></label>
+      @if (open() || !complete()) {
+        <!-- what kind of line -->
+        <div class="ql-seg" role="group" aria-label="Line type">
+          @for (t of types; track t.key) {
+            <button type="button" [class.on]="l.itemType === t.key" [attr.aria-pressed]="l.itemType === t.key" (click)="setType(t.key)">{{ t.label }}</button>
           }
+        </div>
 
-          @if (l.form === 'beam' || l.form === 'channel') {
-            <label class="alabel sm:col-span-2">Section (IS 808)
-              <select class="ainput" (change)="setText('section', $event, true)">
-                <option value="" [selected]="!l.section" disabled>Choose…</option>
-                @for (s of sections(); track s.designation) { <option [value]="s.designation" [selected]="s.designation === l.section">{{ s.designation }} · {{ s.kgPerMetre }} kg/m</option> }
+        @if (l.itemType === 'Calculated') {
+          <div class="ql-grid">
+            <label class="fd" [class.fd-need]="need('form')" [class.fd-ok]="ok('form')"><span class="fl">Shape</span>
+              <select class="ainput" [attr.id]="id('form')" (change)="setShape($any($event.target).value)">
+                <option value="" [selected]="!l.form" disabled>Choose…</option>
+                @for (s of shapes; track s.key) { <option [value]="s.key" [selected]="s.key === l.form">{{ s.label }}</option> }
               </select></label>
-          }
-
-          @if (l.form === 'sspipe') {
-            <label class="alabel">OD (mm)<input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('OD')" (input)="setDim('OD', $event)" /></label>
-            <label class="alabel">ID (mm)
-              <input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('ID')" [placeholder]="derived('id')" (input)="setPipeDim('ID', 'WT', $event)" /></label>
-            <label class="alabel">or wall (mm)
-              <input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('WT')" [placeholder]="derived('wt')" (input)="setPipeDim('WT', 'ID', $event)" /></label>
-          }
-
-          @if (l.form === 'mspipe') {
-            <label class="alabel">Nominal size
-              <select class="ainput" (change)="setPipeSize($any($event.target).value)">
-                <option value="" [selected]="!l.section && l.schedule !== 'Custom'" disabled>Choose…</option>
-                @for (s of pipeSizes(); track s) { <option [value]="s" [selected]="s === l.section">{{ s }}</option> }
-                <option value="Custom" [selected]="l.schedule === 'Custom'">Custom size</option>
+            <label class="fd" [class.fd-need]="need('material')" [class.fd-ok]="ok('material')"><span class="fl">Material</span>
+              <select class="ainput" [attr.id]="id('material')" (change)="setText('materialKey', $event, true)">
+                <option value="" [selected]="!l.materialKey" disabled>Choose…</option>
+                @for (m of materials(); track m.key) { <option [value]="m.key" [selected]="m.key === l.materialKey">{{ m.name }} ({{ m.density }})</option> }
               </select></label>
-            @if (l.schedule === 'Custom') {
-              <label class="alabel">OD (mm)<input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('OD')" (input)="setDim('OD', $event)" /></label>
-              <label class="alabel">Wall (mm)<input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('WT')" (input)="setDim('WT', $event)" /></label>
-            } @else {
-              <label class="alabel">Schedule
-                <select class="ainput" [disabled]="!l.section" (change)="setText('schedule', $event, true)">
-                  <option value="" [selected]="!l.schedule" disabled>Choose…</option>
-                  @for (s of schedules(); track s) { <option [value]="s" [selected]="s === l.schedule">{{ s }}</option> }
-                </select></label>
-              <div class="alabel">OD · wall (from table)
-                <div class="ainput flex items-center bg-[#F8F9FB] text-[#6B7485]">{{ fig.calc?.derived?.od ? fig.calc!.derived.od + ' · ' + fig.calc!.derived.wt : '—' }}</div></div>
+            <label class="fd" [class.fd-need]="need('length')" [class.fd-ok]="ok('length')"><span class="fl">Cut length (mm)</span>
+              <input class="ainput" [attr.id]="id('length')" type="number" min="0" step="any" inputmode="decimal" [value]="l.lengthMm || ''" (input)="setNum('lengthMm', $event)" /></label>
+
+            @for (f of dims(); track f[0]) {
+              <label class="fd" [class.fd-need]="need('dim-' + f[0])" [class.fd-ok]="ok('dim-' + f[0])"><span class="fl">{{ f[1] }} (mm)</span>
+                <input class="ainput" [attr.id]="id('dim-' + f[0])" type="number" min="0" step="any" inputmode="decimal" [value]="dv(f[0])" (input)="setDim(f[0], $event)" /></label>
             }
+
+            @if (l.form === 'beam' || l.form === 'channel') {
+              <label class="fd sm:col-span-2" [class.fd-need]="need('section')" [class.fd-ok]="ok('section')"><span class="fl">Section (IS 808)</span>
+                <select class="ainput" [attr.id]="id('section')" (change)="setText('section', $event, true)">
+                  <option value="" [selected]="!l.section" disabled>Choose…</option>
+                  @for (s of sections(); track s.designation) { <option [value]="s.designation" [selected]="s.designation === l.section">{{ s.designation }} · {{ s.kgPerMetre }} kg/m</option> }
+                </select></label>
+            }
+
+            @if (l.form === 'sspipe') {
+              <label class="fd" [class.fd-need]="need('dim-OD')" [class.fd-ok]="ok('dim-OD')"><span class="fl">OD (mm)</span><input class="ainput" [attr.id]="id('dim-OD')" type="number" min="0" step="any" inputmode="decimal" [value]="dv('OD')" (input)="setDim('OD', $event)" /></label>
+              <label class="fd" [class.fd-need]="need('dim-WT')" [class.fd-ok]="ok('dim-WT')"><span class="fl">ID (mm)</span>
+                <input class="ainput" [attr.id]="id('dim-WT')" type="number" min="0" step="any" inputmode="decimal" [value]="dv('ID')" [placeholder]="derived('id')" (input)="setPipeDim('ID', 'WT', $event)" /></label>
+              <label class="fd" [class.fd-ok]="ok('dim-WT')"><span class="fl">or wall (mm)</span>
+                <input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="dv('WT')" [placeholder]="derived('wt')" (input)="setPipeDim('WT', 'ID', $event)" /></label>
+            }
+
+            @if (l.form === 'mspipe') {
+              <label class="fd" [class.fd-need]="need('size')" [class.fd-ok]="ok('size')"><span class="fl">Nominal size</span>
+                <select class="ainput" [attr.id]="id('size')" (change)="setPipeSize($any($event.target).value)">
+                  <option value="" [selected]="!l.section && l.schedule !== 'Custom'" disabled>Choose…</option>
+                  @for (s of pipeSizes(); track s) { <option [value]="s" [selected]="s === l.section">{{ s }}</option> }
+                  <option value="Custom" [selected]="l.schedule === 'Custom'">Custom size</option>
+                </select></label>
+              @if (l.schedule === 'Custom') {
+                <label class="fd" [class.fd-need]="need('dim-OD')" [class.fd-ok]="ok('dim-OD')"><span class="fl">OD (mm)</span><input class="ainput" [attr.id]="id('dim-OD')" type="number" min="0" step="any" inputmode="decimal" [value]="dv('OD')" (input)="setDim('OD', $event)" /></label>
+                <label class="fd" [class.fd-need]="need('dim-WT')" [class.fd-ok]="ok('dim-WT')"><span class="fl">Wall (mm)</span><input class="ainput" [attr.id]="id('dim-WT')" type="number" min="0" step="any" inputmode="decimal" [value]="dv('WT')" (input)="setDim('WT', $event)" /></label>
+              } @else {
+                <label class="fd" [class.fd-need]="need('schedule')" [class.fd-ok]="ok('schedule')"><span class="fl">Schedule</span>
+                  <select class="ainput" [attr.id]="id('schedule')" [disabled]="!l.section" (change)="setText('schedule', $event, true)">
+                    <option value="" [selected]="!l.schedule" disabled>Choose…</option>
+                    @for (s of schedules(); track s) { <option [value]="s" [selected]="s === l.schedule">{{ s }}</option> }
+                  </select></label>
+                <div class="fd"><span class="fl">OD · wall (from table)</span>
+                  <div class="ainput ql-ro">{{ fig.calc?.derived?.od ? fig.calc!.derived.od + ' · ' + fig.calc!.derived.wt : '—' }}</div></div>
+              }
+            }
+
+            <label class="fd" [class.fd-need]="need('pieces')" [class.fd-ok]="ok('pieces')"><span class="fl">Pieces</span>
+              <input class="ainput" [attr.id]="id('pieces')" type="number" min="1" step="1" inputmode="numeric" [value]="l.quantity" (input)="setNum('quantity', $event, 1)" /></label>
+          </div>
+
+          @if (fig.calc?.error; as e) { <p class="alert mt-3" role="alert">{{ e }}</p> }
+          @else if (fig.calc && fig.calc.kg > 0) {
+            <p class="ql-result">
+              <span>{{ fmt(fig.calc.pieceKg) }} kg each · {{ fmt(fig.calc.kgPerM) }} kg/m</span>
+              <b>{{ fmt(fig.kg) }} kg total</b>
+              <small>theoretical weight</small></p>
           }
-
-          <label class="alabel">Pieces
-            <input class="ainput" type="number" min="1" step="1" inputmode="numeric" [value]="l.quantity" (input)="setNum('quantity', $event, 1)" /></label>
-        </div>
-
-        @if (fig.calc?.error; as e) { <p class="alert mt-3" role="alert">{{ e }}</p> }
-        @else if (fig.calc && fig.calc.kg > 0) {
-          <p class="mt-3 text-[13px] text-[#6B7485]">
-            {{ fmt(fig.calc.pieceKg) }} kg each · {{ fmt(fig.calc.kgPerM) }} kg/m · <b class="font-medium text-ink">{{ fmt(fig.kg) }} kg total</b>
-            <span class="ml-1">(theoretical)</span></p>
+        } @else {
+          <div class="ql-grid">
+            @if (products().length) {
+              <label class="fd sm:col-span-2 lg:col-span-4"><span class="fl">Pick from product list</span>
+                <input class="ainput" [attr.list]="'qp-' + index()" placeholder="Search brand or description…" (change)="pick($any($event.target))" />
+                <datalist id="qp-{{ index() }}">@for (p of products(); track p.id) { <option [value]="label(p)"></option> }</datalist></label>
+            }
+            <label class="fd" [class.fd-ok]="!!l.brand"><span class="fl">Brand</span><input class="ainput" maxlength="100" list="qb" [value]="l.brand ?? ''" (input)="setText('brand', $event, true)" /></label>
+            <label class="fd sm:col-span-1 lg:col-span-3" [class.fd-need]="need('description')" [class.fd-ok]="ok('description')"><span class="fl">Description</span>
+              <input class="ainput" [attr.id]="id('description')" maxlength="200" list="qd" [value]="l.description ?? ''" (input)="setText('description', $event, true)" placeholder="e.g. GI roofing sheet, corrugated" /></label>
+            <label class="fd sm:col-span-1 lg:col-span-2" [class.fd-ok]="!!l.size"><span class="fl">Size or specification</span><input class="ainput" maxlength="120" [value]="l.size ?? ''" (input)="setText('size', $event, true)" /></label>
+            <label class="fd" [class.fd-ok]="!!l.model"><span class="fl">Model / part no.</span><input class="ainput" maxlength="80" [value]="l.model ?? ''" (input)="setText('model', $event, true)" /></label>
+            <div class="fd" [class.fd-need]="need('pieces')" [class.fd-ok]="ok('pieces')"><span class="fl">Quantity</span>
+              <span class="flex gap-2">
+                <input class="ainput" [attr.id]="id('pieces')" type="number" min="1" step="1" inputmode="numeric" [value]="l.quantity" (input)="setNum('quantity', $event, 1)" aria-label="Quantity" />
+                <select class="ainput !w-[104px] shrink-0" aria-label="Unit" (change)="setText('unit', $event)">@for (u of units; track u) { <option [value]="u" [selected]="u === l.unit">{{ u }}</option> }</select>
+              </span></div>
+            @if (l.itemType === 'ManualWeight') {
+              <label class="fd" [class.fd-need]="need('weight')" [class.fd-ok]="ok('weight')"><span class="fl">Weight per unit (kg)</span><input class="ainput" [attr.id]="id('weight')" type="number" min="0" step="any" inputmode="decimal" [value]="l.weightPerUnit || ''" (input)="setNum('weightPerUnit', $event)" /></label>
+              <label class="fd" [class.fd-ok]="ok('weight')"><span class="fl">or total weight (kg)</span><input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="fig.kg || ''" (change)="setTotalKg($event)" /></label>
+            }
+          </div>
+          <datalist id="qb">@for (b of recent.brands; track b) { <option [value]="b"></option> }</datalist>
+          <datalist id="qd">@for (d of recent.descriptions; track d) { <option [value]="d"></option> }</datalist>
         }
-      } @else {
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          @if (products().length) {
-            <label class="alabel sm:col-span-2 lg:col-span-4">Pick from product list
-              <input class="ainput" [attr.list]="'qp-' + index()" placeholder="Search brand or description…" (change)="pick($any($event.target))" />
-              <datalist id="qp-{{ index() }}">@for (p of products(); track p.id) { <option [value]="label(p)"></option> }</datalist></label>
+
+        <!-- price, GST, HSN -->
+        <div class="ql-grid ql-money">
+          @if (l.itemType === 'ManualUnit') {
+            <label class="fd" [class.fd-need]="need('rate')" [class.fd-ok]="ok('rate')"><span class="fl">Price per {{ l.unit }} (₹)</span>
+              <input class="ainput" [attr.id]="id('rate')" type="number" min="0" step="0.01" inputmode="decimal" [value]="l.unitPrice ?? ''" (input)="setNum('unitPrice', $event, 0, true)" />
+              @if (reference()) { <button type="button" class="ql-quick" (click)="useReference()">Use reference rate ₹{{ reference() }}</button> }</label>
+          } @else {
+            <label class="fd" [class.fd-need]="need('rate')" [class.fd-ok]="ok('rate')"><span class="fl">Price per kg (₹)</span>
+              <input class="ainput" [attr.id]="id('rate')" type="number" min="0" step="0.01" inputmode="decimal" [value]="l.ratePerKg || ''" (input)="setNum('ratePerKg', $event)" />
+              @if (!l.ratePerKg && lastRate()) { <button type="button" class="ql-quick" (click)="useLast()">Use last price ₹{{ lastRate() }}/kg</button> }
+              @if (!l.ratePerKg && reference()) { <button type="button" class="ql-quick" (click)="useReference()">Use reference rate ₹{{ reference() }}</button> }</label>
           }
-          <label class="alabel">Brand<input class="ainput" maxlength="100" list="qb" [value]="l.brand ?? ''" (input)="setText('brand', $event, true)" /></label>
-          <label class="alabel sm:col-span-1 lg:col-span-3">Description<input class="ainput" maxlength="200" list="qd" [value]="l.description ?? ''" (input)="setText('description', $event, true)" placeholder="e.g. GI roofing sheet, corrugated" /></label>
-          <label class="alabel sm:col-span-1 lg:col-span-2">Size or specification<input class="ainput" maxlength="120" [value]="l.size ?? ''" (input)="setText('size', $event, true)" /></label>
-          <label class="alabel">Model / part no.<input class="ainput" maxlength="80" [value]="l.model ?? ''" (input)="setText('model', $event, true)" /></label>
-          <label class="alabel">Quantity
+          <label class="fd" [class.fd-need]="need('gst')" [class.fd-ok]="ok('gst')"><span class="fl">GST</span>
             <span class="flex gap-2">
-              <input class="ainput" type="number" min="1" step="1" inputmode="numeric" [value]="l.quantity" (input)="setNum('quantity', $event, 1)" />
-              <select class="ainput !w-[88px]" aria-label="Unit" (change)="setText('unit', $event)">@for (u of units; track u) { <option [value]="u" [selected]="u === l.unit">{{ u }}</option> }</select>
-            </span></label>
-          @if (l.itemType === 'ManualWeight') {
-            <label class="alabel">Weight per unit (kg)<input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="l.weightPerUnit || ''" (input)="setNum('weightPerUnit', $event)" /></label>
-            <label class="alabel">or total weight (kg)<input class="ainput" type="number" min="0" step="any" inputmode="decimal" [value]="fig.kg || ''" (change)="setTotalKg($event)" /></label>
-          }
+              <select class="ainput" [attr.id]="id('gst')" aria-label="GST category" (change)="setCategory($any($event.target).value)">
+                <option value="Raw" [selected]="l.gstCategory === 'Raw'">Raw material</option>
+                <option value="Finished" [selected]="l.gstCategory === 'Finished'">Finished product</option>
+              </select>
+              <input class="ainput !w-[92px] shrink-0" type="number" min="0" max="28" step="0.01" aria-label="GST rate %" [value]="l.gstRate ?? ''" [placeholder]="defaultRate() ?? 'rate %'" (input)="setNum('gstRate', $event, 0, true)" />
+            </span>
+            @if (fig.gstRate === null) { <span class="ql-warn">Set this rate in Quote data, or type it here.</span> }</label>
+          <label class="fd" [class.fd-ok]="!!l.hsn"><span class="fl">HSN code</span>
+            <input class="ainput" maxlength="12" inputmode="numeric" [value]="l.hsn ?? ''" (input)="setHsn($event)" />
+            @if (!l.hsn) { <span class="ql-hint">Optional. Prints blank if empty.</span> }</label>
+          <label class="fd sm:col-span-2 lg:col-span-4" [class.fd-ok]="!!l.remarks"><span class="fl">Remarks (printed under the item)</span>
+            <input class="ainput" maxlength="300" [value]="l.remarks ?? ''" (input)="setText('remarks', $event, true)" /></label>
         </div>
-        <datalist id="qb">@for (b of recent.brands; track b) { <option [value]="b"></option> }</datalist>
-        <datalist id="qd">@for (d of recent.descriptions; track d) { <option [value]="d"></option> }</datalist>
       }
 
-      <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        @if (l.itemType === 'ManualUnit') {
-          <label class="alabel">Price per {{ l.unit }} (₹)
-            <input class="ainput" [class.!border-[#C2410C]]="!l.unitPrice" type="number" min="0" step="0.01" inputmode="decimal" [value]="l.unitPrice ?? ''" (input)="setNum('unitPrice', $event, 0, true)" />
-            @if (reference()) { <button type="button" class="ahint text-left underline" (click)="useReference()">Reference rate ₹{{ reference() }} · use it</button> }</label>
-        } @else {
-          <label class="alabel">Price per kg (₹)
-            <input class="ainput" [class.!border-[#C2410C]]="!l.ratePerKg" type="number" min="0" step="0.01" inputmode="decimal" [value]="l.ratePerKg || ''" (input)="setNum('ratePerKg', $event)" />
-            @if (!l.ratePerKg && lastRate()) { <button type="button" class="ahint text-left underline" (click)="useLast()">Last used ₹{{ lastRate() }}/kg · use it</button> }
-            @if (!l.ratePerKg && reference()) { <button type="button" class="ahint text-left underline" (click)="useReference()">Reference rate ₹{{ reference() }} · use it</button> }</label>
-        }
-        <label class="alabel">GST
-          <span class="flex gap-2">
-            <select class="ainput" aria-label="GST category" (change)="setCategory($any($event.target).value)">
-              <option value="Raw" [selected]="l.gstCategory === 'Raw'">Raw material</option>
-              <option value="Finished" [selected]="l.gstCategory === 'Finished'">Finished product</option>
-            </select>
-            <input class="ainput !w-[78px]" type="number" min="0" max="28" step="0.01" aria-label="GST rate %" [value]="l.gstRate ?? ''" [placeholder]="defaultRate() ?? 'set'" (input)="setNum('gstRate', $event, 0, true)" />
-          </span>
-          @if (fig.gstRate === null) { <span class="ahint text-[#C2410C]">Set this rate in Quote data, or type it here.</span> }</label>
-        <label class="alabel">HSN code
-          <input class="ainput" maxlength="12" [value]="l.hsn ?? ''" (input)="setHsn($event)" />
-          @if (!l.hsn) { <span class="ahint text-[#C2410C]">No HSN code. It prints blank.</span> }</label>
-        <div class="alabel">Amount
-          <div class="ainput flex items-center justify-end bg-[#F8F9FB] font-medium tabular-nums">{{ fig.amount === null ? '—' : '₹ ' + inr(fig.amount) }}</div></div>
-        <label class="alabel sm:col-span-2 lg:col-span-4">Remarks (printed under the item)
-          <input class="ainput" maxlength="300" [value]="l.remarks ?? ''" (input)="setText('remarks', $event, true)" /></label>
+      <!-- the answer, always in view -->
+      <div class="ql-foot">
+        <div class="ql-amt">
+          <small>Line amount</small>
+          <b>{{ fig.amount === null ? '—' : '₹ ' + inr(fig.amount) }}</b>
+          @if (fig.amount !== null && fig.gstRate !== null) { <span>+ GST {{ fig.gstRate }}%</span> }
+        </div>
+        <div class="flex gap-2">
+          <button type="button" class="ql-act" (click)="duplicated.emit()">Duplicate</button>
+          <button type="button" class="ql-act ql-act-del" [disabled]="!canRemove()" (click)="removed.emit()" aria-label="Remove line">Remove</button>
+        </div>
       </div>
     </div>`,
 })
@@ -170,6 +196,8 @@ export class QuoteLineComponent {
   readonly duplicated = output<void>();
 
   protected readonly types = TYPES;
+  /** A finished line can be folded away to one summary row; a line with something still to fill never is. */
+  protected readonly open = signal(true);
   protected readonly shapes = SHAPES;
   protected readonly units = UNITS;
   protected readonly inr = inr;
@@ -194,6 +222,22 @@ export class QuoteLineComponent {
   protected readonly reference = computed(() => { this.rev(); return this.picked()?.referenceRate ?? null; });
 
   protected fmt = formatKg;
+
+  /** Everything this line needs, done or not; the editor shows the same list as its "next missing" guide. */
+  private readonly checks = computed(() => { this.rev(); return lineChecks(this.line(), this.index(), this.figures()); });
+  protected readonly needs = computed(() => this.checks().filter((c) => !c.done));
+  protected readonly complete = computed(() => this.needs().length === 0);
+  protected need(key: string): boolean { return this.checks().some((c) => c.key === key && !c.done); }
+  protected ok(key: string): boolean { return this.checks().some((c) => c.key === key && c.done); }
+  protected id(key: string): string { return lineFieldId(this.index(), key); }
+
+  /** A short name for the line, shown in its header. */
+  protected readonly summary = computed(() => {
+    this.rev();
+    const l = this.line();
+    const text = l.itemType === 'Calculated' ? (this.figures().calc?.description ?? '') : [l.brand, l.description].filter(Boolean).join(' ');
+    return text.length > 46 ? text.slice(0, 45) + '…' : text;
+  });
 
   /** The typed size, or blank while unset. */
   protected dv(k: string): number | string {

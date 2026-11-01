@@ -6,6 +6,7 @@ import { apiError } from '../../../core/models/api.model';
 import { lineFigures } from '../../../core/quote/quote-lines';
 import { inr, inWords, isInterState, quoteTotals } from '../../../core/quote/quote-math';
 import { clearDraft, loadDraft, rememberRates, rememberText, saveDraft } from '../../../core/quote/quote-memory';
+import { headChecks, lineChecks } from '../../../core/quote/quote-progress';
 import { AdminApiService, Customer, QuoteDetail, QuoteItemDto, QuoteItemInput, QuoteLookups, SaveQuote } from '../../../core/services/admin-api.service';
 import { SeoService } from '../../../core/services/seo.service';
 import { QUOTE_TYPES, QuoteType, quoteTypeLabel, tonnes } from '../../../core/quote/quote-types';
@@ -28,16 +29,17 @@ const CUSTOM = 'Custom';
   imports: [FormsModule, RouterLink, NgTemplateOutlet, IconComponent, QuoteLineComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <a routerLink="/admin/quotes" class="mb-3 inline-block text-[13px] text-[#6B7485] hover:underline">← All quotations</a>
+    <div class="qf">
+    <a routerLink="/admin/quotes" class="mb-3 inline-flex items-center gap-1 py-1 text-[14.5px] font-medium text-[#5B6678] hover:underline">← All quotations</a>
     @if (loading()) {
       <div class="card text-[#6B7485]">Loading…</div>
     } @else if (lk(); as lookups) {
-      <header class="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 class="text-[22px] font-medium">{{ saved()?.reference ?? 'New quotation' }}</h1>
-          <p class="mt-0.5 text-[13.5px] text-[#6B7485]">
-            @if (saved(); as s) { {{ s.status }} · {{ typeLabel(s.quoteType) }} · valid until {{ s.validUntil }}@if (s.leadReference) { · for request <a routerLink="/admin/leads" class="underline">{{ s.leadReference }}</a> } }
-            @else { Fill in the customer and lines, then save. }
+      <header class="mb-4 flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="text-[24px] font-semibold leading-tight">{{ saved()?.reference ?? 'New quotation' }}</h1>
+          <p class="mt-1 text-[14.5px] text-[#5B6678]">
+            @if (saved(); as s) { <span class="pill" [class.pill-warn]="s.status === 'Draft'" [class.pill-ok]="s.status === 'Accepted'">{{ s.status }}</span> {{ typeLabel(s.quoteType) }} · valid until {{ s.validUntil }}@if (s.leadReference) { · for request <a routerLink="/admin/leads" class="underline">{{ s.leadReference }}</a> } }
+            @else { Fill in the three steps below. Fields turn green as you complete them. }
           </p>
         </div>
         <div class="hidden flex-wrap items-center gap-2 lg:flex">
@@ -48,159 +50,194 @@ const CUSTOM = 'Custom';
       </header>
 
       @if (restored(); as r) {
-        <p class="alert mb-4 flex flex-wrap items-center justify-between gap-2" role="status">
+        <p class="alert alert-warn mb-4 flex flex-wrap items-center justify-between gap-2 !text-[14.5px]" role="status">
           <span>Restored your unsaved changes from {{ r }}. Save to keep them.</span>
           <button type="button" class="abtn" (click)="discardDraft()">Discard them</button>
         </p>
       }
-      @if (message(); as m) { <p class="alert mb-4" [class.alert-ok]="m.ok" role="status">{{ m.text }}</p> }
+      @if (message(); as m) { <p class="alert mb-4 !text-[14.5px]" [class.alert-ok]="m.ok" role="status">{{ m.text }}</p> }
       @if (dirty() && saved()) { <p class="ahint mb-3">Save first; the PDF and WhatsApp use the saved version.</p> }
       @if (lookups.defaults.gstRaw === null || lookups.defaults.gstFinished === null) {
         <p class="alert mb-4">GST rates are not set yet ({{ lookups.defaults.gstRaw === null ? 'raw material' : '' }}{{ lookups.defaults.gstRaw === null && lookups.defaults.gstFinished === null ? ' and ' : '' }}{{ lookups.defaults.gstFinished === null ? 'finished product' : '' }}). Set them in <a routerLink="/admin/quote-data" class="underline">Quote data</a>, or type a rate on each line.</p>
       }
 
-      <div class="grid gap-5 pb-24 xl:grid-cols-[minmax(0,1fr)_340px] lg:pb-0">
+      <!-- where am I, what is missing, take me there -->
+      <div class="qprog" role="status" aria-live="polite">
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <b class="block text-[15.5px] font-bold">{{ prog().done }} of {{ prog().total }} required fields done</b>
+            <span class="block truncate text-[13.5px] text-[#5B6678]">{{ prog().todo.length ? 'Next: ' + prog().todo[0].label : 'Everything required is filled in.' }}</span>
+          </div>
+          @if (prog().todo.length) { <button type="button" class="qnext" (click)="jump(prog().todo[0].id)">Next ›</button> }
+          @else { <span class="qchip qchip-ok">✓ Ready</span> }
+        </div>
+        <div class="qbar" aria-hidden="true"><i [style.width.%]="prog().pct"></i></div>
+        @if (prog().todo.length > 1) {
+          <details class="qlist"><summary>Show all {{ prog().todo.length }} still needed</summary>
+            @for (c of prog().todo; track c.id) { <button type="button" (click)="jump(c.id)">{{ c.label }}</button> }
+          </details>
+        }
+      </div>
+
+      <div class="grid gap-5 pb-48 xl:grid-cols-[minmax(0,1fr)_360px] lg:pb-0">
         <div class="grid content-start gap-5">
-          <fieldset class="card grid gap-3">
-            <legend class="sr-only">Quotation type</legend>
-            <b class="font-medium">Type of quotation *</b>
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="group" aria-label="Quotation type">
-              @for (qt of types; track qt.key) {
-                <button type="button" class="rounded-lg border p-3 text-left text-[13px]" [class.border-primary]="f.quoteType === qt.key" [class.bg-primary]="f.quoteType === qt.key" [class.text-on-primary]="f.quoteType === qt.key"
-                  [class.border-[#E3E6EB]]="f.quoteType !== qt.key" [attr.aria-pressed]="f.quoteType === qt.key" (click)="setQuoteType(qt.key)">
-                  <b class="block text-[14px] font-medium">{{ qt.label }}</b><span class="mt-0.5 block opacity-80">{{ qt.hint }}</span></button>
+          <section class="qs" id="sec-type" aria-labelledby="type-h">
+            <div class="qs-head">
+              <span class="qs-n" [class.qs-done]="!!f.quoteType">@if (f.quoteType) { ✓ } @else { 1 }</span>
+              <div><h2 id="type-h">Type of quotation</h2><small [class.need]="!f.quoteType">{{ f.quoteType ? typeLabel(f.quoteType) + ' selected' : 'Choose one to continue' }}</small></div>
+            </div>
+            <div class="qt fd" [class.fd-need]="!f.quoteType" role="group" aria-label="Quotation type">
+              @for (qt of types; track qt.key; let first = $first) {
+                <button type="button" [attr.id]="first ? 'q-type' : null" [class.on]="f.quoteType === qt.key" [attr.aria-pressed]="f.quoteType === qt.key" (click)="setQuoteType(qt.key)">
+                  <b>{{ qt.label }}@if (f.quoteType === qt.key) { <span class="ml-1">✓</span> }</b><span class="block text-[13.5px] opacity-85">{{ qt.hint }}</span></button>
               }
             </div>
-          </fieldset>
+          </section>
 
-          <fieldset class="card grid gap-4">
-            <legend class="sr-only">Customer</legend>
-            <b class="font-medium">Customer</b>
+          <section class="qs" id="sec-customer" aria-labelledby="cust-h">
+            <div class="qs-head">
+              <span class="qs-n" [class.qs-done]="custDone()">@if (custDone()) { ✓ } @else { 2 }</span>
+              <div><h2 id="cust-h">Customer</h2><small [class.need]="!custDone()">{{ custDone() ? 'Name and WhatsApp number filled in' : 'Name and WhatsApp number are required' }}</small></div>
+            </div>
             <div class="relative">
-              <label class="alabel">Find a saved customer<input class="ainput" name="find" autocomplete="off" placeholder="Type a name, company or phone number" [ngModel]="find()" (ngModelChange)="findCustomer($event)" /></label>
+              <label class="fd" [class.fd-ok]="false"><span class="fl">Find a saved customer</span>
+                <input class="ainput" name="find" autocomplete="off" placeholder="Type a name, company or phone number" [ngModel]="find()" (ngModelChange)="findCustomer($event)" /></label>
               @if (matches().length) {
-                <ul class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-[#E3E6EB] bg-white shadow-lg" role="listbox">
+                <ul class="absolute z-20 mt-1 w-full overflow-hidden rounded-xl border border-[#D5DBE4] bg-white shadow-lg" role="listbox">
                   @for (c of matches(); track c.id) {
-                    <li><button type="button" role="option" class="block w-full px-3 py-2 text-left text-[13.5px] hover:bg-[#F8F9FB]" (click)="useCustomer(c)">
-                      <b class="font-medium">{{ c.name }}</b><small class="block text-[#8A93A3]">{{ c.company || c.city || '' }} {{ c.phone }}</small></button></li>
+                    <li><button type="button" role="option" class="block w-full px-4 py-3 text-left text-[15.5px] hover:bg-[#F3F6FA]" (click)="useCustomer(c)">
+                      <b class="font-semibold">{{ c.name }}</b><small class="block text-[13.5px] text-[#6B7485]">{{ c.company || c.city || '' }} {{ c.phone }}</small></button></li>
                   }
                 </ul>
               }
-              <p class="ahint mt-1">New customers are added to the <a routerLink="/admin/customers" class="underline">Customers</a> list when you save.</p>
+              <p class="ahint mt-2">New customers are added to the <a routerLink="/admin/customers" class="underline">Customers</a> list when you save.</p>
             </div>
             <div class="grid gap-4 sm:grid-cols-2">
-              <label class="alabel">Name *<input class="ainput" maxlength="150" name="cn" [(ngModel)]="f.customerName" (ngModelChange)="touch()" /></label>
-              <label class="alabel">Company<input class="ainput" maxlength="150" name="co" [(ngModel)]="f.company" (ngModelChange)="touch()" /></label>
-              <label class="alabel">WhatsApp number *<input class="ainput" maxlength="30" name="ph" inputmode="tel" [(ngModel)]="f.phone" (ngModelChange)="touch()" placeholder="10-digit mobile" /></label>
-              <label class="alabel">Email<input class="ainput" maxlength="256" name="em" [(ngModel)]="f.email" (ngModelChange)="touch()" /></label>
-              <label class="alabel">GSTIN<input class="ainput uppercase" maxlength="15" name="gst" [(ngModel)]="f.gstin" (ngModelChange)="gstinChanged()" placeholder="Optional" /></label>
-              <label class="alabel">Delivery city<input class="ainput" maxlength="80" name="city" [(ngModel)]="f.city" (ngModelChange)="touch()" /></label>
-              <label class="alabel">Buyer's order / reference no.<input class="ainput" maxlength="60" name="bref" [(ngModel)]="f.buyerRef" (ngModelChange)="touch()" /></label>
-              <label class="alabel">Dispatched through<input class="ainput" maxlength="80" name="disp" [(ngModel)]="f.dispatchedThrough" (ngModelChange)="touch()" placeholder="Lorry or transport" /></label>
+              <label class="fd" [class.fd-need]="!nameOk()" [class.fd-ok]="nameOk()"><span class="fl">Name</span><input class="ainput" id="q-name" maxlength="150" name="cn" autocomplete="off" [(ngModel)]="f.customerName" (ngModelChange)="touch()" /></label>
+              <label class="fd" [class.fd-ok]="has(f.company)"><span class="fl">Company</span><input class="ainput" maxlength="150" name="co" [(ngModel)]="f.company" (ngModelChange)="touch()" /></label>
+              <label class="fd" [class.fd-need]="!phoneOk()" [class.fd-ok]="phoneOk()"><span class="fl">WhatsApp number</span><input class="ainput" id="q-phone" maxlength="30" name="ph" inputmode="tel" [(ngModel)]="f.phone" (ngModelChange)="touch()" placeholder="10-digit mobile" /></label>
+              <label class="fd" [class.fd-ok]="has(f.email)"><span class="fl">Email</span><input class="ainput" maxlength="256" name="em" inputmode="email" [(ngModel)]="f.email" (ngModelChange)="touch()" /></label>
+              <label class="fd" [class.fd-ok]="has(f.gstin)"><span class="fl">GSTIN</span><input class="ainput uppercase" maxlength="15" name="gst" [(ngModel)]="f.gstin" (ngModelChange)="gstinChanged()" placeholder="Optional" /></label>
+              <label class="fd" [class.fd-ok]="has(f.city)"><span class="fl">Delivery city</span><input class="ainput" maxlength="80" name="city" [(ngModel)]="f.city" (ngModelChange)="touch()" /></label>
+              <label class="fd" [class.fd-ok]="has(f.buyerRef)"><span class="fl">Buyer's order / reference no.</span><input class="ainput" maxlength="60" name="bref" [(ngModel)]="f.buyerRef" (ngModelChange)="touch()" /></label>
+              <label class="fd" [class.fd-ok]="has(f.dispatchedThrough)"><span class="fl">Dispatched through</span><input class="ainput" maxlength="80" name="disp" [(ngModel)]="f.dispatchedThrough" (ngModelChange)="touch()" placeholder="Lorry or transport" /></label>
             </div>
-            <label class="alabel">Address<textarea class="ainput" maxlength="400" name="addr" [(ngModel)]="f.address" (ngModelChange)="touch()" rows="2"></textarea></label>
-          </fieldset>
+            <label class="fd" [class.fd-ok]="has(f.address)"><span class="fl">Address</span><textarea class="ainput" maxlength="400" name="addr" [(ngModel)]="f.address" (ngModelChange)="touch()" rows="2"></textarea></label>
+          </section>
 
-          <section class="card grid gap-3" aria-labelledby="lines-h">
-            <b id="lines-h" class="font-medium">Lines</b>
+          <section class="qs" id="sec-lines" aria-labelledby="lines-h">
+            <div class="qs-head">
+              <span class="qs-n" [class.qs-done]="linesDone()">@if (linesDone()) { ✓ } @else { 3 }</span>
+              <div><h2 id="lines-h">Lines</h2><small [class.need]="!linesDone()">{{ prog().linesDone }} of {{ f.items.length }} line{{ f.items.length === 1 ? '' : 's' }} complete</small></div>
+            </div>
             @for (l of f.items; track l) {
               <ss-quote-line [line]="l" [index]="$index" [lookups]="lookups" [rev]="rev()" [canRemove]="f.items.length > 1"
                 (changed)="touch()" (removed)="removeLine($index)" (duplicated)="duplicateLine($index)" />
             }
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" class="abtn" (click)="addLine()"><ss-icon name="plus" [size]="14" />Add line</button>
-              <button type="button" class="abtn abtn-danger" (click)="clear()">Clear quotation</button>
-              <span class="ahint">Prices are ex-godown plus GST. Weights are theoretical.</span>
+            <div class="flex flex-wrap items-center gap-3">
+              <button type="button" class="qadd" (click)="addLine()"><ss-icon name="plus" [size]="16" />Add another line</button>
+              <button type="button" class="ql-act ql-act-del" (click)="clear()">Clear quotation</button>
             </div>
-            @if (missing() > 0) { <p class="ahint text-[#C2410C]">{{ missing() }} line{{ missing() === 1 ? '' : 's' }} without a price or GST rate {{ missing() === 1 ? 'is' : 'are' }} left out of the totals.</p> }
+            <p class="ahint">Prices are ex-godown plus GST. Weights are theoretical.</p>
+            @if (missing() > 0) { <p class="alert alert-warn !text-[14px]">{{ missing() }} line{{ missing() === 1 ? '' : 's' }} without a price or GST rate {{ missing() === 1 ? 'is' : 'are' }} left out of the totals.</p> }
           </section>
 
-          <fieldset class="card grid gap-4">
-            <legend class="sr-only">Terms</legend>
-            <label class="alabel">Notes on the quotation<textarea class="ainput" maxlength="2000" name="notes" [(ngModel)]="f.notes" (ngModelChange)="touch()" rows="2" placeholder="e.g. Delivery within 2 working days of payment."></textarea></label>
+          <section class="qs" id="sec-terms" aria-labelledby="terms-h">
+            <div class="qs-head">
+              <span class="qs-n">4</span>
+              <div><h2 id="terms-h">Terms</h2><small>Optional: defaults come from Quote data</small></div>
+            </div>
+            <label class="fd" [class.fd-ok]="has(f.notes)"><span class="fl">Notes on the quotation</span><textarea class="ainput" maxlength="2000" name="notes" [(ngModel)]="f.notes" (ngModelChange)="touch()" rows="2" placeholder="e.g. Delivery within 2 working days of payment."></textarea></label>
             <div class="grid gap-4 sm:grid-cols-2">
-              <label class="alabel">Payment terms
+              <label class="fd fd-ok"><span class="fl">Payment terms</span>
                 <select class="ainput" (change)="setPayment($any($event.target).value)">
                   @for (o of paymentOptions; track o) { <option [value]="o" [selected]="paymentChoice() === o">{{ o }}</option> }
                   <option value="Custom" [selected]="paymentChoice() === 'Custom'">Custom text</option>
                 </select></label>
               @if (paymentChoice() === 'Custom') {
-                <label class="alabel">Custom payment terms<input class="ainput" maxlength="200" name="pay" [(ngModel)]="f.paymentTerms" (ngModelChange)="touch()" /></label>
+                <label class="fd" [class.fd-ok]="has(f.paymentTerms)"><span class="fl">Custom payment terms</span><input class="ainput" maxlength="200" name="pay" [(ngModel)]="f.paymentTerms" (ngModelChange)="touch()" /></label>
               }
             </div>
-            <label class="alabel">Bank details<textarea class="ainput" maxlength="600" name="bank" [(ngModel)]="f.bankDetails" (ngModelChange)="touch()" rows="3" placeholder="Account name, bank, account number, IFSC"></textarea>
+            <label class="fd" [class.fd-ok]="has(f.bankDetails)"><span class="fl">Bank details</span><textarea class="ainput" maxlength="600" name="bank" [(ngModel)]="f.bankDetails" (ngModelChange)="touch()" rows="3" placeholder="Account name, bank, account number, IFSC"></textarea>
               <span class="ahint">Set once in Quote data. Left empty, the bank block is not printed.</span></label>
-            <label class="alabel">Terms & conditions<textarea class="ainput" maxlength="4000" name="terms" [(ngModel)]="f.terms" (ngModelChange)="touch()" rows="7"></textarea>
+            <label class="fd" [class.fd-ok]="has(f.terms)"><span class="fl">Terms & conditions</span><textarea class="ainput" maxlength="4000" name="terms" [(ngModel)]="f.terms" (ngModelChange)="touch()" rows="7"></textarea>
               <span class="ahint">Starts from the terms in Quote data. Edit freely for this quotation.</span></label>
-          </fieldset>
+          </section>
         </div>
 
         <aside class="grid content-start gap-5">
-          <fieldset class="card grid gap-3">
-            <legend class="sr-only">Extras</legend>
-            <b class="font-medium">Extras & GST</b>
+          <div class="qtotal" aria-live="polite">
+            <small>Grand total</small>
+            <b>₹ {{ inr(t().grandTotal) }}</b>
+            <span>{{ words() || 'Add a price to a line to see the total' }}</span>
+          </div>
+
+          <section class="qs" aria-labelledby="extras-h">
+            <div class="qs-head"><span class="qs-n">+</span><div><h2 id="extras-h">Extras &amp; GST</h2><small>Charges added to the goods</small></div></div>
             @for (c of visibleCharges(); track c[0]) {
-              <label class="alabel grid-cols-[1fr_120px] items-center !grid">{{ c[1] }} (₹)
+              <label class="fd" [class.fd-ok]="num(c[0]) !== 0"><span class="fl">{{ c[1] }} (₹)</span>
                 <input class="ainput text-right" type="number" min="0" step="0.01" inputmode="decimal" [name]="c[0]" [ngModel]="num(c[0])" (ngModelChange)="setNum(c[0], $event)" /></label>
             }
-            @if (!allExtras()) { <button type="button" class="ahint text-left underline" (click)="allExtras.set(true)">Show all extras</button> }
+            @if (!allExtras()) { <button type="button" class="ql-quick" (click)="allExtras.set(true)">Show all extras</button> }
             <div class="grid grid-cols-2 gap-3">
-              <label class="alabel">GST on extras %<input class="ainput" type="number" min="0" max="28" step="0.01" name="gstRate" [(ngModel)]="f.gstRate" (ngModelChange)="touch()" /></label>
-              <label class="alabel">Valid (days)<input class="ainput" type="number" min="1" max="90" name="valid" [(ngModel)]="f.validDays" (ngModelChange)="touch()" /></label>
+              <label class="fd fd-ok"><span class="fl">GST on extras %</span><input class="ainput" type="number" min="0" max="28" step="0.01" inputmode="decimal" name="gstRate" [(ngModel)]="f.gstRate" (ngModelChange)="touch()" /></label>
+              <label class="fd fd-ok"><span class="fl">Valid (days)</span><input class="ainput" type="number" min="1" max="90" inputmode="numeric" name="valid" [(ngModel)]="f.validDays" (ngModelChange)="touch()" /></label>
             </div>
-            <label class="flex items-center gap-2 text-[13.5px]"><input type="checkbox" name="igst" [(ngModel)]="f.interState" (ngModelChange)="touch()" />Other state (IGST instead of CGST + SGST)</label>
-            <label class="alabel">Quote date<input class="ainput" type="date" name="qd" [(ngModel)]="f.quoteDate" (ngModelChange)="touch()" /></label>
-          </fieldset>
+            <label class="qcheck"><input type="checkbox" name="igst" [(ngModel)]="f.interState" (ngModelChange)="touch()" /><span>Other state: IGST instead of CGST + SGST</span></label>
+            <label class="fd fd-ok"><span class="fl">Quote date</span><input class="ainput" type="date" name="qd" [(ngModel)]="f.quoteDate" (ngModelChange)="touch()" /></label>
+          </section>
 
-          <div class="card grid gap-1.5 text-[13.5px] tabular-nums" aria-live="polite">
-            <b class="mb-1 font-medium">Totals</b>
-            <div class="flex justify-between"><span class="text-[#6B7485]">Subtotal ({{ t().totalKg }} kg{{ f.quoteType === 'Wholesale' ? ' · ' + tonnes(t().totalKg) + ' t' : '' }})</span><span>{{ inr(t().subtotal) }}</span></div>
-            @if (t().discount) { <div class="flex justify-between"><span class="text-[#6B7485]">Discount</span><span>−{{ inr(t().discount) }}</span></div> }
-            @if (f.cuttingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Cutting</span><span>{{ inr(f.cuttingCharge) }}</span></div> }
-            @if (f.loadingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Loading</span><span>{{ inr(f.loadingCharge) }}</span></div> }
-            @if (f.unloadingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Unloading</span><span>{{ inr(f.unloadingCharge) }}</span></div> }
-            @if (f.transportCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Cartage / freight</span><span>{{ inr(f.transportCharge) }}</span></div> }
-            <div class="flex justify-between font-medium"><span>Taxable</span><span>{{ inr(t().taxable) }}</span></div>
+          <section class="qs !gap-2 text-[15px] tabular-nums" aria-label="Totals breakdown">
+            <b class="mb-1 text-[16px] font-semibold">Breakdown</b>
+            <div class="flex justify-between"><span class="text-[#5B6678]">Subtotal ({{ t().totalKg }} kg{{ f.quoteType === 'Wholesale' ? ' · ' + tonnes(t().totalKg) + ' t' : '' }})</span><span>{{ inr(t().subtotal) }}</span></div>
+            @if (t().discount) { <div class="flex justify-between"><span class="text-[#5B6678]">Discount</span><span>−{{ inr(t().discount) }}</span></div> }
+            @if (f.cuttingCharge) { <div class="flex justify-between"><span class="text-[#5B6678]">Cutting</span><span>{{ inr(f.cuttingCharge) }}</span></div> }
+            @if (f.loadingCharge) { <div class="flex justify-between"><span class="text-[#5B6678]">Loading</span><span>{{ inr(f.loadingCharge) }}</span></div> }
+            @if (f.unloadingCharge) { <div class="flex justify-between"><span class="text-[#5B6678]">Unloading</span><span>{{ inr(f.unloadingCharge) }}</span></div> }
+            @if (f.transportCharge) { <div class="flex justify-between"><span class="text-[#5B6678]">Cartage / freight</span><span>{{ inr(f.transportCharge) }}</span></div> }
+            <div class="flex justify-between font-semibold"><span>Taxable</span><span>{{ inr(t().taxable) }}</span></div>
             @for (g of t().taxGroups; track g.rate) {
-              @if (f.interState) { <div class="flex justify-between"><span class="text-[#6B7485]">IGST {{ g.rate }}%</span><span>{{ inr(g.igst) }}</span></div> }
+              @if (f.interState) { <div class="flex justify-between"><span class="text-[#5B6678]">IGST {{ g.rate }}%</span><span>{{ inr(g.igst) }}</span></div> }
               @else {
-                <div class="flex justify-between"><span class="text-[#6B7485]">CGST {{ g.rate / 2 }}%</span><span>{{ inr(g.cgst) }}</span></div>
-                <div class="flex justify-between"><span class="text-[#6B7485]">SGST {{ g.rate / 2 }}%</span><span>{{ inr(g.sgst) }}</span></div>
+                <div class="flex justify-between"><span class="text-[#5B6678]">CGST {{ g.rate / 2 }}%</span><span>{{ inr(g.cgst) }}</span></div>
+                <div class="flex justify-between"><span class="text-[#5B6678]">SGST {{ g.rate / 2 }}%</span><span>{{ inr(g.sgst) }}</span></div>
               }
             }
-            @if (t().roundOff) { <div class="flex justify-between"><span class="text-[#6B7485]">Round off</span><span>{{ inr(t().roundOff) }}</span></div> }
-            <div class="mt-1 flex justify-between border-t border-[#EEF0F3] pt-2 text-[16px] font-medium"><span>Grand total</span><span>₹ {{ inr(t().grandTotal) }}</span></div>
-            <p class="text-[12.5px] text-[#6B7485]">{{ words() }}</p>
-          </div>
+            @if (t().roundOff) { <div class="flex justify-between"><span class="text-[#5B6678]">Round off</span><span>{{ inr(t().roundOff) }}</span></div> }
+            <div class="mt-1 flex justify-between border-t border-[#E3E7EE] pt-3 text-[17px] font-bold"><span>Grand total</span><span>₹ {{ inr(t().grandTotal) }}</span></div>
+          </section>
         </aside>
       </div>
 
-      <!-- Phones: the total and the actions stay in view while editing. -->
-      <div class="fixed inset-x-0 bottom-0 z-30 grid gap-2 border-t border-[#E3E6EB] bg-white px-4 pb-3 pt-2 shadow-[0_-4px_12px_rgba(0,0,0,.06)] lg:hidden">
-        <div class="flex items-baseline justify-between gap-3">
-          <small class="text-[12px] text-[#6B7485]">{{ f.items.length }} line{{ f.items.length === 1 ? '' : 's' }} · {{ t().totalKg }} kg</small>
-          <b class="whitespace-nowrap text-[18px] font-medium tabular-nums">₹ {{ inr(t().grandTotal) }}</b>
+      <!-- Phones: what is missing, the total and the actions stay in view while editing. -->
+      <div class="qbottom lg:hidden">
+        <div class="flex items-center justify-between gap-3">
+          @if (prog().todo.length) { <button type="button" class="qchip qchip-need" (click)="jump(prog().todo[0].id)">{{ prog().todo.length }} to fill · next ›</button> }
+          @else { <span class="qchip qchip-ok">✓ Ready to save</span> }
+          <span class="text-right leading-tight"><b class="block whitespace-nowrap text-[22px] font-bold tabular-nums text-primary">₹ {{ inr(t().grandTotal) }}</b>
+            <small class="text-[12.5px] text-[#5B6678]">{{ f.items.length }} line{{ f.items.length === 1 ? '' : 's' }} · {{ t().totalKg }} kg</small></span>
         </div>
         <div class="flex gap-2"><ng-container *ngTemplateOutlet="actions" /></div>
       </div>
 
       <ng-template #actions>
         @if (dirty()) { <span class="pill pill-warn hidden sm:inline-block">Unsaved</span> }
-        <button type="button" class="abtn abtn-pri flex-1 justify-center lg:flex-none" [disabled]="busy() || !dirty()" (click)="save()">{{ busy() ? 'Saving…' : 'Save' }}</button>
+        <button type="button" class="qbtn qbtn-pri flex-1 lg:flex-none" [disabled]="busy() || !dirty()" (click)="save()">{{ busy() ? 'Saving…' : 'Save' }}</button>
         @if (saved()) {
-          <button type="button" class="abtn flex-1 justify-center lg:flex-none" [disabled]="busy() || dirty()" (click)="pdf()"><ss-icon name="file" [size]="14" />PDF</button>
-          <button type="button" class="abtn flex-1 justify-center lg:flex-none" [disabled]="busy() || dirty()" (click)="send()"><ss-icon name="wa" [size]="14" />Send</button>
+          <button type="button" class="qbtn flex-1 lg:flex-none" [disabled]="busy() || dirty()" (click)="pdf()"><ss-icon name="file" [size]="16" />PDF</button>
+          <button type="button" class="qbtn flex-1 lg:flex-none" [disabled]="busy() || dirty()" (click)="send()"><ss-icon name="wa" [size]="16" />Send</button>
         }
       </ng-template>
 
       <ng-template #statusSelect>
         @if (saved(); as s) {
-          <select class="ainput !h-[34px] !w-auto" [ngModel]="s.status" (ngModelChange)="setStatus($event)" [disabled]="busy() || dirty()" aria-label="Status">
+          <select class="ainput !min-h-[42px] !w-auto" [ngModel]="s.status" (ngModelChange)="setStatus($event)" [disabled]="busy() || dirty()" aria-label="Status">
             @for (st of statuses; track st) { <option [value]="st">{{ st }}</option> }
           </select>
         }
       </ng-template>
-    }`,
+    }
+    </div>`,
 })
 export class QuoteEditComponent {
   private readonly api = inject(AdminApiService);
@@ -244,6 +281,35 @@ export class QuoteEditComponent {
     const lines = this.figs().map((x) => ({ kg: x.kg, amount: x.gstRate === null ? null : x.amount, gstRate: x.gstRate ?? 0 }));
     return quoteTotals(lines, this.f, this.f.gstRate, this.f.interState);
   });
+  /** What the quotation still needs, in page order: type, customer, then every line's unfilled fields. */
+  protected readonly prog = computed(() => {
+    this.rev();
+    const figs = this.figs();
+    const lineList = figs.map((fig, i) => lineChecks(this.f.items[i], i, fig));
+    const all = [
+      ...headChecks(this.f),
+      ...lineList.flatMap((cs, i) => cs.map((c) => ({ ...c, label: `Line ${i + 1}: ${c.label}` }))),
+    ];
+    const done = all.filter((c) => c.done).length;
+    return {
+      total: all.length, done, pct: all.length ? Math.round((done / all.length) * 100) : 0, todo: all.filter((c) => !c.done),
+      linesDone: lineList.filter((cs) => cs.every((c) => c.done)).length,
+    };
+  });
+  protected readonly custDone = computed(() => { this.rev(); const h = headChecks(this.f); return h[1].done && h[2].done; });
+  protected readonly linesDone = computed(() => this.f.items.length > 0 && this.prog().linesDone === this.f.items.length);
+  protected nameOk(): boolean { return headChecks(this.f)[1].done; }
+  protected phoneOk(): boolean { return headChecks(this.f)[2].done; }
+  protected has(v: string | null | undefined): boolean { return !!v && v.trim().length > 0; }
+
+  /** Scrolls to a field and puts the cursor in it. */
+  protected jump(id: string): void {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => el.focus({ preventScroll: true }), 450);
+  }
+
   protected readonly missing = computed(() => this.figs().filter((x) => x.amount === null || x.gstRate === null).length);
   protected readonly words = computed(() => (this.t().grandTotal > 0 ? inWords(this.t().grandTotal) : ''));
   protected readonly paymentChoice = computed(() => {
