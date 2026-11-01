@@ -41,7 +41,7 @@ const DEFAULT_SLIDES: HeroView[] = [
 
 const WIDTHS = [640, 1280, 1920];
 const INTERVAL_MS = 6000;
-const TRANSITION_MS = 1100;
+const TRANSITION_MS = 1000;
 const SWIPE_PX = 40;
 
 /**
@@ -50,8 +50,8 @@ const SWIPE_PX = 40;
  * underneath, which keeps the message readable on phones where the lettering in the picture gets small.
  *
  * Slides come from the admin (Home slideshow); until some are saved the four built-in banners show.
- * Motion: the next banner is revealed by a wipe in the direction of travel while the old one drifts away and dims,
- * a band of light sweeps across like light on polished steel, the picture settles in with a slow push, the heading
+ * Motion: the next banner is revealed by a wipe in the direction of travel, over an old banner that stays put (no fades, no gaps),
+ * a band of light rides the leading edge like light on polished steel, the picture settles in with a slow push, the heading
  * rises word by word, and each progress bar fills over the slide's 6 s. The bar's CSS animation is the timer, so
  * pausing (pointer over it, focus inside it, tab hidden) pauses the clock. Visitors who prefer reduced motion get
  * plain, instant changes and no automatic advance. Swipe, arrows, keys and the progress bars all work.
@@ -79,18 +79,20 @@ const SWIPE_PX = 40;
                [class.hero-back]="dir() < 0"
                role="group" aria-roledescription="slide" [attr.aria-label]="(i + 1) + ' of ' + slides().length"
                [attr.aria-hidden]="i === position() ? null : 'true'">
-            @if (s.media) {
-              <ss-image class="hero-pic block h-full w-full" [media]="s.media" [alt]="s.alt" sizes="100vw" [priority]="i === 0" />
-            } @else {
-              <img class="hero-pic h-full w-full object-cover" draggable="false"
-                   [src]="src(s, 1280)" [attr.srcset]="srcset(s)" sizes="100vw"
-                   width="3840" height="1400" [alt]="s.alt"
-                   [attr.loading]="i === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="i === 0 ? 'high' : null" decoding="async" />
-            }
+            <div class="hero-inner absolute inset-0">
+              @if (s.media) {
+                <ss-image class="hero-pic block h-full w-full" [media]="s.media" [alt]="s.alt" sizes="100vw" [priority]="i === 0" />
+              } @else {
+                <img class="hero-pic h-full w-full object-cover" draggable="false"
+                     [src]="src(s, 1280)" [attr.srcset]="srcset(s)" sizes="100vw"
+                     width="3840" height="1400" [alt]="s.alt"
+                     [attr.loading]="i === 0 ? 'eager' : 'lazy'" [attr.fetchpriority]="i === 0 ? 'high' : null" decoding="async" />
+              }
+            </div>
           </div>
         }
         @if (prev() !== null) {
-          @for (t of [tick()]; track t) { <span class="hero-glint pointer-events-none absolute inset-0 z-[3]" aria-hidden="true"></span> }
+          @for (t of [tick()]; track t) { <span class="hero-glint pointer-events-none absolute inset-y-0 z-[3]" [class.hero-glint-back]="dir() < 0" aria-hidden="true"></span> }
         }
         @if (slides().length > 1) {
           <button type="button" class="absolute top-1/2 z-[4] grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/85 text-ink shadow-[0_2px_10px_rgb(0_0_0/.2)] transition-colors hover:bg-white max-sm:hidden left-[var(--pad)]" aria-label="Previous slide" (click)="step(-1)">
@@ -142,26 +144,31 @@ const SWIPE_PX = 40;
       </div>
     </section>`,
   styles: `
-    /* Slides stack; only the shown one (and the one leaving) is visible. */
-    .hero-slide { visibility: hidden; z-index: 0; }
+    /* Slides stack; only the shown one (and the one it is covering) is visible. Nothing is faded or dimmed: the new banner slides
+       over the old one, which stays exactly as it was, so there is never a gap or a flash of the background behind them. */
+    .hero-slide { visibility: hidden; z-index: 0; overflow: hidden; }
     .hero-slide.hero-active, .hero-slide.hero-leaving { visibility: visible; }
     .hero-slide.hero-active { z-index: 2; }
     .hero-slide.hero-leaving { z-index: 1; pointer-events: none; }
-    .hero-slide.hero-active .hero-pic { animation: hero-push 7100ms cubic-bezier(.2, 0, .2, 1) both; }
+    .hero-slide.hero-in, .hero-slide.hero-in .hero-inner { will-change: transform; }
 
-    /* The next banner is wiped in from the side we are travelling towards, as its picture settles from a slight zoom. */
-    .hero-slide.hero-in { animation: hero-wipe 1100ms cubic-bezier(.77, 0, .18, 1) both; }
-    .hero-slide.hero-in.hero-back { animation-name: hero-wipe-back; }
-    .hero-slide.hero-in .hero-pic { animation: hero-settle 1500ms cubic-bezier(.2, .7, .2, 1) both, hero-push 7100ms 1500ms cubic-bezier(.2, 0, .2, 1) both; }
-    /* The old one slides away a little and dims, so the wipe reads as depth rather than a cut. */
-    .hero-slide.hero-leaving { animation: hero-away 1100ms cubic-bezier(.77, 0, .18, 1) both; }
-    .hero-slide.hero-leaving.hero-back { animation-name: hero-away-back; }
+    /* The reveal: the window slides in from one side while the picture inside slides the opposite way by the same amount and
+       on the same curve, so the picture itself holds still and is uncovered. Transforms only, so it runs on the GPU. */
+    .hero-slide.hero-in { animation: hero-win 1000ms cubic-bezier(.65, 0, .25, 1) both; }
+    .hero-slide.hero-in .hero-inner { animation: hero-pic 1000ms cubic-bezier(.65, 0, .25, 1) both; }
+    .hero-slide.hero-in.hero-back { animation-name: hero-win-back; }
+    .hero-slide.hero-in.hero-back .hero-inner { animation-name: hero-pic-back; }
 
-    /* A band of light crossing the banner, like a reflection moving over polished steel. */
-    .hero-glint {
-      background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / .38) 49%, rgb(255 255 255 / .12) 53%, transparent 62%);
-      transform: translateX(-120%); animation: hero-glint 1400ms cubic-bezier(.4, 0, .2, 1) 80ms both; mix-blend-mode: soft-light;
+    /* The slow push. The same animation list is on the shown and the leaving slide, so when a slide starts to leave its animation
+       carries on instead of snapping back to its starting size. */
+    .hero-slide.hero-active .hero-pic, .hero-slide.hero-leaving .hero-pic {
+      animation: hero-settle 1400ms cubic-bezier(.2, .7, .2, 1) both, hero-push 7200ms 1400ms cubic-bezier(.2, 0, .2, 1) both;
     }
+
+    /* A band of light on the leading edge of the wipe: same length, same curve, so it travels with the edge. */
+    .hero-glint { left: 0; width: 30%; background: linear-gradient(90deg, transparent, rgb(255 255 255 / .28) 55%, rgb(255 255 255 / .05) 85%, transparent);
+      animation: hero-glint 1000ms cubic-bezier(.65, 0, .25, 1) both; will-change: transform; }
+    .hero-glint.hero-glint-back { left: auto; right: 0; animation-name: hero-glint-back; transform: scaleX(-1); }
 
     /* Heading: each word rises out of a mask; then the line under it and the button. */
     .hero-word-mask { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; }
@@ -173,13 +180,14 @@ const SWIPE_PX = 40;
     .hero-fill { transform: scaleX(0); transform-origin: left; }
     .hero-fill-run { animation-name: hero-fill; animation-timing-function: linear; animation-fill-mode: forwards; }
 
-    @keyframes hero-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-    @keyframes hero-wipe-back { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
-    @keyframes hero-away { from { transform: translateX(0); filter: brightness(1); } to { transform: translateX(-5%); filter: brightness(.55); } }
-    @keyframes hero-away-back { from { transform: translateX(0); filter: brightness(1); } to { transform: translateX(5%); filter: brightness(.55); } }
-    @keyframes hero-settle { from { transform: scale(1.08); } to { transform: scale(1); } }
-    @keyframes hero-push { from { transform: scale(1); } to { transform: scale(1.025); } }
-    @keyframes hero-glint { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+    @keyframes hero-win { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+    @keyframes hero-pic { from { transform: translate3d(100%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+    @keyframes hero-win-back { from { transform: translate3d(100%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+    @keyframes hero-pic-back { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+    @keyframes hero-settle { from { transform: scale(1.06); } to { transform: scale(1); } }
+    @keyframes hero-push { from { transform: scale(1); } to { transform: scale(1.02); } }
+    @keyframes hero-glint { from { transform: translate3d(-50%, 0, 0); } to { transform: translate3d(283.3%, 0, 0); } }
+    @keyframes hero-glint-back { from { transform: scaleX(-1) translate3d(-50%, 0, 0); } to { transform: scaleX(-1) translate3d(283.3%, 0, 0); } }
     @keyframes hero-rise { from { transform: translateY(110%); } to { transform: translateY(0); } }
     @keyframes hero-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes hero-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
@@ -254,7 +262,7 @@ export class HeroSliderComponent {
     this.index.set(to);
     this.tick.update((t) => t + 1);
     clearTimeout(this.settle);
-    this.settle = setTimeout(() => this.prev.set(null), TRANSITION_MS + 100);
+    this.settle = setTimeout(() => this.prev.set(null), TRANSITION_MS + 150);
   }
 
   protected words(title: string): string[] { return title.split(' ').filter(Boolean); }
