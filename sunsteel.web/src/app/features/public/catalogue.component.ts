@@ -6,7 +6,6 @@ import { SeoService } from '../../core/services/seo.service';
 import { SiteService } from '../../core/services/site.service';
 import { breadcrumbLd } from '../../core/services/structured-data';
 import { IconComponent } from '../../shared/icon.component';
-import { MetalComponent } from '../../shared/metal.component';
 
 const INDUSTRIES = ['Machine shop / CNC', 'Fabrication & structural', 'Pumps & valves', 'Textile & spinning', 'Printing & converting', 'Food & pharma', 'Wind & power', 'General maintenance', 'Trader / reseller', 'Other'];
 
@@ -16,19 +15,14 @@ const INDUSTRIES = ['Machine shop / CNC', 'Fabrication & structural', 'Pumps & v
  */
 @Component({
   selector: 'ss-catalogue',
-  imports: [FormsModule, IconComponent, MetalComponent],
+  imports: [FormsModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="grid pt-[84px] lg:min-h-[min(92svh,820px)] lg:grid-cols-2">
-      <div class="relative min-h-[300px]">
-        <ss-metal kind="metal-dark" class="!absolute inset-0" />
-        <div class="on-dark absolute inset-0 grid place-items-center p-10 text-on-primary">
-          <div class="w-[min(300px,70%)] border border-gold-light/50 p-8 text-center shadow-[20px_20px_0_-1px_rgba(0,0,0,.25)]">
-            <span class="label !text-gold-light">Sun Steel Traders</span>
-            <b class="mt-6 block font-serif text-[34px] font-medium leading-none">Catalogue <em class="text-gold-light">&amp; weight chart</em></b>
-            <span class="label mt-8">93 grades · 7 families</span>
-          </div>
-        </div>
+      <div class="relative grid min-h-[360px] place-items-center overflow-hidden bg-primary p-[clamp(24px,5vw,64px)]">
+        <img src="/hero/cutting-1280.webp" alt="" class="absolute inset-0 h-full w-full scale-110 object-cover blur-[6px]" fetchpriority="high" />
+        <div class="absolute inset-0 bg-primary/72"></div>
+        <img src="/about/catalogue-cover.webp" width="827" height="1169" alt="Cover of the Sun Steel Traders product catalogue and weight chart" class="relative w-[min(300px,62%)] rounded-[2px] shadow-[0_28px_60px_-12px_rgba(0,0,0,.65)] lg:-rotate-2" />
       </div>
       <div class="flex flex-col justify-center px-[var(--pad)] py-[clamp(40px,5vw,80px)] lg:pl-[clamp(32px,5vw,80px)]">
         <span class="label label-accent mb-4">Catalogue</span>
