@@ -83,6 +83,9 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   wa.me. Sent/Accepted/Rejected moves the request to Quoted/Won/Lost. Customer must supply: finished-product GST rate, bank details, HSN codes,
   full MS pipe schedule (only 5 sample sizes seeded). Browser checks: `npx esbuild src/app/core/quote/quote-lines.ts --bundle --format=esm --outfile=/tmp/ql.mjs`
   and `quote-math.ts` → `/tmp/qm.mjs`, then `node src/app/core/quote/quote.check.mjs /tmp/ql.mjs`.
+  Quote type (migration 017): Project (pure trading, supplier to customer), Wholesale (tonnes), Retail (kg), Cut pieces (includes cutting) is a
+  tag with defaults, all priced per kg: cutting extra opens for Cut pieces, loading/unloading hidden for Project, tonnes shown for Wholesale; type
+  prints on the PDF and filters the list. Per-type pricing rules, if the customer has any, are not built.
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

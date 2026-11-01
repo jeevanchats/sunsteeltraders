@@ -15,7 +15,7 @@ namespace sunsteel.api.Features.Quotes;
 
 public interface IQuoteService
 {
-    Task<PagedResult<QuoteRowDto>> ListAsync(string? status, string? q, int page, int pageSize, CancellationToken ct = default);
+    Task<PagedResult<QuoteRowDto>> ListAsync(string? status, string? type, string? q, int page, int pageSize, CancellationToken ct = default);
     Task<QuoteDetailDto> GetAsync(long id, CancellationToken ct = default);
     Task<QuoteLookupsDto> LookupsAsync(CancellationToken ct = default);
     Task<QuoteDetailDto> CreateAsync(long actorId, SaveQuoteRequest r, CancellationToken ct = default);
@@ -33,6 +33,7 @@ public interface IQuoteService
 public sealed partial class QuoteService : IQuoteService
 {
     public static readonly string[] Statuses = ["Draft", "Sent", "Accepted", "Rejected"];
+    public static readonly string[] QuoteTypes = ["Project", "Wholesale", "Retail", "CutPieces"];
     public static readonly string[] ItemTypes = ["Calculated", "ManualWeight", "ManualUnit"];
     public static readonly string[] Units = ["nos", "pcs", "set", "sheet", "metre", "ft", "kg"];
     private const string HomeState = "33"; // Tamil Nadu: first two digits of a GSTIN
@@ -52,17 +53,18 @@ public sealed partial class QuoteService : IQuoteService
 
     // --- reads -----------------------------------------------------------------
 
-    public async Task<PagedResult<QuoteRowDto>> ListAsync(string? status, string? q, int page, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<QuoteRowDto>> ListAsync(string? status, string? type, string? q, int page, int pageSize, CancellationToken ct = default)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 10, 100);
         var query = _db.Quotes.AsNoTracking().AsQueryable();
         if (!string.IsNullOrWhiteSpace(status)) query = query.Where(x => x.Status == status);
+        if (!string.IsNullOrWhiteSpace(type)) query = query.Where(x => x.QuoteType == type);
         if (!string.IsNullOrWhiteSpace(q))
             query = query.Where(x => x.CustomerName.Contains(q) || x.Phone.Contains(q) || x.Reference.Contains(q) || (x.Company != null && x.Company.Contains(q)));
         var total = await query.LongCountAsync(ct);
         var rows = await query.OrderByDescending(x => x.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(x => new QuoteRowDto(x.QuoteId, x.Reference, x.Status, x.CustomerName, x.Company, x.Phone, x.Items.Count, x.GrandTotal, x.QuoteDate,
+            .Select(x => new QuoteRowDto(x.QuoteId, x.Reference, x.Status, x.QuoteType, x.CustomerName, x.Company, x.Phone, x.Items.Count, x.GrandTotal, x.QuoteDate,
                 _db.Leads.Where(l => l.LeadId == x.LeadId).Select(l => l.Reference).FirstOrDefault()))
             .ToListAsync(ct);
         return new PagedResult<QuoteRowDto> { Items = rows, Page = page, PageSize = pageSize, TotalCount = total };
@@ -74,7 +76,7 @@ public sealed partial class QuoteService : IQuoteService
             ?? throw new AppException("Quotation not found.", StatusCodes.Status404NotFound);
         var leadRef = x.LeadId is { } lid ? await _db.Leads.AsNoTracking().Where(l => l.LeadId == lid).Select(l => l.Reference).FirstOrDefaultAsync(ct) : null;
         var settings = await SettingsAsync(ct);
-        return new QuoteDetailDto(x.QuoteId, x.Reference, x.Status, x.LeadId, leadRef,
+        return new QuoteDetailDto(x.QuoteId, x.Reference, x.Status, x.QuoteType, x.LeadId, leadRef,
             x.QuoteDate, x.ValidDays, x.QuoteDate.AddDays(x.ValidDays),
             x.CustomerName, x.Company, x.Gstin, x.Phone, x.Email, x.City, x.Address,
             x.CuttingCharge, x.LoadingCharge, x.UnloadingCharge, x.TransportCharge, x.Discount, x.GstRate, x.InterState,
@@ -116,7 +118,7 @@ public sealed partial class QuoteService : IQuoteService
 
         var quote = new Quote
         {
-            LeadId = lead.LeadId, QuoteDate = Today(), ValidDays = d.ValidDays,
+            LeadId = lead.LeadId, QuoteType = lead.Items.Any(i => i.CutToSize) ? "CutPieces" : "Retail", QuoteDate = Today(), ValidDays = d.ValidDays,
             GstRate = d.GstRaw ?? 0, Terms = WithDays(d.Terms, d.ValidDays), PaymentTerms = d.PaymentTerms, BankDetails = d.BankDetails,
             CustomerName = lead.Name, Company = lead.Company, Gstin = lead.Gstin, Phone = lead.Phone, Email = lead.Email, City = lead.City,
             InterState = IsInterState(lead.Gstin), CreatedBy = actorId, CreatedAt = DateTime.UtcNow, Reference = "pending",
@@ -224,6 +226,8 @@ public sealed partial class QuoteService : IQuoteService
         if (items.Count == 0) throw new AppException("Add at least one line.");
         if (items.Count > 100) throw new AppException("Up to 100 lines per quotation.");
 
+        if (!QuoteTypes.Contains(r.QuoteType ?? "")) throw new AppException("Choose the quotation type: project, wholesale, retail or cut pieces.");
+        q.QuoteType = r.QuoteType;
         q.CustomerName = name;
         q.Company = Cut(r.Company, 150);
         q.Gstin = gstin;

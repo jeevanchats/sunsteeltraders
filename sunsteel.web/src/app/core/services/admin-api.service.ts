@@ -7,6 +7,7 @@ import { MediaItem } from '../models/media.model';
 import { Theme } from '../models/site.model';
 import { HsnRef, MaterialRef, MsPipeRef, SectionRef } from '../quote/quote-lines';
 import { ItemType, QuoteTotals } from '../quote/quote-math';
+import { QuoteType } from '../quote/quote-types';
 
 export interface StaffUser {
   userId: number;
@@ -58,8 +59,9 @@ export interface QuoteLookups {
   materials: MaterialRef[]; sections: SectionRef[]; msPipes: MsPipeRef[]; hsn: HsnRef[]; products: QuoteProduct[]; defaults: QuoteDefaults;
 }
 export interface QuoteSettings { gstRaw: number | null; gstFinished: number | null; validDays: number; weightDecimals: number; paymentTerms: string | null; bankDetails: string | null; terms: string | null }
-export interface QuoteRow { quoteId: number; reference: string; status: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
+export interface QuoteRow { quoteId: number; reference: string; status: string; quoteType: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
 export interface SaveQuote {
+  quoteType: QuoteType | '';
   customerName: string; company: string | null; gstin: string | null; phone: string; email: string | null; city: string | null; address: string | null;
   quoteDate: string | null; validDays: number;
   cuttingCharge: number; loadingCharge: number; unloadingCharge: number; transportCharge: number; discount: number;
@@ -162,7 +164,7 @@ export class AdminApiService {
     return this.http.get(`${this.base}/lead-files/${fileId}`, { responseType: 'blob' });
   }
 
-  quotes(q: { status?: string; q?: string; page?: number }): Observable<Paged<QuoteRow>> {
+  quotes(q: { status?: string; type?: string; q?: string; page?: number }): Observable<Paged<QuoteRow>> {
     const params: Record<string, string> = {};
     for (const [k, v] of Object.entries(q)) if (v !== undefined && v !== '') params[k] = String(v);
     return this.http.get<ApiResponse<Paged<QuoteRow>>>(`${this.base}/quotes`, { params }).pipe(map((r) => r.data!));

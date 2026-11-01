@@ -59,7 +59,8 @@ public static class QuotePdf
         foreach (var w in wrapped) { p.Text(w, M, y, 8.5f, color: new SKColor(0xD9, 0xDD, 0xE5)); y += 11.5f; }
 
         p.Text("QUOTATION", W - M, 36, 16, bold: true, color: p.AccentOnDark, align: SKTextAlign.Right);
-        var ry = 54f;
+        p.Text(TypeLabel(q.QuoteType), W - M, 50, 8.5f, bold: true, color: SKColors.White, align: SKTextAlign.Right);
+        var ry = 64f;
         foreach (var (k, v) in new[] { ("No.", q.Reference), ("Date", q.QuoteDate.ToString("dd-MM-yyyy")), ("Valid until", q.ValidUntil.ToString("dd-MM-yyyy")) })
         {
             p.Text(k, W - M - 140, ry, 9, color: new SKColor(0xD9, 0xDD, 0xE5));
@@ -94,6 +95,14 @@ public static class QuotePdf
         p.Text("Amount", ColAmt - 4, p.Y, 8.5f, bold: true, color: SKColors.White, align: SKTextAlign.Right);
         p.Y += 18;
     }
+
+    private static string TypeLabel(string type) => type switch
+    {
+        "Project" => "PROJECT",
+        "Wholesale" => "WHOLESALE",
+        "CutPieces" => "CUT PIECES",
+        _ => "RETAIL",
+    };
 
     private static string Kg(decimal v, int decimals) => v.ToString("#,##0." + new string('0', decimals), In).TrimEnd('.');
 
@@ -132,7 +141,9 @@ public static class QuotePdf
     private static void Totals(Writer p, QuoteDetailDto q)
     {
         var t = q.Totals;
-        var rows = new List<(string Label, decimal Amount, bool Bold)> { ($"Subtotal ({Kg(t.TotalKg, 1)} kg)", t.Subtotal, false) };
+        // Wholesale is bought by the tonne, so the weight is also shown in tonnes.
+        var weight = q.QuoteType == "Wholesale" ? $"{Kg(t.TotalKg, 1)} kg · {(t.TotalKg / 1000).ToString("#,##0.###", In)} t" : $"{Kg(t.TotalKg, 1)} kg";
+        var rows = new List<(string Label, decimal Amount, bool Bold)> { ($"Subtotal ({weight})", t.Subtotal, false) };
         if (t.Discount > 0) rows.Add(("Less: discount", -t.Discount, false));
         if (q.CuttingCharge > 0) rows.Add(("Cutting charges", q.CuttingCharge, false));
         if (q.LoadingCharge > 0) rows.Add(("Loading charges", q.LoadingCharge, false));

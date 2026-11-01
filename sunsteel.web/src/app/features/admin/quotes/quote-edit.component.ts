@@ -8,6 +8,7 @@ import { inr, inWords, isInterState, quoteTotals } from '../../../core/quote/quo
 import { rememberRates, rememberText } from '../../../core/quote/quote-memory';
 import { AdminApiService, QuoteDetail, QuoteItemDto, QuoteItemInput, QuoteLookups, SaveQuote } from '../../../core/services/admin-api.service';
 import { SeoService } from '../../../core/services/seo.service';
+import { QUOTE_TYPES, QuoteType, quoteTypeLabel, tonnes } from '../../../core/quote/quote-types';
 import { IconComponent } from '../../../shared/icon.component';
 import { QuoteLineComponent } from './quote-line.component';
 
@@ -35,7 +36,7 @@ const CUSTOM = 'Custom';
         <div>
           <h1 class="text-[22px] font-medium">{{ saved()?.reference ?? 'New quotation' }}</h1>
           <p class="mt-0.5 text-[13.5px] text-[#6B7485]">
-            @if (saved(); as s) { {{ s.status }} · valid until {{ s.validUntil }}@if (s.leadReference) { · for request <a routerLink="/admin/leads" class="underline">{{ s.leadReference }}</a> } }
+            @if (saved(); as s) { {{ s.status }} · {{ typeLabel(s.quoteType) }} · valid until {{ s.validUntil }}@if (s.leadReference) { · for request <a routerLink="/admin/leads" class="underline">{{ s.leadReference }}</a> } }
             @else { Fill in the customer and lines, then save. }
           </p>
         </div>
@@ -54,6 +55,18 @@ const CUSTOM = 'Custom';
 
       <div class="grid gap-5 pb-24 xl:grid-cols-[minmax(0,1fr)_340px] lg:pb-0">
         <div class="grid content-start gap-5">
+          <fieldset class="card grid gap-3">
+            <legend class="sr-only">Quotation type</legend>
+            <b class="font-medium">Type of quotation *</b>
+            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="group" aria-label="Quotation type">
+              @for (qt of types; track qt.key) {
+                <button type="button" class="rounded-lg border p-3 text-left text-[13px]" [class.border-primary]="f.quoteType === qt.key" [class.bg-primary]="f.quoteType === qt.key" [class.text-on-primary]="f.quoteType === qt.key"
+                  [class.border-[#E3E6EB]]="f.quoteType !== qt.key" [attr.aria-pressed]="f.quoteType === qt.key" (click)="setQuoteType(qt.key)">
+                  <b class="block text-[14px] font-medium">{{ qt.label }}</b><span class="mt-0.5 block opacity-80">{{ qt.hint }}</span></button>
+              }
+            </div>
+          </fieldset>
+
           <fieldset class="card grid gap-4">
             <legend class="sr-only">Customer</legend>
             <b class="font-medium">Customer</b>
@@ -106,10 +119,11 @@ const CUSTOM = 'Custom';
           <fieldset class="card grid gap-3">
             <legend class="sr-only">Extras</legend>
             <b class="font-medium">Extras & GST</b>
-            @for (c of charges; track c[0]) {
+            @for (c of visibleCharges(); track c[0]) {
               <label class="alabel grid-cols-[1fr_120px] items-center !grid">{{ c[1] }} (₹)
                 <input class="ainput text-right" type="number" min="0" step="0.01" inputmode="decimal" [name]="c[0]" [ngModel]="num(c[0])" (ngModelChange)="setNum(c[0], $event)" /></label>
             }
+            @if (!allExtras()) { <button type="button" class="ahint text-left underline" (click)="allExtras.set(true)">Show all extras</button> }
             <div class="grid grid-cols-2 gap-3">
               <label class="alabel">GST on extras %<input class="ainput" type="number" min="0" max="28" step="0.01" name="gstRate" [(ngModel)]="f.gstRate" (ngModelChange)="touch()" /></label>
               <label class="alabel">Valid (days)<input class="ainput" type="number" min="1" max="90" name="valid" [(ngModel)]="f.validDays" (ngModelChange)="touch()" /></label>
@@ -120,7 +134,7 @@ const CUSTOM = 'Custom';
 
           <div class="card grid gap-1.5 text-[13.5px] tabular-nums" aria-live="polite">
             <b class="mb-1 font-medium">Totals</b>
-            <div class="flex justify-between"><span class="text-[#6B7485]">Subtotal ({{ t().totalKg }} kg)</span><span>{{ inr(t().subtotal) }}</span></div>
+            <div class="flex justify-between"><span class="text-[#6B7485]">Subtotal ({{ t().totalKg }} kg{{ f.quoteType === 'Wholesale' ? ' · ' + tonnes(t().totalKg) + ' t' : '' }})</span><span>{{ inr(t().subtotal) }}</span></div>
             @if (t().discount) { <div class="flex justify-between"><span class="text-[#6B7485]">Discount</span><span>−{{ inr(t().discount) }}</span></div> }
             @if (f.cuttingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Cutting</span><span>{{ inr(f.cuttingCharge) }}</span></div> }
             @if (f.loadingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Loading</span><span>{{ inr(f.loadingCharge) }}</span></div> }
@@ -178,6 +192,10 @@ export class QuoteEditComponent {
     ['cuttingCharge', 'Cutting'], ['loadingCharge', 'Loading'], ['unloadingCharge', 'Unloading'], ['transportCharge', 'Freight'], ['discount', 'Discount (less)'],
   ];
   protected readonly inr = inr;
+  protected readonly types = QUOTE_TYPES;
+  protected readonly typeLabel = quoteTypeLabel;
+  protected readonly tonnes = tonnes;
+  protected readonly allExtras = signal(false);
   protected readonly loading = signal(true);
   protected readonly busy = signal(false);
   protected readonly dirty = signal(false);
@@ -237,6 +255,18 @@ export class QuoteEditComponent {
     if (this.dirty()) e.preventDefault();
   }
 
+  protected setQuoteType(t: QuoteType): void { this.f.quoteType = t; this.touch(); }
+
+  /**
+   * Extras that apply to this type of quotation: cutting for cut pieces, loading and unloading unless it is a project
+   * (supplied direct, never handled here). Anything with a value, or after "Show all extras", is always shown.
+   */
+  protected visibleCharges(): [string, string][] {
+    const t = this.f.quoteType;
+    return this.charges.filter((c) => this.allExtras() || this.num(c[0]) !== 0 || c[0] === 'transportCharge' || c[0] === 'discount'
+      || (c[0] === 'cuttingCharge' && t === 'CutPieces') || ((c[0] === 'loadingCharge' || c[0] === 'unloadingCharge') && t !== 'Project'));
+  }
+
   protected touch(fresh = false): void { this.rev.update((v) => v + 1); if (!fresh) this.dirty.set(true); }
   protected num(k: string): number { return (this.f as unknown as Record<string, number>)[k]; }
   protected setNum(k: string, v: number): void { (this.f as unknown as Record<string, number>)[k] = Number(v) || 0; this.touch(); }
@@ -262,6 +292,7 @@ export class QuoteEditComponent {
   }
 
   protected save(): void {
+    if (!this.f.quoteType) { this.message.set({ ok: false, text: 'Choose the type of quotation first: project, wholesale, retail or cut pieces.' }); return; }
     this.busy.set(true);
     this.message.set(null);
     const id = this.saved()?.quoteId;
@@ -323,7 +354,7 @@ export class QuoteEditComponent {
   private load(q: QuoteDetail): void {
     this.saved.set(q);
     this.f = {
-      customerName: q.customerName, company: q.company, gstin: q.gstin, phone: q.phone, email: q.email, city: q.city, address: q.address,
+      quoteType: q.quoteType as QuoteType, customerName: q.customerName, company: q.company, gstin: q.gstin, phone: q.phone, email: q.email, city: q.city, address: q.address,
       quoteDate: q.quoteDate, validDays: q.validDays, cuttingCharge: q.cuttingCharge, loadingCharge: q.loadingCharge,
       unloadingCharge: q.unloadingCharge, transportCharge: q.transportCharge, discount: q.discount, gstRate: q.gstRate,
       interState: q.interState, notes: q.notes, paymentTerms: q.paymentTerms, bankDetails: q.bankDetails, terms: q.terms,
@@ -352,7 +383,7 @@ function blankLine(): QuoteItemInput {
 
 function blank(): SaveQuote {
   return {
-    customerName: '', company: null, gstin: null, phone: '', email: null, city: null, address: null, quoteDate: null, validDays: 3,
+    quoteType: '', customerName: '', company: null, gstin: null, phone: '', email: null, city: null, address: null, quoteDate: null, validDays: 3,
     cuttingCharge: 0, loadingCharge: 0, unloadingCharge: 0, transportCharge: 0, discount: 0, gstRate: 18, interState: false,
     notes: null, paymentTerms: null, bankDetails: null, terms: null, items: [blankLine()],
   };

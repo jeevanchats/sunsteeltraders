@@ -24,9 +24,9 @@ public sealed class QuotesController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = Perm.LeadManage)]
-    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? q,
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] string? type, [FromQuery] string? q,
         [FromQuery] int page = 1, [FromQuery] int pageSize = 25, CancellationToken ct = default)
-        => Ok(ApiResponse<PagedResult<QuoteRowDto>>.Ok(await _quotes.ListAsync(status, q, page, pageSize, ct)));
+        => Ok(ApiResponse<PagedResult<QuoteRowDto>>.Ok(await _quotes.ListAsync(status, type, q, page, pageSize, ct)));
 
     /// <summary>Materials, sections, pipe schedule, HSN codes, product list and defaults, for the editor.</summary>
     [HttpGet("lookups")]

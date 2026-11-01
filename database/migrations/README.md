@@ -21,3 +21,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 014 | HomeSlides (home-page slideshow banners) |
 | 015 | Quotes, QuoteItems; SiteSettings QuoteValidDays, QuoteGstRate, QuoteTerms (TO CONFIRM) |
 | 016 | Quotation lines (type, brand, HSN, GST rate, weight inputs), payment terms and bank details on quotes; QuoteProducts, QuoteHsn, MsPipeSchedule (sample rows); Quote* settings |
+| 017 | Quotes.QuoteType (Project, Wholesale, Retail, CutPieces; existing quotes become Retail) |

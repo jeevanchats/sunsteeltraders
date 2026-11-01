@@ -7,6 +7,8 @@ public sealed class Quote
     public string Reference { get; set; } = string.Empty;
     public long? LeadId { get; set; }
     public string Status { get; set; } = "Draft";
+    /// <summary>Project | Wholesale | Retail | CutPieces (migration 017).</summary>
+    public string QuoteType { get; set; } = "Retail";
     public DateOnly QuoteDate { get; set; }
     public int ValidDays { get; set; } = 3;
     public string CustomerName { get; set; } = string.Empty;
