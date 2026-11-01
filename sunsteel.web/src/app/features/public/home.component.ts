@@ -12,13 +12,14 @@ import { FaqListComponent } from '../../shared/faq-list.component';
 import { IconComponent } from '../../shared/icon.component';
 import { LoopVideoComponent } from '../../shared/loop-video.component';
 import { MetalComponent } from '../../shared/metal.component';
+import { ReelVideoComponent } from '../../shared/reel-video.component';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { SearchBoxComponent } from '../../shared/search-box.component';
 
 /** v3 sheet 01: banner slideshow, the library rail, proof band, the house, the scale, cities. */
 @Component({
   selector: 'ss-home',
-  imports: [RouterLink, HeroSliderComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, LoopVideoComponent, RevealDirective],
+  imports: [RouterLink, HeroSliderComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, LoopVideoComponent, ReelVideoComponent, RevealDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- hero: the slideshow sits below the fixed header; the h1 and search follow it -->
@@ -86,22 +87,37 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
       </div>
     </section>
 
-    <!-- 03 the scale teaser -->
+    <!-- 03 the film: two minutes inside the godown, playing by itself and looping -->
+    <section class="on-dark relative overflow-hidden bg-primary py-[clamp(56px,7vw,104px)] text-on-primary" ssReveal>
+      <div class="wrap">
+        <div class="mb-8 grid items-end gap-5 lg:mb-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,.85fr)] lg:gap-16">
+          <div>
+            <span class="label label-accent mb-4">03 · Inside the godown</span>
+            <h2 class="h-xl">Two minutes, <em>start to dispatch.</em></h2>
+          </div>
+          <p class="lede !text-on-primary-muted">From the showroom on Tamil Sangam Road to the racks, the band saw, the crane and the weighing platform: this is how every order is handled before it leaves the godown.</p>
+        </div>
+        <ss-reel-video src="/video/reel-2min-720.mp4" srcSmall="/video/reel-2min-480.mp4" poster="/video/reel-poster.webp"
+          label="A two-minute film of Sun Steel Traders in Simmakkal, Madurai: the shopfront, racks of bars, a band saw cutting steel, a crane lifting a round bar, sparks from cutting plate, and pieces being weighed on the platform scale." />
+      </div>
+    </section>
+
+    <!-- 04 the scale teaser -->
     <section class="border-y border-line bg-paper py-[clamp(40px,5vw,72px)]" ssReveal>
       <div class="wrap flex flex-wrap items-center justify-between gap-6">
         <div>
-          <span class="label label-accent mb-3">03 · Weight calculator</span>
+          <span class="label label-accent mb-3">04 · Weight calculator</span>
           <h2 class="h-l max-w-[24ch]">Weigh a piece in seconds, <em>then ask us.</em></h2>
         </div>
         <a routerLink="/metal-weight-calculator/" class="btn btn-ghost"><ss-icon name="scale" [size]="16" />Open the weight calculator</a>
       </div>
     </section>
 
-    <!-- 04 delivery -->
+    <!-- 05 delivery -->
     <section class="sec" ssReveal>
       <div class="wrap grid gap-12 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
         <div>
-          <span class="label label-accent mb-4">04 · Dispatch</span>
+          <span class="label label-accent mb-4">05 · Dispatch</span>
           <h2 class="h-xl">From Madurai, <em>across the south.</em></h2>
           <p class="lede mt-5">Same day across Madurai, Virudhunagar and Sivakasi. Next day to Tirunelveli, Tuticorin and Trichy.</p>
         </div>
