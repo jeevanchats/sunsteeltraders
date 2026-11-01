@@ -79,6 +79,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/quotes/quotes.component').then((m) => m.QuotesComponent),
       },
       {
+        path: 'email',
+        canActivate: [permissionGuard(Perm.SettingsManage)],
+        loadComponent: () => import('./features/admin/email/email-settings.component').then((m) => m.EmailSettingsComponent),
+      },
+      {
         path: 'customers',
         canActivate: [permissionGuard(Perm.LeadManage)],
         loadComponent: () => import('./features/admin/quotes/customers.component').then((m) => m.CustomersComponent),

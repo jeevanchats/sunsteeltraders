@@ -82,6 +82,8 @@ export interface Dashboard {
   limitedOrOnOrder: number; recent: { leadId: number; reference: string; type: string; status: string; name: string; city?: string | null; totalKg?: number | null; createdAt: string }[];
 }
 
+export interface EmailSettings { mode: 'Mock' | 'Live'; host: string; port: number; login: string | null; hasKey: boolean; fromAddress: string | null; fromName: string | null; alertTo: string[] }
+export interface SaveEmailSettings { mode: string; host: string; port: number; login: string | null; key: string | null; fromAddress: string | null; fromName: string | null; alertTo: string[] }
 export interface Traffic {
   from: string; to: string; totals: { views: number; visits: number }; previous: { views: number; visits: number };
   daily: { date: string; views: number; visits: number }[];
@@ -147,6 +149,18 @@ export class AdminApiService {
 
   updateUser(id: number, body: { fullName: string; phoneNumber: string; roleId: number; isActive: boolean; allowGoogleSignIn: boolean }): Observable<StaffUser> {
     return this.http.put<ApiResponse<StaffUser>>(`${this.base}/users/${id}`, body).pipe(map((r) => r.data!));
+  }
+
+  emailSettings(): Observable<EmailSettings> {
+    return this.http.get<ApiResponse<EmailSettings>>(`${this.base}/email`).pipe(map((r) => r.data!));
+  }
+
+  saveEmailSettings(body: SaveEmailSettings): Observable<EmailSettings> {
+    return this.http.put<ApiResponse<EmailSettings>>(`${this.base}/email`, body).pipe(map((r) => r.data!));
+  }
+
+  sendTestEmail(to: string): Observable<{ sent: boolean; message: string }> {
+    return this.http.post<ApiResponse<{ sent: boolean; message: string }>>(`${this.base}/email/test`, { to }).pipe(map((r) => r.data!));
   }
 
   traffic(from: string, to: string): Observable<Traffic> {

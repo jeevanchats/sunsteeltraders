@@ -86,6 +86,8 @@ builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteService, sunsteel.
 builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteDataService, sunsteel.api.Features.Quotes.QuoteDataService>();
 builder.Services.AddScoped<sunsteel.api.Features.Quotes.ICustomerService, sunsteel.api.Features.Quotes.CustomerService>();
 builder.Services.AddScoped<sunsteel.api.Features.Analytics.IAnalyticsService, sunsteel.api.Features.Analytics.AnalyticsService>();
+builder.Services.AddScoped<sunsteel.api.Features.Email.IEmailService, sunsteel.api.Features.Email.EmailService>();
+builder.Services.AddSingleton<sunsteel.api.Features.Email.INewRequestAlert, sunsteel.api.Features.Email.NewRequestAlert>();
 builder.Services.AddScoped<sunsteel.api.Features.Media.IMediaService, sunsteel.api.Features.Media.MediaService>();
 builder.Services.AddScoped<sunsteel.api.Features.Gallery.IGalleryService, sunsteel.api.Features.Gallery.GalleryService>();
 builder.Services.AddScoped<sunsteel.api.Features.Slides.ISlideService, sunsteel.api.Features.Slides.SlideService>();

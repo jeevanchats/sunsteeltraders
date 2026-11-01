@@ -75,6 +75,7 @@ export class AdminLayoutComponent {
     { link: '/admin/pages', label: 'Pages & content', icon: 'doc', perm: Perm.CmsManage },
     { link: '/admin/theme', label: 'Theme', icon: 'palette', perm: Perm.ThemeManage },
     { link: '/admin/settings', label: 'Site settings', icon: 'cog', perm: Perm.SettingsManage },
+    { link: '/admin/email', label: 'Email alerts', icon: 'mail', perm: Perm.SettingsManage },
     { link: '/admin/users', label: 'Staff users', icon: 'users', perm: Perm.UserManage },
   ];
 

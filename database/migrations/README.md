@@ -29,3 +29,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 020 | Customers (customer master, one row per phone number), Quotes.CustomerId; fills from existing quotations |
 | 021 | Roles: Manager and Staff limited to dashboard, requests, quotations, customers, quote data; new permission quote.data; Sales renamed Staff |
 | 022 | PageViews (first-party site traffic for the dashboard graph: no cookies, no stored IP) |
+| 023 | Email settings (Brevo SMTP, Mock/Live, alert addresses) for new-request emails |

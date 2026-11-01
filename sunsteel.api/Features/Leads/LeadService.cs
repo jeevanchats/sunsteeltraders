@@ -43,9 +43,11 @@ public sealed partial class LeadService : ILeadService
     private readonly IAuditService _audit;
     private readonly IConfiguration _config;
     private readonly IWebHostEnvironment _env;
+    private readonly sunsteel.api.Features.Email.INewRequestAlert _alert;
 
-    public LeadService(SunSteelDbContext db, IAuditService audit, IConfiguration config, IWebHostEnvironment env)
+    public LeadService(SunSteelDbContext db, IAuditService audit, IConfiguration config, IWebHostEnvironment env, sunsteel.api.Features.Email.INewRequestAlert alert)
     {
+        _alert = alert;
         _db = db;
         _audit = audit;
         _config = config;
@@ -129,6 +131,7 @@ public sealed partial class LeadService : ILeadService
         // Reference uses the id so it's short, unique and readable over the phone.
         lead.Reference = $"SST-{(r.Type == "Catalogue" ? "CAT" : r.Type == "RFQ" ? "RFQ" : "ENQ")}-{lead.LeadId:0000}";
         await _db.SaveChangesAsync(ct);
+        _alert.Queue(lead.LeadId); // email to the sales desk, after the customer has their answer
 
         var dtoItems = lead.Items.OrderBy(x => x.DisplayOrder).Select(ToItemDto).ToList();
         return new LeadCreatedDto(lead.Reference, lead.TotalKg, dtoItems, await WhatsAppUrlAsync(lead, dtoItems, ct));
