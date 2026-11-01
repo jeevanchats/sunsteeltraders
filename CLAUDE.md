@@ -94,6 +94,8 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   unsaved draft in the browser (localStorage) until it is saved.
   Roles (migration 021): Super Admin everything; Manager = Dashboard, Requests, Quotations, Customers, Quote data and may change it (permission `quote.data`: GST, HSN,
   pipe schedule, terms, bank); Staff (was Sales) = the same screens, Quote data view-only. Other admin screens are hidden and their endpoints refuse them.
+  Site traffic (migration 022, `Features/Analytics`): the public site posts each page view to `/api/events/view` (no cookies, no stored IP; a daily one-way hash counts distinct visitors;
+  bots, /admin and Do-Not-Track are skipped); the admin dashboard graphs visits and page views per day for a chosen period (`/api/admin/analytics`).
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

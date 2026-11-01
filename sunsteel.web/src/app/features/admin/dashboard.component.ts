@@ -4,10 +4,11 @@ import { RouterLink } from '@angular/router';
 import { Perm } from '../../core/models/auth.model';
 import { AdminApiService, Dashboard } from '../../core/services/admin-api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { TrafficComponent } from './traffic.component';
 
 @Component({
   selector: 'ss-dashboard',
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DatePipe, DecimalPipe, TrafficComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="mb-6">
@@ -35,6 +36,8 @@ import { AuthService } from '../../core/services/auth.service';
         </table>
       </div>
     }
+
+    <ss-traffic />
 
     <div class="mt-4 grid gap-4 md:grid-cols-3">
       @if (auth.can(perm.ThemeManage)) {

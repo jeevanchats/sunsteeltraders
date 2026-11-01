@@ -82,6 +82,13 @@ export interface Dashboard {
   limitedOrOnOrder: number; recent: { leadId: number; reference: string; type: string; status: string; name: string; city?: string | null; totalKg?: number | null; createdAt: string }[];
 }
 
+export interface Traffic {
+  from: string; to: string; totals: { views: number; visits: number }; previous: { views: number; visits: number };
+  daily: { date: string; views: number; visits: number }[];
+  topPages: { name: string; count: number }[]; sources: { name: string; count: number }[];
+  referrers: { name: string; count: number }[]; devices: { name: string; count: number }[];
+}
+
 export interface GallerySettings { show: boolean; kicker: string; heading: string; speed: number }
 export interface GalleryItemAdmin { id: number; mediaId: number; media: MediaItem | null; title: string | null; caption: string | null; linkUrl: string | null; visible: boolean }
 export interface SaveGalleryItem { id?: number; mediaId: number; title: string; caption: string; linkUrl: string; visible: boolean }
@@ -140,6 +147,10 @@ export class AdminApiService {
 
   updateUser(id: number, body: { fullName: string; phoneNumber: string; roleId: number; isActive: boolean; allowGoogleSignIn: boolean }): Observable<StaffUser> {
     return this.http.put<ApiResponse<StaffUser>>(`${this.base}/users/${id}`, body).pipe(map((r) => r.data!));
+  }
+
+  traffic(from: string, to: string): Observable<Traffic> {
+    return this.http.get<ApiResponse<Traffic>>(`${this.base}/analytics`, { params: { from, to } }).pipe(map((r) => r.data!));
   }
 
   dashboard(): Observable<Dashboard> {

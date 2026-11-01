@@ -65,6 +65,22 @@ public sealed class LeadNote
     public DateTime CreatedAt { get; set; }
 }
 
+/// <summary>One public page seen (migration 022). No IP address or cookie: VisitorKey is a one-way hash that only holds within a day.</summary>
+public sealed class PageView
+{
+    public long PageViewId { get; set; }
+    public DateTime At { get; set; }
+    /// <summary>The calendar day in India (UTC+5:30).</summary>
+    public DateOnly Day { get; set; }
+    public string Path { get; set; } = string.Empty;
+    public string VisitorKey { get; set; } = string.Empty;
+    /// <summary>Direct | Search | Social | Referral</summary>
+    public string Source { get; set; } = "Direct";
+    public string? Referrer { get; set; }
+    /// <summary>Desktop | Mobile | Tablet</summary>
+    public string Device { get; set; } = "Desktop";
+}
+
 /// <summary>Anonymous WhatsApp / call / email / map click, for the dashboard.</summary>
 public sealed class ClickEvent
 {
