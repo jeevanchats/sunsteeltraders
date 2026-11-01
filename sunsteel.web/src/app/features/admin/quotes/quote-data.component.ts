@@ -37,7 +37,7 @@ const blankProduct = (): QuoteProduct => ({
       }
     </div>
     @if (message(); as m) { <p class="alert mb-4" [class.alert-ok]="m.ok" role="status">{{ m.text }}</p> }
-    @if (!canEdit() && tab() !== 'products') { <p class="alert mb-4">You can view this. Changing it needs permission to manage settings.</p> }
+    @if (!canEdit() && tab() !== 'products') { <p class="alert mb-4">You can view this. Changing it needs the Manager or Super Admin role.</p> }
 
     @switch (tab()) {
       @case ('settings') {
@@ -160,7 +160,7 @@ export class QuoteDataComponent {
   protected readonly tab = signal<Tab>('products');
   protected readonly busy = signal(false);
   protected readonly message = signal<{ ok: boolean; text: string } | null>(null);
-  protected readonly canEdit = computed(() => this.auth.can(Perm.SettingsManage));
+  protected readonly canEdit = computed(() => this.auth.can(Perm.QuoteData));
   protected readonly settings = signal<QuoteSettings | null>(null);
   protected readonly products = signal<QuoteProduct[]>([]);
   protected readonly editing = signal<QuoteProduct | null>(null);

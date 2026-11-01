@@ -7,7 +7,7 @@ namespace sunsteel.api.Features.Quotes;
 
 /// <summary>
 /// Staff-only quotations. Uses the sales permission (lead.manage): whoever answers requests quotes them
-/// and keeps the product list. The tax and terms tables (GST rates, HSN, pipe schedule, bank details) need settings.manage.
+/// and keeps the product list. Changing the tax and terms tables (GST rates, HSN, pipe schedule, bank details) needs quote.data.
 /// </summary>
 [ApiController]
 [Route("api/admin/quotes")]
@@ -101,7 +101,7 @@ public sealed class QuotesController : ControllerBase
         => Ok(ApiResponse<IReadOnlyList<HsnDto>>.Ok(await _data.HsnAsync(ct)));
 
     [HttpPut("data/hsn")]
-    [Authorize(Policy = Perm.SettingsManage)]
+    [Authorize(Policy = Perm.QuoteData)]
     public async Task<IActionResult> SaveHsn(IReadOnlyList<HsnDto> rows, CancellationToken ct)
         => Ok(ApiResponse<IReadOnlyList<HsnDto>>.Ok(await _data.ReplaceHsnAsync(User.UserId(), rows, ct), "HSN codes saved."));
 
@@ -111,7 +111,7 @@ public sealed class QuotesController : ControllerBase
         => Ok(ApiResponse<IReadOnlyList<MsPipeDto>>.Ok(await _data.PipesAsync(ct)));
 
     [HttpPut("data/pipes")]
-    [Authorize(Policy = Perm.SettingsManage)]
+    [Authorize(Policy = Perm.QuoteData)]
     public async Task<IActionResult> SavePipes(IReadOnlyList<MsPipeDto> rows, CancellationToken ct)
         => Ok(ApiResponse<IReadOnlyList<MsPipeDto>>.Ok(await _data.ReplacePipesAsync(User.UserId(), rows, ct), "Pipe schedule saved."));
 
@@ -121,7 +121,7 @@ public sealed class QuotesController : ControllerBase
         => Ok(ApiResponse<QuoteSettingsDto>.Ok(await _data.SettingsAsync(ct)));
 
     [HttpPut("data/settings")]
-    [Authorize(Policy = Perm.SettingsManage)]
+    [Authorize(Policy = Perm.QuoteData)]
     public async Task<IActionResult> SaveSettings(QuoteSettingsDto body, CancellationToken ct)
         => Ok(ApiResponse<QuoteSettingsDto>.Ok(await _data.SaveSettingsAsync(User.UserId(), body, ct), "Quote settings saved."));
 }

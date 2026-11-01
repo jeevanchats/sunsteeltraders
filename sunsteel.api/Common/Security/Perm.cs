@@ -15,11 +15,13 @@ public static class Perm
     public const string ThemeManage = "theme.manage";
     public const string SettingsManage = "settings.manage";
     public const string UserManage = "user.manage";
+    /// <summary>Change GST rates, HSN codes, the MS pipe schedule, payment terms and bank details (migration 021).</summary>
+    public const string QuoteData = "quote.data";
 
     /// <summary>Every code, so one authorization policy is registered per permission.</summary>
     public static readonly string[] All =
     [
-        LeadManage, CatalogManage, StockManage, MediaManage, CmsManage, ThemeManage, SettingsManage, UserManage,
+        LeadManage, CatalogManage, StockManage, MediaManage, CmsManage, ThemeManage, SettingsManage, UserManage, QuoteData,
     ];
 
     /// <summary>The JWT claim type that carries these codes.</summary>

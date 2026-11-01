@@ -28,4 +28,5 @@ export const Perm = {
   ThemeManage: 'theme.manage',
   SettingsManage: 'settings.manage',
   UserManage: 'user.manage',
+  QuoteData: 'quote.data',
 } as const;

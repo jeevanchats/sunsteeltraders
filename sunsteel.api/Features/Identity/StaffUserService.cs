@@ -17,7 +17,7 @@ public interface IStaffUserService
 }
 
 /// <summary>
-/// Each staff user holds exactly one role (Super Admin, Manager or Front Desk) — simpler
+/// Each staff user holds exactly one role (Super Admin, Manager or Staff) — simpler
 /// for a small sales team than the many-to-many the schema allows. Guards stop the last active
 /// Super Admin from being demoted or disabled, which would lock everyone out of this screen.
 /// </summary>

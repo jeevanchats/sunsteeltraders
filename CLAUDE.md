@@ -92,6 +92,8 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   Customer master (migration 020, `CustomerService`, admin Customers): saving a quotation adds or updates the customer by phone number (blank fields never
   erase stored ones); the quotation form can pick a saved customer; the Customers screen edits, exports and imports CSV. The quotation form also keeps an
   unsaved draft in the browser (localStorage) until it is saved.
+  Roles (migration 021): Super Admin everything; Manager = Dashboard, Requests, Quotations, Customers, Quote data and may change it (permission `quote.data`: GST, HSN,
+  pipe schedule, terms, bank); Staff (was Sales) = the same screens, Quote data view-only. Other admin screens are hidden and their endpoints refuse them.
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

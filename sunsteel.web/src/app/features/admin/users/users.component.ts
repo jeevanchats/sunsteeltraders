@@ -61,7 +61,7 @@ export class UsersComponent {
   }
 
   protected add(): void {
-    const frontDesk = this.roles().find((r) => r.name === 'Front Desk') ?? this.roles()[0];
+    const frontDesk = this.roles().find((r) => r.name === 'Staff') ?? this.roles()[0];
     this.formError.set('');
     this.draft.set({ email: '', fullName: '', phoneNumber: '', roleId: frontDesk?.roleId ?? 0, isActive: true, allowGoogleSignIn: true, temporaryPassword: suggestPassword() });
   }
