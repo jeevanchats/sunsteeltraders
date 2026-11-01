@@ -68,7 +68,7 @@
 @layer components {
   .wrap { max-width: 1360px; margin: 0 auto; padding: 0 var(--pad); width: 100%; }
   .sec { padding: var(--sec) 0; }
-  .label { display: block; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; font-weight: 600; color: var(--color-faint); }
+  .label { display: block; font-size: 12.5px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--color-muted); }
   .label-accent { color: var(--color-accent); }
   .on-dark .label { color: var(--color-on-primary-muted); }
   .chapter { font-family: var(--font-serif); font-size: clamp(40px, 4vw, 56px); line-height: .9; color: var(--color-accent); }
@@ -99,8 +99,8 @@
   .lnk:hover { background-size: 0 1px; background-position: 100% 100%; }
 
   .chip {
-    display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: 999px; font-size: 12px; font-weight: 500;
-    border: 1px solid var(--color-line); background: transparent; color: var(--color-ink); white-space: nowrap; transition: all .3s;
+    display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 999px; font-size: 13.5px; font-weight: 500;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 40%, var(--color-surface)); background: transparent; color: var(--color-ink); white-space: nowrap; transition: all .3s;
   }
   .chip:hover { border-color: var(--color-accent); }
   .chip-on { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-surface); }
@@ -114,19 +114,21 @@
   .on-dark .card-rule { border-color: color-mix(in srgb, var(--color-on-primary) 40%, transparent); }
 
   /* underline fields */
-  .fld { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .fld > span { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--color-ink); font-weight: 600; }
+  .fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fld > span { font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--color-ink); font-weight: 600; }
   .fld input, .fld select, .fld textarea {
-    border: 0; border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-surface));
-    background: transparent; padding: 8px 0 10px; font-family: var(--font-sans); font-size: 16px; outline: none;
+    border: 0; border-bottom: 1.5px solid color-mix(in srgb, var(--color-primary) 55%, var(--color-surface));
+    background: transparent; padding: 8px 0 10px; font-family: var(--font-sans); font-size: 17px; outline: none;
     border-radius: 0; appearance: none; color: inherit; transition: border-color .3s; width: 100%; min-width: 0;
   }
   .fld textarea { resize: vertical; min-height: 84px; }
-  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--color-accent); }
+  .fld input::placeholder, .fld textarea::placeholder { color: var(--color-muted); opacity: 1; }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--color-accent); border-bottom-width: 2px; }
   .fld .err { font-size: 12px; color: #A33A2B; min-height: 0; }
   .on-dark .fld > span { color: var(--color-on-primary); }
   .on-dark .fld input, .on-dark .fld select { border-color: color-mix(in srgb, var(--color-on-primary) 45%, transparent); }
   .on-dark .fld select option { color: #111; }
+  .on-dark .fld input::placeholder, .on-dark .fld textarea::placeholder { color: var(--color-on-primary-muted); }
 
   /* data tables (sizes, chemistry) */
   .dtable { width: 100%; border-collapse: collapse; font-size: 14px; }

@@ -73,16 +73,16 @@ type Reply = 'WhatsApp' | 'Phone' | 'Email';
           <form (ngSubmit)="submit()" novalidate class="grid gap-7">
             <div>
               <div class="flex items-baseline justify-between"><span class="label">Your request · {{ req.count() }} {{ req.count() === 1 ? 'item' : 'items' }}</span>
-                @if (req.count()) { <span class="text-[13px] tabular-nums text-muted">≈ {{ kg(req.totalKg()) }} kg</span> }</div>
+                @if (req.count()) { <span class="text-[14.5px] font-medium tabular-nums text-ink">≈ {{ kg(req.totalKg()) }} kg</span> }</div>
               <ul class="mt-3 border-t border-ink">
                 @for (l of req.lines(); track l.id) {
-                  <li class="flex items-center gap-3 border-b border-line py-3 text-[14px]">
-                    <span class="min-w-0 flex-1"><b class="font-medium">{{ l.gradeText }}</b><small class="block text-muted"><span class="capitalize">{{ l.form }}</span> {{ l.dimText }} × {{ l.lengthMm }} mm · {{ l.quantity }} pcs</small></span>
+                  <li class="flex items-center gap-3 border-b border-line py-3.5 text-[15.5px]">
+                    <span class="min-w-0 flex-1"><b class="font-medium">{{ l.gradeText }}</b><small class="mt-0.5 block text-[13.5px] text-muted"><span class="capitalize">{{ l.form }}</span> {{ l.dimText }} × {{ l.lengthMm }} mm · {{ l.quantity }} pcs</small></span>
                     <span class="tabular-nums">{{ kg(l.kg) }} kg</span>
-                    <button type="button" class="p-1 text-faint hover:text-ink" (click)="req.remove(l.id)" [attr.aria-label]="'Remove ' + l.gradeText"><ss-icon name="trash" [size]="15" /></button>
+                    <button type="button" class="p-1 text-muted hover:text-ink" (click)="req.remove(l.id)" [attr.aria-label]="'Remove ' + l.gradeText"><ss-icon name="trash" [size]="15" /></button>
                   </li>
                 }
-                <li class="py-3 text-[14px]"><a routerLink="/products/" class="text-accent">+ Add an item from the library</a><span class="mx-1.5 text-faint">or</span><a routerLink="/metal-weight-calculator/" class="text-accent">weigh one on the scale</a></li>
+                <li class="py-3.5 text-[15px]"><a routerLink="/products/" class="font-medium text-accent underline underline-offset-4">+ Add an item from the library</a><span class="mx-1.5 text-muted">or</span><a routerLink="/metal-weight-calculator/" class="font-medium text-accent underline underline-offset-4">weigh one on the scale</a></li>
               </ul>
             </div>
 
@@ -90,7 +90,7 @@ type Reply = 'WhatsApp' | 'Phone' | 'Email';
               <textarea name="message" [(ngModel)]="f.message" rows="3" placeholder="e.g. EN8 Ø50 × 300 mm, 20 pcs; SS 304 sheet 2 mm, 4 sheets"></textarea></label>
 
             @if (mode() === 'drawing') {
-              <label class="flex cursor-pointer items-center gap-4 border border-dashed border-faint p-5 text-[14px] hover:border-accent">
+              <label class="flex cursor-pointer items-center gap-4 border border-dashed border-muted p-5 text-[15px] hover:border-accent">
                 <ss-icon name="upload" [size]="22" class="text-accent" />
                 <span class="min-w-0 flex-1">@if (files().length) { {{ fileNames() }} } @else { Drop or choose a drawing or cut list: PDF, DWG, DXF, Excel or photos, up to 5 files }</span>
                 <input type="file" class="sr-only" multiple accept=".pdf,.dwg,.dxf,.xlsx,.xls,.csv,.jpg,.jpeg,.png,.webp,.heic" (change)="pick($event)" />
@@ -122,7 +122,7 @@ type Reply = 'WhatsApp' | 'Phone' | 'Email';
               <button type="submit" class="btn" [disabled]="busy()">
                 @if (reply() === 'WhatsApp') { <ss-icon name="wa" [size]="16" />Send on WhatsApp } @else { Send request }
               </button>
-              <span class="text-[12.5px] text-muted">Saved with our sales desk first, then {{ reply() === 'WhatsApp' ? 'WhatsApp opens with your list' : 'we reply' }}.</span>
+              <span class="text-[13.5px] text-muted">Saved with our sales desk first, then {{ reply() === 'WhatsApp' ? 'WhatsApp opens with your list' : 'we reply' }}.</span>
             </div>
           </form>
         }
