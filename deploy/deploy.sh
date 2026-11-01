@@ -62,7 +62,7 @@ else
 fi
 
 echo "   migrations"
-for f in $(ls $S/mig/0*.sql | sort); do mysql sunsteel < "$f"; done
+for f in $(ls $S/mig/0*.sql | sort); do mysql --default-character-set=utf8mb4 sunsteel < "$f"; done
 
 systemctl stop sunsteel-api sunsteel-ssr 2>/dev/null || true
 rm -rf $R/api $R/web; mkdir -p $R/api $R/web
