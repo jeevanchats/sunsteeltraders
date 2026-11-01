@@ -23,8 +23,9 @@ public static class QuotePdf
     });
 
     // Table columns: right edges, in points. Description takes the space on the left.
-    private const float ColHsn = 322, ColQty = 372, ColKg = 424, ColRate = 486, ColAmt = W - M;
-    private const float DescX = M + 26, DescWidth = ColHsn - 58 - DescX;
+    // Each number column has room for its widest usual value plus an even gap, so headers never touch.
+    private const float ColHsn = 292, ColQty = 346, ColKg = 410, ColRate = 478, ColAmt = W - M;
+    private const float DescX = M + 26, DescWidth = ColHsn - 40 - DescX;
 
     public static byte[] Render(QuoteDetailDto q, IReadOnlyDictionary<string, string?> site, IReadOnlyDictionary<string, string?> theme)
     {
@@ -307,19 +308,23 @@ public static class QuotePdf
             _canvas!.DrawLine(M, Y, W - M, Y, paint);
         }
 
-        /// <summary>Greedy word wrap to a width in points.</summary>
+        /// <summary>Greedy word wrap to a width in points. Line breaks in the text (a typed address) start a new line; they are never drawn as a character.</summary>
         public List<string> Wrap(string text, float size, float width)
         {
             using var font = new SKFont(Regular, size);
             var lines = new List<string>();
-            var line = "";
-            foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var para in text.Replace("\r", "").Split('\n'))
             {
-                var next = line.Length == 0 ? word : $"{line} {word}";
-                if (font.MeasureText(next) <= width || line.Length == 0) line = next;
-                else { lines.Add(line); line = word; }
+                var line = "";
+                foreach (var word in para.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var next = line.Length == 0 ? word : $"{line} {word}";
+                    if (font.MeasureText(next) <= width || line.Length == 0) line = next;
+                    else { lines.Add(line); line = word; }
+                }
+                if (line.Length > 0) lines.Add(line);
             }
-            if (line.Length > 0 || lines.Count == 0) lines.Add(line);
+            if (lines.Count == 0) lines.Add("");
             return lines;
         }
     }
