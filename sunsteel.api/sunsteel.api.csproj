@@ -22,4 +22,9 @@
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The logo printed in the quotation PDF header; copied next to the app, and into the publish folder. -->
+    <None Include="Assets\sst-logo.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

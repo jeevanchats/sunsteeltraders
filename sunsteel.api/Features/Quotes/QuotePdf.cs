@@ -14,6 +14,14 @@ public static class QuotePdf
     private const float Bottom = H - 62;
     private static readonly CultureInfo In = new("en-IN"); // 2,55,622.00
 
+    /// <summary>The company logo, if Assets/sst-logo.png is next to the app. Without it the header simply has no logo.</summary>
+    private static readonly Lazy<SKImage?> LogoImage = new(() =>
+    {
+        var dir = Path.GetDirectoryName(typeof(QuotePdf).Assembly.Location) ?? AppContext.BaseDirectory;
+        var file = Path.Combine(dir, "Assets", "sst-logo.png");
+        return File.Exists(file) ? SKImage.FromEncodedData(file) : null;
+    });
+
     // Table columns: right edges, in points. Description takes the space on the left.
     private const float ColHsn = 322, ColQty = 372, ColKg = 424, ColRate = 486, ColAmt = W - M;
     private const float DescX = M + 26, DescWidth = ColHsn - 58 - DescX;
@@ -51,13 +59,17 @@ public static class QuotePdf
         Add(s.GetValueOrDefault("Phone1"), s.GetValueOrDefault("Phone2"), s.GetValueOrDefault("Landline"), s.GetValueOrDefault("SalesEmail"));
         Add(s.GetValueOrDefault("Gstin") is { Length: > 0 } g ? $"GSTIN {g}" : null);
 
-        var wrapped = lines.SelectMany(l => p.Wrap(l, 8.5f, 330)).ToList();
-        var bandHeight = Math.Max(52 + wrapped.Count * 11.5f + 6, 96);
+        // The logo sits on a white tile at the left, and the company text starts to its right.
+        var logo = LogoImage.Value;
+        var tx = logo is null ? M : M + 80;
+        var wrapped = lines.SelectMany(l => p.Wrap(l, 8.5f, 330 - (tx - M))).ToList();
+        var bandHeight = Math.Max(52 + wrapped.Count * 11.5f + 6, logo is null ? 96 : 104);
         p.Fill(0, 0, W, bandHeight, p.Primary);
+        if (logo is not null) p.Logo(logo, M, 16, 70);
 
-        p.Text(s.GetValueOrDefault("BusinessName") ?? "Sun Steel Traders", M, 36, 20, bold: true, color: SKColors.White);
+        p.Text(s.GetValueOrDefault("BusinessName") ?? "Sun Steel Traders", tx, 36, 20, bold: true, color: SKColors.White);
         var y = 52f;
-        foreach (var w in wrapped) { p.Text(w, M, y, 8.5f, color: new SKColor(0xD9, 0xDD, 0xE5)); y += 11.5f; }
+        foreach (var w in wrapped) { p.Text(w, tx, y, 8.5f, color: new SKColor(0xD9, 0xDD, 0xE5)); y += 11.5f; }
 
         p.Text("QUOTATION", W - M, 36, 16, bold: true, color: p.AccentOnDark, align: SKTextAlign.Right);
         p.Text(TypeLabel(q.QuoteType), W - M, 50, 8.5f, bold: true, color: SKColors.White, align: SKTextAlign.Right);
@@ -268,6 +280,19 @@ public static class QuotePdf
             using var font = new SKFont(bold ? BoldFace : Regular, size);
             using var paint = new SKPaint { Color = color ?? Ink, IsAntialias = true };
             _canvas!.DrawText(text, x, y, align, font, paint);
+        }
+
+        /// <summary>The logo, fitted inside a white rounded tile of the given size so it reads on the dark header.</summary>
+        public void Logo(SKImage img, float x, float y, float size)
+        {
+            using var tile = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill, IsAntialias = true };
+            _canvas!.DrawRoundRect(x, y, size, size, 6, 6, tile);
+            const float inset = 5;
+            var box = size - 2 * inset;
+            var scale = Math.Min(box / img.Width, box / img.Height);
+            var w = img.Width * scale;
+            var h = img.Height * scale;
+            _canvas.DrawImage(img, SKRect.Create(x + (size - w) / 2, y + (size - h) / 2, w, h), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
         }
 
         public void Fill(float x, float y, float w, float h, SKColor color)
