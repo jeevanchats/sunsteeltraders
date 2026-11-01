@@ -78,6 +78,7 @@ export class ReelVideoComponent {
   private readonly video = viewChild.required<ElementRef<HTMLVideoElement>>('v');
   private readonly box = viewChild.required<ElementRef<HTMLElement>>('box');
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly destroyRef = inject(DestroyRef);
   private loaded = false;
   /** Set when the visitor pauses it themselves: scrolling back does not restart it. */
   private pausedByUser = false;
@@ -93,7 +94,7 @@ export class ReelVideoComponent {
         else if (!e.isIntersecting && !document.fullscreenElement) el.pause();
       }, { threshold: 0.4 });
       io.observe(el);
-      inject(DestroyRef).onDestroy(() => io.disconnect());
+      this.destroyRef.onDestroy(() => io.disconnect());
     });
   }
 

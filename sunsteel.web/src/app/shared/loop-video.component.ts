@@ -35,6 +35,7 @@ export class LoopVideoComponent {
   protected readonly playing = signal(false);
   private readonly video = viewChild.required<ElementRef<HTMLVideoElement>>('v');
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly destroyRef = inject(DestroyRef);
   /** Set once the visitor pauses it themselves: scrolling back then does not restart it. */
   private pausedByUser = false;
   private reduced = false;
@@ -51,7 +52,7 @@ export class LoopVideoComponent {
         else if (!e.isIntersecting) el.pause();
       }, { threshold: 0.35 });
       io.observe(el);
-      inject(DestroyRef).onDestroy(() => io.disconnect());
+      this.destroyRef.onDestroy(() => io.disconnect());
     });
   }
 

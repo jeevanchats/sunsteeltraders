@@ -3,7 +3,7 @@
 // (database/seed/catalog.json). NOT for production: no auth, no persistence.
 // Usage: npm run mock-api   (listens on http://localhost:5090/api)
 import { createServer } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -109,6 +109,16 @@ createServer(async (req, res) => {
   }
   if ((m = p.match(/^\/api\/pages\/?(.*)$/))) return pages[m[1]] ? ok(res, pages[m[1]]) : notFound(res);
   if ((m = p.match(/^\/api\/policies\/([^/]+)$/))) return policies[m[1]] ? ok(res, policies[m[1]]) : notFound(res);
+  if (p === '/api/gallery') {
+    // Stand-in photos: the product pictures that ship with the site, as 39 gallery cards.
+    const files = readdirSync(join(here, '../public/materials')).filter((f) => f.endsWith('-1200.webp')).slice(0, 39);
+    const pretty = (f) => f.replace('-1200.webp', '').replace(/-/g, ' ').replace(/^./, (x) => x.toUpperCase());
+    const items = files.map((f, i) => ({
+      id: i + 1, title: pretty(f), caption: i % 3 === 0 ? 'Cut to your size in our Simmakkal godowns.' : null, linkUrl: i === 1 ? '/products/' : null,
+      media: { id: i + 1, kind: 'image', fileName: f, url: `/materials/${f}`, variants: { '640': `/materials/${f}`, '1200': `/materials/${f}` }, placeholder: null, width: 1200, height: 900, sizeBytes: 0, altText: pretty(f), caption: null, category: null, createdAt: '' },
+    }));
+    return ok(res, { settings: { show: true, kicker: 'The gallery', heading: 'A look inside Sun Steel Traders', speed: 50 }, items });
+  }
   if (p === '/api/events/click') return send(res, 204);
   if (req.method === 'POST' && p === '/api/leads') {
     let body = ''; for await (const chunk of req) body += chunk;
