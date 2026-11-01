@@ -14,11 +14,11 @@ const STATES = ['In stock', 'Limited', 'On order'];
   template: `
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div><h1 class="text-[22px] font-medium">Stock board</h1><p class="text-[13.5px] text-[#6B7485]">Changes show on the website straight away.</p></div>
-      <div class="flex gap-2">
+      <div class="flex w-full gap-2 sm:w-auto">
         <select class="ainput !w-auto" [ngModel]="silo()" (ngModelChange)="silo.set($event)">
           <option value="">All families</option>@for (s of catalog.index().silos; track s.key) { <option [value]="s.key">{{ s.shortName }}</option> }
         </select>
-        <input class="ainput !w-[200px]" placeholder="Filter grade or SKU" [ngModel]="q()" (ngModelChange)="q.set($event)" />
+        <input class="ainput min-w-0 flex-1 sm:!w-[200px] sm:flex-none" placeholder="Filter grade or SKU" [ngModel]="q()" (ngModelChange)="q.set($event)" />
       </div>
     </header>
     @if (error()) { <p class="alert mb-3">{{ error() }}</p> }

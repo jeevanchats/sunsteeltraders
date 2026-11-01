@@ -16,11 +16,11 @@ import { CatalogService } from '../../../core/services/catalog.service';
         <h1 class="text-[22px] font-medium">Products</h1>
         <p class="text-[13.5px] text-[#6B7485]">Edit the details, photo and search text of each grade. For a quick stock change use the <a routerLink="/admin/stock" class="underline">Stock board</a>.</p>
       </div>
-      <div class="flex flex-wrap gap-2">
+      <div class="flex w-full flex-wrap gap-2 sm:w-auto">
         <select class="ainput !w-auto" [ngModel]="silo()" (ngModelChange)="silo.set($event)" aria-label="Family">
           <option value="">All families</option>@for (s of catalog.index().silos; track s.key) { <option [value]="s.key">{{ s.shortName }}</option> }
         </select>
-        <input class="ainput !w-[210px]" placeholder="Search name, grade or SKU" [ngModel]="q()" (ngModelChange)="q.set($event)" />
+        <input class="ainput min-w-0 flex-1 sm:!w-[210px] sm:flex-none" placeholder="Search name, grade or SKU" [ngModel]="q()" (ngModelChange)="q.set($event)" />
       </div>
     </header>
     @if (error()) { <p class="alert mb-3">{{ error() }}</p> }

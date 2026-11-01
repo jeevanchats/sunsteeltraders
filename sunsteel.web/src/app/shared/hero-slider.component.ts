@@ -119,7 +119,7 @@ const SWIPE_PX = 40;
             </div>
           }
         </div>
-        <div class="flex items-center gap-5">
+        <div class="flex w-full flex-wrap items-center justify-between gap-x-5 gap-y-3 sm:w-auto sm:justify-end">
           @if (slides().length > 1) {
             <span class="hidden tabular-nums text-[13px] font-medium sm:block" aria-hidden="true">{{ pad(position() + 1) }}<span class="text-faint"> / {{ pad(slides().length) }}</span></span>
             <div class="flex items-center gap-1.5" role="group" aria-label="Choose a slide">

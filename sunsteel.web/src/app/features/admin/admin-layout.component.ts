@@ -21,7 +21,7 @@ interface AdminNav {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="adm md:grid md:grid-cols-[248px_1fr]">
-      <aside class="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-primary px-4 py-6 text-on-primary transition-transform duration-300 md:sticky md:top-0 md:h-svh md:w-auto md:translate-x-0"
+      <aside class="fixed left-0 top-0 z-50 flex h-dvh w-[min(280px,86vw)] flex-col overflow-y-auto overscroll-contain bg-primary px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 text-on-primary transition-transform duration-300 md:sticky md:h-svh md:w-auto md:translate-x-0"
              [class.-translate-x-full]="!navOpen()">
         <div class="px-2 pb-7"><ss-brand link="/admin" [showPlace]="false" /></div>
         <nav class="grid gap-0.5" aria-label="Admin">

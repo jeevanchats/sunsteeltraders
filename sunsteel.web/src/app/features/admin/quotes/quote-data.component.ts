@@ -66,7 +66,7 @@ const blankProduct = (): QuoteProduct => ({
 
       @case ('products') {
         <div class="mb-3 flex flex-wrap items-center gap-2">
-          <input class="ainput !w-[260px]" placeholder="Search brand, description, model" [(ngModel)]="q" (keyup.enter)="loadProducts()" />
+          <input class="ainput w-full sm:!w-[260px]" placeholder="Search brand, description, model" [(ngModel)]="q" (keyup.enter)="loadProducts()" />
           <button type="button" class="abtn abtn-pri" (click)="editing.set(blank())"><ss-icon name="plus" [size]="14" />Add product</button>
           <span class="ahint">Branded pipes, roof sheets and tools. Prices are typed per quotation; a reference rate is only a suggestion.</span>
         </div>

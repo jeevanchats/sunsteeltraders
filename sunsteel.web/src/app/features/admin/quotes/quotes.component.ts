@@ -19,15 +19,15 @@ const STATUSES = ['Draft', 'Sent', 'Accepted', 'Rejected'];
   template: `
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div><h1 class="text-[22px] font-medium">Quotations</h1><p class="text-[13.5px] text-[#6B7485]">Priced per kg, with GST. Start one from a request, or blank for phone and walk-in customers.</p></div>
-      <div class="flex gap-2">
-        <input class="ainput !w-[240px]" placeholder="Search name, phone, reference" [(ngModel)]="q" (keyup.enter)="load(1)" />
+      <div class="flex w-full flex-wrap gap-2 sm:w-auto">
+        <input class="ainput min-w-0 flex-1 sm:!w-[240px] sm:flex-none" placeholder="Search name, phone, reference" [(ngModel)]="q" (keyup.enter)="load(1)" />
         <a routerLink="/admin/quotes/new" class="abtn abtn-pri"><ss-icon name="plus" [size]="14" />New quotation</a>
       </div>
     </header>
     <div class="mb-4 flex flex-wrap gap-2">
       <button type="button" class="abtn abtn-sm" [class.abtn-pri]="!status()" (click)="status.set(''); load(1)">All</button>
       @for (s of statuses; track s) { <button type="button" class="abtn abtn-sm" [class.abtn-pri]="status() === s" (click)="status.set(s); load(1)">{{ s }}</button> }
-      <span class="mx-2 w-px bg-[#E3E6EB]"></span>
+      <span class="mx-2 w-px bg-[#E3E6EB] max-sm:hidden"></span>
       <select class="ainput !h-[30px] !w-auto !text-[12.5px]" aria-label="Type" (change)="type.set($any($event.target).value); load(1)">
         <option value="">All types</option>@for (t of types; track t.key) { <option [value]="t.key">{{ t.label }}</option> }
       </select>

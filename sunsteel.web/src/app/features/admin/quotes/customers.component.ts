@@ -20,8 +20,8 @@ const blank = (): SaveCustomer => ({ name: '', company: null, gstin: null, phone
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div><h1 class="text-[22px] font-medium">Customers</h1>
         <p class="text-[13.5px] text-[#6B7485]">Filled in automatically when you save a quotation. Edit them here, or import and export the list as a CSV file.</p></div>
-      <div class="flex flex-wrap gap-2">
-        <input class="ainput !w-[220px]" placeholder="Search name, phone, GSTIN" [(ngModel)]="q" (keyup.enter)="load(1)" aria-label="Search customers" />
+      <div class="flex w-full flex-wrap gap-2 sm:w-auto">
+        <input class="ainput w-full sm:!w-[220px]" placeholder="Search name, phone, GSTIN" [(ngModel)]="q" (keyup.enter)="load(1)" aria-label="Search customers" />
         <button type="button" class="abtn" (click)="edit(null)"><ss-icon name="plus" [size]="14" />Add</button>
         <button type="button" class="abtn" [disabled]="busy()" (click)="export()"><ss-icon name="file" [size]="14" />Export</button>
         <label class="abtn cursor-pointer"><ss-icon name="upload" [size]="14" />Import

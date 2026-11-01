@@ -53,7 +53,7 @@ const MAX_VIDEO = 80 * 1024 * 1024;
             <option value="">All categories</option>
             @for (c of categories(); track c) { <option [value]="c">{{ c }}</option> }
           </select>
-          <input class="ainput !h-[30px] !w-[200px] !py-0 text-[12.5px]" type="search" placeholder="Search name or caption" [ngModel]="query()" (ngModelChange)="setQuery($event)" aria-label="Search" />
+          <input class="ainput !h-[30px] !w-[200px] !py-0 text-[12.5px] max-sm:!w-full" type="search" placeholder="Search name or caption" [ngModel]="query()" (ngModelChange)="setQuery($event)" aria-label="Search" />
           <span class="ml-auto text-[12.5px] text-[#6B7485]">{{ total() }} item{{ total() === 1 ? '' : 's' }}</span>
         </div>
 

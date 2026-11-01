@@ -17,7 +17,7 @@ const TYPES = ['RFQ', 'Catalogue', 'Contact', 'Callback'];
   template: `
     <header class="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div><h1 class="text-[22px] font-medium">Requests</h1><p class="text-[13.5px] text-[#6B7485]">Saved before WhatsApp opens, so nothing is lost if a customer never presses Send.</p></div>
-      <input class="ainput !w-[260px]" placeholder="Search name, phone, reference" [(ngModel)]="q" (keyup.enter)="load(1)" />
+      <input class="ainput w-full sm:!w-[260px]" placeholder="Search name, phone, reference" [(ngModel)]="q" (keyup.enter)="load(1)" />
     </header>
     <div class="mb-4 flex flex-wrap gap-2">
       <button type="button" class="abtn abtn-sm" [class.abtn-pri]="!status()" (click)="status.set(''); load(1)">All</button>
