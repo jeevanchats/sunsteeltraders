@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { GalleryPublic } from '../../core/models/media.model';
+import { GalleryPublic, SlideCard } from '../../core/models/media.model';
 import { PageInfo, SILO_METAL } from '../../core/models/catalog.model';
 import { CatalogService } from '../../core/services/catalog.service';
 import { SeoService } from '../../core/services/seo.service';
 import { SiteService } from '../../core/services/site.service';
 import { compact, faqLd, organizationLd } from '../../core/services/structured-data';
-import { HeroArtComponent } from '../../shared/hero-art.component';
+import { HeroSliderComponent } from '../../shared/hero-slider.component';
 import { GalleryStripComponent } from '../../shared/gallery-strip.component';
 import { FaqListComponent } from '../../shared/faq-list.component';
 import { IconComponent } from '../../shared/icon.component';
@@ -14,26 +14,26 @@ import { MetalComponent } from '../../shared/metal.component';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { SearchBoxComponent } from '../../shared/search-box.component';
 
-/** v3 sheet 01: full-bleed macro hero, the library rail, proof band, the house, the scale, cities. */
+/** v3 sheet 01: banner slideshow, the library rail, proof band, the house, the scale, cities. */
 @Component({
   selector: 'ss-home',
-  imports: [RouterLink, HeroArtComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, RevealDirective],
+  imports: [RouterLink, HeroSliderComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, RevealDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- hero -->
-    <section class="relative flex min-h-[min(100svh,900px)] items-end overflow-hidden text-white">
-      <ss-metal kind="metal-alloy" class="!absolute inset-0" />
-      <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,24,32,.25)_0%,rgba(20,24,32,.15)_40%,rgba(20,24,32,.78)_100%)]"></div>
-      <div class="pointer-events-none absolute inset-0 hidden min-[1200px]:block" aria-hidden="true"><div class="wrap relative h-full"><div class="absolute right-[var(--pad)] top-1/2 w-[clamp(320px,36vw,580px)] -translate-y-[46%]"><ss-hero-art /></div></div></div>
-      <div class="wrap relative pb-[clamp(48px,7vw,96px)] pt-40">
-        <span class="label !text-white/80 mb-5">{{ site.get('Tagline') }} · {{ site.get('LocationLine') }}</span>
-        <h1 class="h-xxl max-w-[13ch] !text-[clamp(46px,7.4vw,108px)]">Ninety-three grades. <em class="!text-[#E2C49B]">One house.</em></h1>
-        <p class="mt-6 max-w-[52ch] text-[clamp(15px,1.3vw,18px)] text-white/85">Mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Simmakkal godowns and dispatched the same day.</p>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <a routerLink="/contact-us/" class="btn">Contact us</a>
-          <a routerLink="/products/" class="btn btn-ghost !border-white/70 !text-white hover:!bg-white hover:!text-ink">Explore the library</a>
+    <!-- hero: the slideshow sits below the fixed header; the h1 and search follow it -->
+    <div class="pt-[84px]"><ss-hero-slider [custom]="slides()" /></div>
+    <section class="border-b border-line">
+      <div class="wrap grid items-center gap-8 py-[clamp(28px,4vw,56px)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
+        <div>
+          <span class="label label-accent mb-4">{{ site.get('Tagline') }} · {{ site.get('LocationLine') }}</span>
+          <h1 class="h-xl">Ninety-three grades. <em>One house.</em></h1>
+          <p class="lede mt-4 max-w-[56ch]">Mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Simmakkal godowns and dispatched the same day.</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a routerLink="/contact-us/" class="btn">Contact us</a>
+            <a routerLink="/products/" class="btn btn-ghost">Explore the library</a>
+          </div>
         </div>
-        <div class="mt-10 max-w-[560px]"><ss-search-box [dark]="true" /></div>
+        <div class="max-w-[560px] lg:justify-self-end lg:w-full"><ss-search-box /></div>
       </div>
     </section>
 
@@ -154,6 +154,7 @@ export class HomeComponent {
   protected readonly catalog = inject(CatalogService);
   protected readonly page = signal<PageInfo | null>(null);
   protected readonly gallery = signal<GalleryPublic | null>(null);
+  protected readonly slides = signal<SlideCard[] | null>(null);
   protected readonly total = computed(() => this.catalog.index().silos.reduce((s, x) => s + x.productCount, 0) || 93);
 
   protected readonly numbers = [
@@ -173,6 +174,7 @@ export class HomeComponent {
   constructor() {
     this.catalog.loadIndex().subscribe();
     this.catalog.gallery().subscribe((g) => this.gallery.set(g));
+    this.catalog.slides().subscribe((s) => this.slides.set(s));
     const seo = inject(SeoService);
     seo.set({
       title: 'Steel, Stainless, Brass & Copper Stockist in Madurai | Sun Steel Traders',

@@ -14,7 +14,7 @@ export const routes: Routes = [
     path: '',
     component: PublicLayoutComponent,
     children: [
-      { path: '', pathMatch: 'full', data: { heroHeader: true }, loadComponent: () => import('./features/public/home.component').then((m) => m.HomeComponent) },
+      { path: '', pathMatch: 'full', loadComponent: () => import('./features/public/home.component').then((m) => m.HomeComponent) },
       { path: 'products', pathMatch: 'full', loadComponent: () => import('./features/public/products.component').then((m) => m.ProductsComponent) },
       {
         path: 'products/:silo',
@@ -112,6 +112,11 @@ export const routes: Routes = [
         path: 'media',
         canActivate: [permissionGuard(Perm.MediaManage)],
         loadComponent: () => import('./features/admin/media/media.component').then((m) => m.MediaComponent),
+      },
+      {
+        path: 'slides',
+        canActivate: [permissionGuard(Perm.MediaManage)],
+        loadComponent: () => import('./features/admin/slides/slides-admin.component').then((m) => m.SlidesAdminComponent),
       },
       {
         path: 'gallery',

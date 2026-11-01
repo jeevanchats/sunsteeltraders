@@ -79,6 +79,8 @@ export interface Dashboard {
 export interface GallerySettings { show: boolean; kicker: string; heading: string; speed: number }
 export interface GalleryItemAdmin { id: number; mediaId: number; media: MediaItem | null; title: string | null; caption: string | null; linkUrl: string | null; visible: boolean }
 export interface SaveGalleryItem { id?: number; mediaId: number; title: string; caption: string; linkUrl: string; visible: boolean }
+export interface SlideAdmin { id: number; mediaId: number; media: MediaItem | null; title: string | null; caption: string | null; ctaText: string | null; linkUrl: string | null; visible: boolean }
+export interface SaveSlide { id?: number; mediaId: number; title: string; caption: string; ctaText: string; linkUrl: string; visible: boolean }
 export interface GalleryAdmin { settings: GallerySettings; items: GalleryItemAdmin[] }
 
 export interface ProductFull {
@@ -276,6 +278,15 @@ export class AdminApiService {
     return this.http.delete<ApiResponse<unknown>>(`${this.base}/media/${id}`).pipe(map(() => void 0));
   }
 
+  // --- home slideshow ---
+
+  slides(): Observable<SlideAdmin[]> {
+    return this.http.get<ApiResponse<SlideAdmin[]>>(`${this.base}/slides`).pipe(map((r) => r.data!));
+  }
+
+  saveSlides(items: SaveSlide[]): Observable<SlideAdmin[]> {
+    return this.http.put<ApiResponse<SlideAdmin[]>>(`${this.base}/slides`, { items }).pipe(map((r) => r.data!));
+  }
 
   // --- home gallery ---
 

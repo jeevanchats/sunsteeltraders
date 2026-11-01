@@ -86,6 +86,7 @@ builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteService, sunsteel.
 builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteDataService, sunsteel.api.Features.Quotes.QuoteDataService>();
 builder.Services.AddScoped<sunsteel.api.Features.Media.IMediaService, sunsteel.api.Features.Media.MediaService>();
 builder.Services.AddScoped<sunsteel.api.Features.Gallery.IGalleryService, sunsteel.api.Features.Gallery.GalleryService>();
+builder.Services.AddScoped<sunsteel.api.Features.Slides.ISlideService, sunsteel.api.Features.Slides.SlideService>();
 
 // --- Platform ------------------------------------------------------------
 builder.Services.Configure<ForwardedHeadersOptions>(o =>

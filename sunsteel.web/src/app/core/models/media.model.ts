@@ -27,3 +27,13 @@ export interface GalleryPublic {
   settings: { show: boolean; kicker: string; heading: string; speed: number };
   items: GalleryCard[];
 }
+
+/** One banner of the home-page slideshow. */
+export interface SlideCard {
+  id: number;
+  title: string | null;
+  caption: string | null;
+  ctaText: string | null;
+  linkUrl: string | null;
+  media: MediaItem | null;
+}

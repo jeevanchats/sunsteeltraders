@@ -31,6 +31,7 @@ public sealed class SunSteelDbContext : DbContext
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
     public DbSet<GalleryItem> GalleryItems => Set<GalleryItem>();
+    public DbSet<HomeSlide> HomeSlides => Set<HomeSlide>();
     public DbSet<Faq> Faqs => Set<Faq>();
     public DbSet<PolicyPage> PolicyPages => Set<PolicyPage>();
     public DbSet<Lead> Leads => Set<Lead>();
@@ -106,6 +107,7 @@ public sealed class SunSteelDbContext : DbContext
 
         b.Entity<MediaAsset>(e => { e.ToTable("MediaAssets"); e.HasKey(x => x.MediaId); });
         b.Entity<GalleryItem>(e => { e.ToTable("GalleryItems"); e.HasKey(x => x.GalleryItemId); });
+        b.Entity<HomeSlide>(e => { e.ToTable("HomeSlides"); e.HasKey(x => x.HomeSlideId); });
 
         // --- Catalogue (006) -------------------------------------------------
         b.Entity<Silo>(e => { e.ToTable("Silos"); e.HasKey(x => x.SiloId); e.HasIndex(x => x.SiloKey).IsUnique(); });

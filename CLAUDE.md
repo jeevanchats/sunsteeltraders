@@ -71,6 +71,8 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   stock board, theme, settings, staff users
 - ✅ Stage 3 — media library (SkiaSharp → WebP, `Features/Media`, admin Photographs), home sliding gallery (`Features/Gallery`, admin Home gallery, migration 013),
   product / family photos wired to the public cards and product pages
+- ✅ Home slideshow — top-of-page banners (`Features/Slides`, `HomeSlides` table, migration 014, admin Home slideshow). With none saved the
+  site shows four built-in banners from `sunsteel.web/public/hero/`; images come from the media library (wide 3840×1400)
 - ✅ Stage 4 — admin Products editor, Pages & content (page SEO, FAQs, terms/privacy, families, city pages; `Features/Content/ContentAdmin.cs`)
 - ✅ Quotations — `Features/Quotes`, migrations 015 + 016, admin Quotations list/editor, "Create quotation" on a request, admin Quote data
   (product list, HSN codes, MS pipe schedule, GST/terms/bank). Each line is Calculated (material, shape, size, length, pieces → weight from the

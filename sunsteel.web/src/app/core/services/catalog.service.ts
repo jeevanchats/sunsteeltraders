@@ -3,7 +3,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 import { API_BASE_URL } from '../api.config';
 import { ApiResponse } from '../models/api.model';
-import { GalleryPublic } from '../models/media.model';
+import { GalleryPublic, SlideCard } from '../models/media.model';
 import { CatalogIndex, City, PageInfo, Policy, Product, ProductCard, SearchHit, Silo } from '../models/catalog.model';
 
 const EMPTY_INDEX: CatalogIndex = { silos: [], materials: [], sections: [], leadTimes: [], cities: [] };
@@ -52,6 +52,11 @@ export class CatalogService {
 
   city(slug: string): Observable<City> {
     return this.http.get<ApiResponse<City>>(`${this.base}/catalog/cities/${encodeURIComponent(slug)}`).pipe(map((r) => r.data!));
+  }
+
+  /** Visible home-page slides; empty (or null on error) means the site shows its built-in banners. */
+  slides(): Observable<SlideCard[] | null> {
+    return this.http.get<ApiResponse<SlideCard[]>>(`${this.base}/slides`).pipe(map((r) => r.data ?? null), catchError(() => of(null)));
   }
 
   gallery(): Observable<GalleryPublic | null> {

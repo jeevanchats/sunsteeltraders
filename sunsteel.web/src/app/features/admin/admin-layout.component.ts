@@ -69,6 +69,7 @@ export class AdminLayoutComponent {
     { link: '/admin/stock', label: 'Stock board', icon: 'box', perm: Perm.StockManage },
     { link: '/admin/products', label: 'Products', icon: 'list', perm: Perm.CatalogManage },
     { link: '/admin/media', label: 'Photographs', icon: 'image', perm: Perm.MediaManage },
+    { link: '/admin/slides', label: 'Home slideshow', icon: 'image', perm: Perm.MediaManage },
     { link: '/admin/gallery', label: 'Home gallery', icon: 'image', perm: Perm.MediaManage },
     { link: '/admin/pages', label: 'Pages & content', icon: 'doc', perm: Perm.CmsManage },
     { link: '/admin/theme', label: 'Theme', icon: 'palette', perm: Perm.ThemeManage },

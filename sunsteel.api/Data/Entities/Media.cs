@@ -31,3 +31,16 @@ public sealed class GalleryItem
     public int DisplayOrder { get; set; }
     public bool IsVisible { get; set; } = true;
 }
+
+/// <summary>A banner in the home-page slideshow (migration 014).</summary>
+public sealed class HomeSlide
+{
+    public long HomeSlideId { get; set; }
+    public long MediaId { get; set; }
+    public string? Title { get; set; }
+    public string? Caption { get; set; }
+    public string? CtaText { get; set; }
+    public string? LinkUrl { get; set; }
+    public int DisplayOrder { get; set; }
+    public bool IsVisible { get; set; } = true;
+}
