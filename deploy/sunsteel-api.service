@@ -4,7 +4,7 @@ After=network.target mysql.service
 
 [Service]
 WorkingDirectory=/var/www/sunsteel/api
-ExecStart=/usr/bin/dotnet /var/www/sunsteel/api/sunsteel.api.dll
+ExecStart=/var/www/sunsteel/api/sunsteel.api
 EnvironmentFile=/etc/sunsteel/api.env
 Restart=always
 RestartSec=10

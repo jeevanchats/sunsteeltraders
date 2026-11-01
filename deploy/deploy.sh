@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # Build locally, ship to the VPS, (re)start. Idempotent.
-#   DOMAIN=carbrand.in SCHEME=http ./deploy/deploy.sh      # before TLS
-#   DOMAIN=carbrand.in SCHEME=https ./deploy/deploy.sh     # after certbot
+#   DOMAIN=example.com SCHEME=http ./deploy/deploy.sh      # before TLS
+#   DOMAIN=example.com SCHEME=https ./deploy/deploy.sh     # after certbot
+# DOMAIN has no default on purpose: the VPS hosts other sites, so a wrong default would rewire this one.
 # First run also creates the DB + user, generates secrets into /etc/sunsteel/api.env,
 # and installs the Nginx site. Later runs never touch those.
 set -euo pipefail
 HOST="${HOST:-root@62.72.59.84}"
-DOMAIN="${DOMAIN:-carbrand.in}"
+DOMAIN="${DOMAIN:?Set DOMAIN, e.g. DOMAIN=example.com ./deploy/deploy.sh}"
 SCHEME="${SCHEME:-https}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$(mktemp -d)"; trap 'rm -rf "$OUT"' EXIT
 R=/var/www/sunsteel
 
-echo "==> build API";  dotnet publish "$ROOT/sunsteel.api" -c Release -o "$OUT/api" --nologo -v q
+echo "==> build API";  dotnet publish "$ROOT/sunsteel.api" -c Release -r linux-x64 --self-contained true -o "$OUT/api" --nologo -v q
 echo "==> build web";  (cd "$ROOT/sunsteel.web" && npm ci --silent && npx ng build >/dev/null)
 cp -r "$ROOT/sunsteel.web/dist/sunsteel-web" "$OUT/web"
 cat > "$OUT/web/browser/config.js" <<CFG
@@ -66,6 +67,7 @@ for f in $(ls $S/mig/0*.sql | sort); do mysql sunsteel < "$f"; done
 systemctl stop sunsteel-api sunsteel-ssr 2>/dev/null || true
 rm -rf $R/api $R/web; mkdir -p $R/api $R/web
 cp -r $S/api/. $R/api/; cp -r $S/web/. $R/web/
+chmod +x $R/api/sunsteel.api   # self-contained: the VPS needs no shared .NET runtime
 chown -R www-data:www-data $R/api $R/web
 cp $S/sunsteel-api.service $S/sunsteel-ssr.service /etc/systemd/system/
 systemctl daemon-reload
