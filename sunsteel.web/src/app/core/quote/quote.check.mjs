@@ -34,6 +34,14 @@ check('SS pipe ID 60: error, no price', calc({ form: 'sspipe', materialKey: 'ss3
 const m1 = calc({ form: 'mspipe', materialKey: 'ms', section: '2 in.', schedule: 'SCH 40', lengthMm: 6000 });
 check('MS pipe 2in SCH40: OD 60.3, wall 3.91, 32.6 kg, 5.44 kg/m', m1.derived.od === 60.3 && m1.derived.wt === 3.91 && m1.kg === 32.6 && near(m1.kgPerM, 5.44));
 check('MS pipe missing from table: unavailable, no price', calc({ form: 'mspipe', materialKey: 'ms', section: '6 in.', schedule: 'SCH 160', lengthMm: 6000 }).error !== '');
+const t1 = calc({ form: 'tube', materialKey: 'brass', dims: { OD: 100, ID: 60 }, lengthMm: 1000 });
+check('Tube by inside diameter: brass OD 100 x ID 60 = wall 20, 42.73 kg', near(t1.pieceKg, 42.73, 0.01) && t1.derived.wt === 20 && t1.derived.id === 60);
+check('Tube: inside diameter not smaller than the outside is refused', calc({ form: 'tube', materialKey: 'brass', dims: { OD: 60, ID: 60 }, lengthMm: 1000 }).error !== '');
+check('Tube by wall still works: OD 100 x wall 20 = 42.73 kg', near(calc({ form: 'tube', materialKey: 'brass', dims: { OD: 100, WT: 20 }, lengthMm: 1000 }).pieceKg, 42.73, 0.01));
+const h1 = calc({ form: 'rect', materialKey: 'ms', dims: { A: 100, B: 50, a: 92, b: 42 }, lengthMm: 1000 });
+check('Hollow section by inside size: 100 x 50 outside, 92 x 42 inside = wall 4, 8.92 kg', near(h1.pieceKg, 8.92, 0.01) && h1.derived.wt === 4);
+check('Hollow section: unequal walls are refused', calc({ form: 'rect', materialKey: 'ms', dims: { A: 100, B: 50, a: 92, b: 40 }, lengthMm: 1000 }).error !== '');
+check('Switching mode with nothing typed yet gives no price and no error', (() => { const r = calc({ form: 'tube', materialKey: 'brass', dims: { OD: 100, ID: 0 }, lengthMm: 1000 }); return r.kg === 0 && r.error === ''; })());
 check('Beam: kg/m from the IS 808 table', calc({ form: 'beam', materialKey: 'ms', section: 'ISMB 300', lengthMm: 6000, quantity: 2 }).kg === 530.4);
 check('Empty inputs: no price, no error', (() => { const r = calc({ form: 'round', materialKey: 'ms', lengthMm: 500 }); return r.kg === 0 && r.error === ''; })());
 check('Material list filtered by shape', materialsFor('sspipe', materials).length === 1 && materialsFor('mspipe', materials).every((m) => m.key === 'ms'));

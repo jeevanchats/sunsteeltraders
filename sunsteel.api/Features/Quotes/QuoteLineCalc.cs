@@ -9,7 +9,8 @@ public sealed record CalcResult(decimal PieceKg, decimal Kg, string Description,
 /// <summary>
 /// Weight for a calculated quote line. Reuses <see cref="WeightCalculator"/> for every catalogue shape; stainless
 /// and mild-steel pipes are two extra shapes that resolve to the same tube formula
-/// (π × (OD − WT) × WT × L × ρ), so figures match the public calculator. The editor mirrors this
+/// (π × (OD − WT) × WT × L × ρ), so figures match the public calculator. A tube may be given by inside diameter (ID) and a
+/// hollow section by inside sizes (a, b) instead of its wall. The editor mirrors this
 /// in <c>core/quote/quote-lines.ts</c>; change both.
 /// </summary>
 public static class QuoteLineCalc
@@ -59,6 +60,33 @@ public static class QuoteLineCalc
                 }
                 calcForm = "tube";
                 break;
+
+            case "tube" when d.GetValueOrDefault("ID") > 0:
+            {
+                // Tube or bush given by outside and inside diameter (brass, copper, gunmetal ...): the wall follows from them.
+                var od = d.GetValueOrDefault("OD");
+                var inner = d["ID"];
+                if (od <= 0) throw new AppException("Enter the outside diameter.");
+                if (inner >= od) throw new AppException("Inside diameter must be less than the outside diameter.");
+                d["WT"] = (od - inner) / 2;
+                desc = $"Tube {N(od)} OD × {N(inner)} ID";
+                dimsText = $"OD {N(od)} × ID {N(inner)} ({N(d["WT"])} wall)";
+                break;
+            }
+
+            case "rect" when d.GetValueOrDefault("a") > 0 || d.GetValueOrDefault("b") > 0:
+            {
+                // Hollow section given by outside and inside sizes: both directions must leave the same wall.
+                double A = d.GetValueOrDefault("A"), B = d.GetValueOrDefault("B"), a = d.GetValueOrDefault("a"), b = d.GetValueOrDefault("b");
+                if (!(A > 0 && B > 0 && a > 0 && b > 0)) throw new AppException("Enter the outside and inside sizes.");
+                if (a >= A || b >= B) throw new AppException("The inside sizes must be smaller than the outside sizes.");
+                double w1 = (A - a) / 2, w2 = (B - b) / 2;
+                if (Math.Abs(w1 - w2) > 0.01) throw new AppException("The inside sizes must leave the same wall all round: (A - a) / 2 must equal (B - b) / 2.");
+                d["WT"] = w1;
+                desc = $"Hollow section {N(A)} × {N(B)} outside, {N(a)} × {N(b)} inside";
+                dimsText = $"{N(A)} × {N(B)} outside, {N(a)} × {N(b)} inside ({N(w1)} wall)";
+                break;
+            }
 
             default:
                 desc = $"{FormName(form)} {WeightCalculator.DimText(form, d, section)}".Trim();

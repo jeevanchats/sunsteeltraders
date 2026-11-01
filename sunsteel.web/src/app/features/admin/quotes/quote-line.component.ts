@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { QuoteItemInput, QuoteLookups, QuoteProduct } from '../../../core/services/admin-api.service';
-import { SHAPES, dimFields, lineFigures, materialsFor, resolveHsn } from '../../../core/quote/quote-lines';
+import { SHAPES, dimFieldsFor, insideMode, lineFigures, materialsFor, resolveHsn } from '../../../core/quote/quote-lines';
 import { lineChecks, lineFieldId } from '../../../core/quote/quote-progress';
 import { ItemType, inr } from '../../../core/quote/quote-math';
 import { lastRates, recentText } from '../../../core/quote/quote-memory';
@@ -62,6 +62,13 @@ const TYPES: { key: ItemType; label: string }[] = [
             <label class="fd" [class.fd-need]="need('length')" [class.fd-ok]="ok('length')"><span class="fl">Cut length (mm)</span>
               <input class="ainput" [attr.id]="id('length')" type="number" min="0" step="any" inputmode="decimal" [value]="l.lengthMm || ''" (input)="setNum('lengthMm', $event)" /></label>
 
+            @if (canInside()) {
+              <div class="fd sm:col-span-2 lg:col-span-4"><span class="fl">The wall is given as</span>
+                <div class="ql-seg !grid-cols-2" role="group" aria-label="How the wall is given">
+                  <button type="button" [class.on]="!inside()" [attr.aria-pressed]="!inside()" (click)="setInside(false)">Wall thickness</button>
+                  <button type="button" [class.on]="inside()" [attr.aria-pressed]="inside()" (click)="setInside(true)">{{ l.form === 'tube' ? 'Inside diameter' : 'Inside size' }}</button>
+                </div></div>
+            }
             @for (f of dims(); track f[0]) {
               <label class="fd" [class.fd-need]="need('dim-' + f[0])" [class.fd-ok]="ok('dim-' + f[0])"><span class="fl">{{ f[1] }} (mm)</span>
                 <input class="ainput" [attr.id]="id('dim-' + f[0])" type="number" min="0" step="any" inputmode="decimal" [value]="dv(f[0])" (input)="setDim(f[0], $event)" /></label>
@@ -111,7 +118,7 @@ const TYPES: { key: ItemType; label: string }[] = [
           @if (fig.calc?.error; as e) { <p class="alert mt-3" role="alert">{{ e }}</p> }
           @else if (fig.calc && fig.calc.kg > 0) {
             <p class="ql-result">
-              <span>{{ fmt(fig.calc.pieceKg) }} kg each · {{ fmt(fig.calc.kgPerM) }} kg/m</span>
+              <span>{{ fmt(fig.calc.pieceKg) }} kg each · {{ fmt(fig.calc.kgPerM) }} kg/m@if (inside() && fig.calc.derived.wt) { · wall {{ fig.calc.derived.wt }} mm }</span>
               <b>{{ fmt(fig.kg) }} kg total</b>
               <small>theoretical weight</small></p>
           }
@@ -213,7 +220,10 @@ export class QuoteLineComponent {
       { weightDecimals: lk.defaults.weightDecimals, gstRaw: lk.defaults.gstRaw, gstFinished: lk.defaults.gstFinished });
   });
   protected readonly materials = computed(() => { this.rev(); return materialsFor(this.line().form, this.lookups().materials); });
-  protected readonly dims = computed(() => { this.rev(); return dimFields(this.line().form); });
+  protected readonly dims = computed(() => { this.rev(); return dimFieldsFor(this.line()); });
+  /** Tubes and hollow sections can be given by their inside size instead of the wall. */
+  protected readonly canInside = computed(() => { this.rev(); const f = this.line().form; return f === 'tube' || f === 'rect'; });
+  protected readonly inside = computed(() => { this.rev(); return insideMode(this.line()); });
   protected readonly sections = computed(() => { this.rev(); return this.lookups().sections.filter((s) => s.kind === this.line().form); });
   protected readonly pipeSizes = computed(() => [...new Set(this.lookups().msPipes.map((p) => p.nominalSize))]);
   protected readonly schedules = computed(() => { this.rev(); return this.lookups().msPipes.filter((p) => p.nominalSize === this.line().section).map((p) => p.schedule); });
@@ -241,7 +251,7 @@ export class QuoteLineComponent {
 
   /** The typed size, or blank while unset. */
   protected dv(k: string): number | string {
-    return this.line().dims[k] ?? '';
+    return this.line().dims[k] || '';
   }
 
   protected defaultRate(): string | null {
@@ -277,6 +287,21 @@ export class QuoteLineComponent {
     this.touch();
   }
 
+  /** Switch a tube or hollow section between wall thickness and inside size, carrying the size across so nothing is retyped. */
+  protected setInside(on: boolean): void {
+    const l = this.line();
+    const d = l.dims;
+    const r2 = (n: number) => Math.round(n * 100) / 100;
+    if (l.form === 'tube') {
+      if (on) { d['ID'] = d['OD'] > 0 && d['WT'] > 0 ? r2(d['OD'] - 2 * d['WT']) : 0; delete d['WT']; }
+      else { if (d['OD'] > 0 && d['ID'] > 0 && d['ID'] < d['OD']) d['WT'] = r2((d['OD'] - d['ID']) / 2); delete d['ID']; }
+    } else if (l.form === 'rect') {
+      if (on) { d['a'] = d['A'] > 0 && d['WT'] > 0 ? r2(d['A'] - 2 * d['WT']) : 0; d['b'] = d['B'] > 0 && d['WT'] > 0 ? r2(d['B'] - 2 * d['WT']) : 0; delete d['WT']; }
+      else { if (d['A'] > 0 && d['a'] > 0 && d['a'] < d['A']) d['WT'] = r2((d['A'] - d['a']) / 2); delete d['a']; delete d['b']; }
+    }
+    this.touch();
+  }
+
   protected setShape(form: string): void {
     const l = this.line();
     l.form = form; l.dims = {}; l.section = null; l.schedule = null;
@@ -303,7 +328,8 @@ export class QuoteLineComponent {
   protected setDim(k: string, e: Event): void {
     const raw = (e.target as HTMLInputElement).value;
     const l = this.line();
-    if (raw === '') delete l.dims[k]; else l.dims[k] = +raw;
+    // An emptied inside-size box stays at 0 (not removed), so the line does not drop back to "wall thickness" mid-edit.
+    if (raw === '') { if (k === 'ID' || k === 'a' || k === 'b') l.dims[k] = 0; else delete l.dims[k]; } else l.dims[k] = +raw;
     this.touch();
   }
 

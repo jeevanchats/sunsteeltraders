@@ -43,6 +43,21 @@ export function materialsFor(shape: string | null, materials: MaterialRef[]): Ma
 }
 
 /** Size inputs per shape: [key, label]. Pipes, beams and channels have their own controls. */
+/**
+ * Whether a tube or hollow section is being given by its inside size instead of its wall. The keys are there once the person
+ * switches (the value may still be empty), so the choice survives while nothing is typed yet. ID = inside diameter; a, b = inside sizes.
+ */
+export function insideMode(l: { form: string | null; dims: Record<string, number> }): boolean {
+  return (l.form === 'tube' && 'ID' in l.dims) || (l.form === 'rect' && ('a' in l.dims || 'b' in l.dims));
+}
+
+/** The size inputs for a line: as dimFields, with the inside-size inputs in place of the wall when that is how it is given. */
+export function dimFieldsFor(l: { form: string | null; dims: Record<string, number> }): [string, string][] {
+  if (l.form === 'tube' && insideMode(l)) return [['OD', 'Outside dia.'], ['ID', 'Inside dia.']];
+  if (l.form === 'rect' && insideMode(l)) return [['A', 'Side A'], ['B', 'Side B'], ['a', 'Inside A'], ['b', 'Inside B']];
+  return dimFields(l.form);
+}
+
 export function dimFields(shape: string | null): [string, string][] {
   if (!shape || shape === 'sspipe' || shape === 'mspipe' || shape === 'beam' || shape === 'channel') return [];
   return (DIMS[shape as Form] ?? []).map(([k, label]) => [k, label]);
@@ -96,6 +111,20 @@ export function calcLine(l: LineInputs, materials: MaterialRef[], sections: Sect
     calcForm = 'tube';
   } else {
     calcForm = form;
+    if (form === 'tube' && num(d['ID'])) {
+      const od = num(d['OD']);
+      if (!od) return EMPTY();
+      if (d['ID'] >= od) return EMPTY('Inside diameter must be less than the outside diameter.');
+      d['WT'] = (od - d['ID']) / 2;
+      derived.id = d['ID']; derived.wt = d['WT'];
+    } else if (form === 'rect' && (num(d['a']) || num(d['b']))) {
+      const A = num(d['A']), B = num(d['B']), a = num(d['a']), b = num(d['b']);
+      if (!(A && B && a && b)) return EMPTY();
+      if (a >= A || b >= B) return EMPTY('The inside sizes must be smaller than the outside sizes.');
+      if (Math.abs((A - a) / 2 - (B - b) / 2) > 0.01) return EMPTY('The inside sizes must leave the same wall all round: (A − a) ÷ 2 must equal (B − b) ÷ 2.');
+      d['WT'] = (A - a) / 2;
+      derived.wt = d['WT'];
+    }
     if (form === 'beam' || form === 'channel') {
       kgm = sections.find((s) => s.designation === l.section)?.kgPerMetre ?? 0;
       if (!kgm) return EMPTY();

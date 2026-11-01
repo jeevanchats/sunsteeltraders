@@ -1,5 +1,5 @@
 import { QuoteItemInput } from '../services/admin-api.service';
-import { dimFields } from './quote-lines';
+import { dimFieldsFor } from './quote-lines';
 
 /** One thing a quotation needs before it can go out. `id` is the page id of the field to jump to. */
 export interface Check { key: string; id: string; label: string; done: boolean }
@@ -24,7 +24,7 @@ export function lineChecks(l: QuoteItemInput, index: number, fig: LineState): Ch
     add('form', 'Shape', !!l.form);
     add('material', 'Material', !!l.materialKey);
     add('length', 'Cut length', pos(l.lengthMm));
-    for (const [k, label] of dimFields(l.form)) add(`dim-${k}`, label, pos(l.dims[k]));
+    for (const [k, label] of dimFieldsFor(l)) add(`dim-${k}`, label, pos(l.dims[k]));
     if (l.form === 'beam' || l.form === 'channel') add('section', 'Section', !!l.section);
     if (l.form === 'sspipe') {
       add('dim-OD', 'Outside diameter', pos(l.dims['OD']));
