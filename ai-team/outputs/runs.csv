@@ -1,0 +1,4 @@
+date,prospect,folder,verdict,accuracy,specificity,voice,usefulness,email,status,replied
+2026-11-01,https://sunsteeltraders.com,2026-11-01_sunsteeltraders-com,pass,5,5,4,4,5,PENDING_REVIEW,
+2026-11-01,https://demo.wavos.in/site,2026-11-01_demo-wavos-in,revise,4,3,2,3,4,PENDING_REVIEW,
+2026-11-01,https://demo.wavos.in/site,2026-11-01_demo-wavos-in,pass,5,5,5,5,5,PENDING_REVIEW,

@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "accuracy": 5,
+    "specificity": 5,
+    "voice": 5,
+    "usefulness": 5,
+    "email": 5
+  },
+  "verdict": "pass",
+  "issues": [],
+  "risks": [
+    "Placeholders to fill before sending: [CONFIRM: contact name] in the email, and [CONFIRM: trial link] in Sample 1 and Sample 3.",
+    "No contact details appear on the saved site. Confirm the right recipient and channel, especially since the email offers WhatsApp as an option.",
+    "WavOS is pre-launch and the site is a demo. Confirm with them that the 14-day free trial and sign-up are live, or when they will be, before any trial CTA (Samples 1, 2, 3) is presented as ready to publish.",
+    "Sample 2 compares against a third-party per-user range (elitemindz.co, \u20b9500\u20132,000/user/month). It is cited correctly. Still, competitors may object that not all 30 staff need paid logins. Check the client is comfortable with a public comparison and that the source page still shows that range.",
+    "Sample 2 says the bill stays the same 'until your team grows past 30', which matches the Growth tier of 11\u201330 employees. Confirm pricing hasn't changed before launch.",
+    "Sample 3 slide 5 adds 'Paid' after the pack's listed stages (which end at 'Delivered'). This is consistent with the overall 8-step flow but not with the pack's own stage list. Confirm the client is happy with it.",
+    "Sample 3 plans to reuse launch teaser clips. Confirm the agency has the rights and the client's approval to reuse that footage in social posts.",
+    "The email sign-off reads 'Chris Graphic Design Studio'. Confirm this is the correct sender name and signature format.",
+    "The other four carousel posts need full stage lists for the remaining live packs, which must come from WavOS."
+  ]
+}

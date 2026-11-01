@@ -1,0 +1,22 @@
+{
+  "scores": {
+    "accuracy": 5,
+    "specificity": 5,
+    "voice": 4,
+    "usefulness": 4,
+    "email": 5
+  },
+  "verdict": "pass",
+  "issues": [],
+  "risks": [
+    "Placeholders must all be filled before sending, especially the owner's name, the past work we did for them, and which of the five phone numbers goes on the .com site.",
+    "Sample 1: the order flow is invented as a suggestion. Store pickup ('Pick up from our Simmakkal store') and 'keep it ready' are implied, not stated in the brief. The client must confirm every step.",
+    "Sample 2 is mostly an outline with placeholders. Only the EN24 note is sourced. The owner may want the other one-line grade notes pasted in from the .com site so the client sees real substance.",
+    "Sample 3 keeps the client's unverified superlative 'Biggest Stockist for Metals based in Madurai'. It is their own claim, but publishing it on a new page carries some risk.",
+    "Sample 3: Tata/JSW/Vizag wording should stay 'stock and deal in' unless the client confirms authorised dealer status. Association membership also needs confirming, since the brief only shows logos.",
+    "Tone: the email points out a gap on sunsteeltraders.com, which our agency may have built. Consider framing the samples as next steps rather than fixes.",
+    "The .co.in blog may be our own work. Check before any comment on blog strategy.",
+    "The '\u2122 Convenience Stores for Metal' slogan on .co.in may belong to Metal Supermarkets. Unverified, but worth raising with the client separately.",
+    "Delivery claims ('same-day service', 'across Tamil Nadu') rest on site copy and one testimonial. Confirm their terms before publishing."
+  ]
+}

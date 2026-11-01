@@ -1,0 +1,26 @@
+{
+  "scores": {
+    "accuracy": 4,
+    "specificity": 3,
+    "voice": 2,
+    "usefulness": 3,
+    "email": 4
+  },
+  "verdict": "revise",
+  "issues": [
+    "Voice (all samples): the brief has no voice information, so the samples use neutral copy that cannot be checked against the prospect's tone. Get the WavOS teaser scripts or creative brief from agency files, then rewrite all three samples in that tone. This blocks a pass.",
+    "Sample 3: 'That's where you'll find what we're building, the launch teasers in one place, and news as it happens' says the official site hosts the teasers and a news feed. The brief does not support this. Remove it or mark it [CONFIRM: site hosts teasers and news].",
+    "Sample 1: 'a short series of launch teaser videos' adds detail the brief does not have. It only says the agency made launch teaser videos. Drop 'short series' or mark it [CONFIRM].",
+    "Specificity/usefulness (all samples): apart from the namesake problem, every sample depends on [CONFIRM] placeholders for what WavOS is and who it is for, so a WavOS reader gets little. Once the teaser scripts are available, fill in the description and audience and add at least one concrete product detail per sample.",
+    "Pitch email: the line 'When we searched for \"WavOS\"... wavos.in did not' doesn't account for the site possibly being a pre-launch demo that is not indexed yet. Add a qualifier such as 'once you're live' so the client doesn't read it as a misunderstanding of their launch stage."
+  ],
+  "risks": [
+    "Placeholders for the product description and the official live domain appear in all three samples, and the audience placeholder appears in Samples 1 and 2. All must be filled before sending.",
+    "The URL we were given is a demo site. If WavOS is not public yet, the search-visibility gap may just be timing, and pitching it could look uninformed. Confirm the launch stage and which site version to assume.",
+    "The brief contradicts itself on whether namesakes appear on the first page of search results. The email avoids the claim, but the owner should check with the Researcher.",
+    "The signature 'Chris Graphic Design Studio' does not come from the brief. Confirm it is the correct agency name.",
+    "The email opens with 'Hello WavOS team'. Use the contact's name if the owner has it, since this is an existing client.",
+    "The 'voiceover' detail was removed from the email. Re-add it only if the agency profile is reliable.",
+    "The social post asks readers to share the link. Check the client is comfortable publicly saying other businesses share its name."
+  ]
+}
