@@ -30,3 +30,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 021 | Roles: Manager and Staff limited to dashboard, requests, quotations, customers, quote data; new permission quote.data; Sales renamed Staff |
 | 022 | PageViews (first-party site traffic for the dashboard graph: no cookies, no stored IP) |
 | 023 | Email settings (Brevo SMTP, Mock/Live, alert addresses) for new-request emails |
+| 024 | Standard MS pipe schedule (ASME B36.10M, NPS 1/2 to 12) for the weight calculator and quotations; only added while the table still holds the 10 sample rows |

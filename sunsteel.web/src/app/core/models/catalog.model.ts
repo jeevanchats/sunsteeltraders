@@ -32,7 +32,10 @@ export interface Section { designation: string; kind: 'beam' | 'channel'; kgPerM
 export interface LeadTime { city: string; leadTime: string }
 export interface CityCard { slug: string; name: string; distanceKm: number; leadTime?: string | null; path: string }
 
-export interface CatalogIndex { silos: SiloSummary[]; materials: Material[]; sections: Section[]; leadTimes: LeadTime[]; cities: CityCard[] }
+/** One row of the MS pipe schedule (ASME B36.10M): outside diameter and wall for a nominal size at a schedule. */
+export interface PipeSchedule { nominalSize: string; odMm: number; schedule: string; wallMm: number }
+
+export interface CatalogIndex { silos: SiloSummary[]; materials: Material[]; sections: Section[]; leadTimes: LeadTime[]; cities: CityCard[]; msPipes?: PipeSchedule[] }
 
 export interface SearchHit { slug: string; siloKey: string; name: string; grade: string; siloName: string; stockStatus: StockStatus; match?: string | null; path: string }
 

@@ -78,7 +78,21 @@ public sealed class CatalogService : ICatalogService
             .Select(l => new LeadTimeDto(l.City, l.LeadTime)).ToListAsync(ct);
         var cities = await _db.Cities.AsNoTracking().Where(c => c.IsPublished).OrderBy(c => c.DisplayOrder)
             .Select(c => new CityCardDto(c.Slug, c.Name, c.DistanceKm, c.LeadTime)).ToListAsync(ct);
-        return new CatalogIndexDto(silos, materials, sections, leads, cities);
+        var pipes = (await _db.MsPipeSchedule.AsNoTracking().ToListAsync(ct))
+            .OrderBy(p => p.DisplayOrder).ThenBy(p => ScheduleRank(p.Schedule))
+            .Select(p => new PipeScheduleDto(p.NominalSize, p.OdMm, p.Schedule, p.WallMm)).ToList();
+        return new CatalogIndexDto(silos, materials, sections, leads, cities, pipes);
+    }
+
+    /// <summary>Schedules in their usual order: SCH 10, 20, 30, 40 (STD), 60, 80 (XS), 100, 120, 140, 160, XXS; anything else last.</summary>
+    private static double ScheduleRank(string schedule)
+    {
+        var s = schedule.Trim().ToUpperInvariant();
+        if (s == "STD") return 40.5;
+        if (s == "XS") return 80.5;
+        if (s == "XXS") return 170;
+        var digits = new string(s.Where(char.IsDigit).ToArray());
+        return double.TryParse(digits, out var n) ? n : 1000;
     }
 
     public async Task<SiloDto> GetSiloAsync(string key, CancellationToken ct = default)

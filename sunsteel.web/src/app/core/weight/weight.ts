@@ -33,14 +33,26 @@ export const FORMULA_TEXT: Record<Form, string> = {
   hex: 'W = 0.866025 × A/F² × L × ρ ÷ 1,000,000',
   flat: 'W = T × W × L × ρ ÷ 1,000,000',
   plate: 'W = T × W × L × ρ ÷ 1,000,000',
-  tube: 'W = π × (OD − WT) × WT × L × ρ ÷ 1,000,000',
-  rect: 'W = (2(A + B) − 4·WT) × WT × L × ρ ÷ 1,000,000',
+  tube: 'W = π × (OD − WT) × WT × L × ρ ÷ 1,000,000   (with an inside diameter, WT = (OD − ID) ÷ 2)',
+  rect: 'W = (2(A + B) − 4·WT) × WT × L × ρ ÷ 1,000,000   (with inside sizes, WT = (A − a) ÷ 2 = (B − b) ÷ 2)',
   angle: 'W = (A + B − T) × T × L × ρ ÷ 1,000,000',
   beam: 'W = IS 808 kg/m × L ÷ 1,000',
   channel: 'W = IS 808 kg/m × L ÷ 1,000',
 };
 
 const v = (d: Dims, k: string) => (d[k] > 0 ? d[k] : 0);
+
+/** Wall thickness from the outside and inside diameters; 0 unless the inside is smaller than the outside. */
+export function wallFromId(od: number, id: number): number {
+  return od > 0 && id > 0 && id < od ? Math.round(((od - id) / 2) * 1000) / 1000 : 0;
+}
+
+/** Wall of a rectangular or square hollow section from its outside sizes (A, B) and inside sizes (a, b); 0 unless both directions leave the same wall. */
+export function rectWallFromInside(A: number, B: number, a: number, b: number): number {
+  if (!(A > 0 && B > 0 && a > 0 && b > 0 && a < A && b < B)) return 0;
+  const w1 = (A - a) / 2, w2 = (B - b) / 2;
+  return Math.abs(w1 - w2) <= 0.01 ? Math.round(w1 * 1000) / 1000 : 0;
+}
 
 /** Plain-language problem with the dimensions, or '' when they are valid. */
 export function validate(form: Form, d: Dims): string {

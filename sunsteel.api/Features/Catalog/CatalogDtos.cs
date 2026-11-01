@@ -29,11 +29,13 @@ public sealed record SiloDto(SiloSummaryDto Silo, string MetaTitle, string MetaD
 public sealed record MaterialDto(string Key, string Name, decimal Density);
 public sealed record SectionDto(string Designation, string Kind, decimal KgPerMetre);
 public sealed record LeadTimeDto(string City, string LeadTime);
+/// <summary>One row of the MS pipe schedule (ASME B36.10M): the outside diameter and wall thickness of a nominal size at a schedule.</summary>
+public sealed record PipeScheduleDto(string NominalSize, decimal OdMm, string Schedule, decimal WallMm);
 
 /// <summary>Everything the header, home page, calculator and RFQ need in one cached call.</summary>
 public sealed record CatalogIndexDto(
     IReadOnlyList<SiloSummaryDto> Silos, IReadOnlyList<MaterialDto> Materials, IReadOnlyList<SectionDto> Sections,
-    IReadOnlyList<LeadTimeDto> LeadTimes, IReadOnlyList<CityCardDto> Cities);
+    IReadOnlyList<LeadTimeDto> LeadTimes, IReadOnlyList<CityCardDto> Cities, IReadOnlyList<PipeScheduleDto> MsPipes);
 
 public sealed record SearchHitDto(string Slug, string SiloKey, string Name, string Grade, string SiloName, string StockStatus, string? Match)
 {

@@ -10,6 +10,15 @@ near(w.pieceKg('tube', { OD: 60.3, WT: 3.6 }, 1000, 7.85), 5.03, 0.01);    // 2�
 near(w.pieceKg('hex', { AF: 32 }, 1000, 8.5), 7.54, 0.01);                 // brass hex 32 A/F
 near(w.pieceKg('beam', {}, 6000, 0, 44.2), 265.2, 0.01);                    // ISMB 300 × 6 m
 assert.equal(w.pieceKg('tube', { OD: 20, WT: 10 }, 1000, 7.85), 0);         // impossible wall
+near(w.pieceKg('tube', { OD: 60.3, WT: 3.91 }, 1000, 7.85), 5.44, 0.01);   // 2 in. SCH 40 (ASME B36.10M) = 5.44 kg/m
+near(w.pieceKg('tube', { OD: 60.3, WT: 5.54 }, 1000, 7.85), 7.48, 0.01);   // 2 in. SCH 80 = 7.48 kg/m
+near(w.pieceKg('tube', { OD: 114.3, WT: 6.02 }, 1000, 7.85), 16.07, 0.01); // 4 in. SCH 40 = 16.07 kg/m
+assert.equal(w.wallFromId(60, 50), 5);                                     // OD 60, ID 50 -> wall 5
+near(w.pieceKg('tube', { OD: 60, WT: w.wallFromId(60, 50) }, 1000, 7.85), 6.78, 0.01);
+assert.equal(w.wallFromId(50, 50), 0);                                     // inside not smaller than outside
+assert.equal(w.rectWallFromInside(100, 50, 92, 42), 4);                    // 100 x 50 outside, 92 x 42 inside -> wall 4
+near(w.pieceKg('rect', { A: 100, B: 50, WT: w.rectWallFromInside(100, 50, 92, 42) }, 1000, 7.85), 8.92, 0.01);
+assert.equal(w.rectWallFromInside(100, 50, 92, 40), 0);                    // unequal walls are refused
 assert.equal(w.validate('angle', { A: 50, B: 50, T: 60 }), 'Thickness must be less than the shorter leg.');
 assert.equal(w.dimText('flat', { W: 75, T: 12 }), '75 × 12');
 assert.deepEqual(w.rangeOf('Ø 6–150 mm, h9/h11'), [6, 150]);

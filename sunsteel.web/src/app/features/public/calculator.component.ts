@@ -21,7 +21,7 @@ const FAQS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ss-page-header label="Weight calculator" title="How much will it <em>weigh?</em>"
-      lede="Rounds, squares, hex, flats, plates, tubes, hollow sections, angles, beams and channels, in any of our 27 materials. Add the result to your request and the concierge quotes it."
+      lede="Rounds, squares, hex, flats, plates, tubes and MS pipes by schedule, hollow sections, angles, beams and channels, in any of our 27 materials. Add the result to your request and the concierge quotes it."
       [crumbs]="[['/', 'Home'], ['', 'Metal weight calculator']]" />
 
     <section class="wrap pb-[clamp(56px,7vw,96px)]">
@@ -38,6 +38,7 @@ const FAQS = [
           }
         </dl>
         <p class="mt-4 text-[13px] text-muted">Dimensions in millimetres, density ρ in g/cm³, weight in kilograms. Beams and channels use IS 808 nominal kg/m.</p>
+        <p class="mt-2 text-[13px] text-muted">Tubes and hollow sections can be entered by wall thickness or by inside size. <b class="font-medium text-ink">MS pipe (SCH)</b> takes the outside diameter and wall thickness from the pipe schedule (ASME B36.10M, SCH 10 to SCH 160, STD, XS, XXS): pick the nominal size and the schedule.</p>
       </div>
       <div>
         <span class="label label-accent mb-4">Densities</span>

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using sunsteel.api.Common.Models;
 using sunsteel.api.Common.Security;
 
@@ -16,10 +17,13 @@ public sealed class QuotesController : ControllerBase
     private readonly IQuoteService _quotes;
     private readonly IQuoteDataService _data;
 
-    public QuotesController(IQuoteService quotes, IQuoteDataService data)
+    private readonly IOutputCacheStore _cache;
+
+    public QuotesController(IQuoteService quotes, IQuoteDataService data, IOutputCacheStore cache)
     {
         _quotes = quotes;
         _data = data;
+        _cache = cache;
     }
 
     [HttpGet]
@@ -113,7 +117,11 @@ public sealed class QuotesController : ControllerBase
     [HttpPut("data/pipes")]
     [Authorize(Policy = Perm.QuoteData)]
     public async Task<IActionResult> SavePipes(IReadOnlyList<MsPipeDto> rows, CancellationToken ct)
-        => Ok(ApiResponse<IReadOnlyList<MsPipeDto>>.Ok(await _data.ReplacePipesAsync(User.UserId(), rows, ct), "Pipe schedule saved."));
+    {
+        var saved = await _data.ReplacePipesAsync(User.UserId(), rows, ct);
+        await _cache.EvictByTagAsync(Site.SiteController.CacheTag, ct); // the public weight calculator reads this table
+        return Ok(ApiResponse<IReadOnlyList<MsPipeDto>>.Ok(saved, "Pipe schedule saved."));
+    }
 
     [HttpGet("data/settings")]
     [Authorize(Policy = Perm.LeadManage)]

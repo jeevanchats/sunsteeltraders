@@ -97,6 +97,8 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   Site traffic (migration 022, `Features/Analytics`): the public site posts each page view to `/api/events/view` (no cookies, no stored IP; a daily one-way hash counts distinct visitors;
   bots, /admin and Do-Not-Track are skipped); the admin dashboard graphs visits and page views per day for a chosen period (`/api/admin/analytics`).
 - ✅ Email alerts (migration 023, `Features/Email`): a Super Admin sets up Brevo SMTP under admin > Email alerts (Mock logs only, Live sends; key saved encrypted with a key derived from Jwt:Key); each saved request is emailed to the alert addresses in the background, and a mail failure never affects the request.
+- ✅ Weight calculator: MS pipe by schedule (migration 024 seeds ASME B36.10M, read from `MsPipeSchedule` through `/api/catalog`; editable in Quote data), tubes by wall or inside diameter,
+  hollow sections by wall or inside sizes. These are UI helpers over the same formulas (`weight.ts` and `WeightCalculator.cs` unchanged); the request stores OD and wall.
 - Stage 5 — sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

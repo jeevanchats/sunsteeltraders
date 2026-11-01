@@ -7,7 +7,7 @@ import { GalleryPublic, SlideCard } from '../models/media.model';
 import { CatalogIndex, City, PageInfo, Policy, Product, ProductCard, SearchHit, Silo } from '../models/catalog.model';
 import { withProductPhoto, withSiloPhoto, withSiloPhotos } from '../catalog/built-in-photos';
 
-const EMPTY_INDEX: CatalogIndex = { silos: [], materials: [], sections: [], leadTimes: [], cities: [] };
+const EMPTY_INDEX: CatalogIndex = { silos: [], materials: [], sections: [], leadTimes: [], cities: [], msPipes: [] };
 
 /**
  * Public catalogue reads. GETs made during SSR are replayed in the browser by Angular's
