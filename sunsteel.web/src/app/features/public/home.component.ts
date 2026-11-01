@@ -102,6 +102,15 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
       </div>
     </section>
 
+    <!-- brands we stock -->
+    <section class="wrap py-[clamp(40px,5vw,72px)]" ssReveal>
+      <span class="label label-accent mb-3">Brands we stock</span>
+      <div class="mt-4 grid gap-5 rounded-sm border border-line bg-white p-[clamp(14px,2.5vw,32px)]">
+        <img src="/about/brands-steel.webp" width="1955" height="134" alt="Steel brands we stock: SAIL, Vizag Steel (RINL), Tata Steel, JSW Steel, APL Apollo, Noble Steels, AM/NS India, MTC Group and Jindal Steel and Power" class="mx-auto h-auto w-full" loading="lazy" />
+        <img src="/about/brands-metals.webp" width="847" height="100" alt="Aluminium and stainless brands we stock: Jindal Aluminium, Balco, Hindalco and Jindal Stainless" class="mx-auto h-auto w-full max-w-[520px]" loading="lazy" />
+      </div>
+    </section>
+
     <!-- 04 the scale teaser -->
     <section class="border-y border-line bg-paper py-[clamp(40px,5vw,72px)]" ssReveal>
       <div class="wrap flex flex-wrap items-center justify-between gap-6">
