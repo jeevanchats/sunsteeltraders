@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { apiError } from '../../core/models/api.model';
 import { RequestService } from '../../core/services/request.service';
@@ -11,7 +12,7 @@ const INDUSTRIES = ['Machine shop / CNC', 'Fabrication & structural', 'Pumps & v
 
 /**
  * /catalogue-download/ — the download gate (spec §4.4). A short form records a Catalogue lead,
- * then the PDF link appears. The PDF URL is a site setting (CatalogueUrl) so sales can replace it.
+ * then the PDF link appears. The PDF downloads straight away; CatalogueUrl (site setting) overrides the bundled file.
  */
 @Component({
   selector: 'ss-catalogue',
@@ -32,11 +33,8 @@ const INDUSTRIES = ['Machine shop / CNC', 'Fabrication & structural', 'Pumps & v
         @if (ready()) {
           <div class="mt-9 grid gap-4" role="status">
             <p class="font-serif text-[22px]">Thank you, {{ f.name.split(' ')[0] }}.</p>
-            @if (site.get('CatalogueUrl')) {
-              <a [href]="site.get('CatalogueUrl')" target="_blank" rel="noopener" class="btn justify-self-start"><ss-icon name="file" [size]="16" />Download the catalogue (PDF)</a>
-            } @else {
-              <p class="text-muted">We'll send the PDF to you on WhatsApp shortly.</p>
-            }
+            <p class="text-muted">Your download should start by itself. If it does not, use the button.</p>
+            <a [href]="pdfUrl()" download="Sun-Steel-Traders-Catalogue.pdf" target="_blank" rel="noopener" class="btn justify-self-start"><ss-icon name="file" [size]="16" />Download the catalogue (PDF)</a>
           </div>
         } @else {
           <form class="mt-9 grid gap-6 sm:grid-cols-2" (ngSubmit)="submit()" novalidate>
@@ -57,6 +55,9 @@ const INDUSTRIES = ['Machine shop / CNC', 'Fabrication & structural', 'Pumps & v
 export class CatalogueComponent {
   protected readonly site = inject(SiteService);
   private readonly req = inject(RequestService);
+  private readonly doc = inject(DOCUMENT);
+  /** The catalogue PDF shipped with the site; the CatalogueUrl setting overrides it so sales can point to a newer file. */
+  protected readonly pdfUrl = computed(() => this.site.get('CatalogueUrl') || '/downloads/Sun-Steel-Traders-Catalogue.pdf');
   protected readonly industries = INDUSTRIES;
   protected readonly busy = signal(false);
   protected readonly ready = signal(false);
@@ -79,6 +80,17 @@ export class CatalogueComponent {
     this.busy.set(true);
     this.req.submit({ type: 'Catalogue', name: this.f.name, phone: this.f.phone, company: this.f.company || undefined, city: this.f.city || undefined,
       industry: this.f.industry || undefined, sourcePage: '/catalogue-download/', website: this.f.website })
-      .subscribe({ next: () => { this.busy.set(false); this.ready.set(true); }, error: (e) => { this.busy.set(false); this.error.set(apiError(e)); } });
+      .subscribe({ next: () => { this.busy.set(false); this.ready.set(true); this.startDownload(); }, error: (e) => { this.busy.set(false); this.error.set(apiError(e)); } });
+  }
+
+  /** Starts the PDF download right after the request is saved (the lead is recorded first, as for every form). */
+  private startDownload(): void {
+    const a = this.doc.createElement('a');
+    a.href = this.pdfUrl();
+    a.download = 'Sun-Steel-Traders-Catalogue.pdf';
+    a.rel = 'noopener';
+    this.doc.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 }
