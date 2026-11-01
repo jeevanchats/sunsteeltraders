@@ -36,11 +36,11 @@ export class PublicLayoutComponent {
   protected readonly year = new Date().getFullYear();
 
   protected readonly nav: NavItem[] = [
-    { label: 'Material library', link: '/products/' },
-    { label: 'Weight calculator', link: '/metal-weight-calculator/' },
+    { label: 'Materials', link: '/products/' },
+    { label: 'Weight Calculator', link: '/metal-weight-calculator/' },
     { label: 'Catalogue', link: '/catalogue-download/' },
-    { label: 'About us', link: '/about-us/' },
-    { label: 'Visit', link: '/contact-us/' },
+    { label: 'About Us', link: '/about-us/' },
+    { label: 'Contact', link: '/contact-us/' },
   ];
 
   constructor() {
