@@ -10,6 +10,7 @@ import { HeroSliderComponent } from '../../shared/hero-slider.component';
 import { GalleryStripComponent } from '../../shared/gallery-strip.component';
 import { FaqListComponent } from '../../shared/faq-list.component';
 import { IconComponent } from '../../shared/icon.component';
+import { LoopVideoComponent } from '../../shared/loop-video.component';
 import { MetalComponent } from '../../shared/metal.component';
 import { RevealDirective } from '../../shared/reveal.directive';
 import { SearchBoxComponent } from '../../shared/search-box.component';
@@ -17,7 +18,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
 /** v3 sheet 01: banner slideshow, the library rail, proof band, the house, the scale, cities. */
 @Component({
   selector: 'ss-home',
-  imports: [RouterLink, HeroSliderComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, RevealDirective],
+  imports: [RouterLink, HeroSliderComponent, GalleryStripComponent, MetalComponent, SearchBoxComponent, FaqListComponent, IconComponent, LoopVideoComponent, RevealDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- hero: the slideshow sits below the fixed header; the h1 and search follow it -->
@@ -70,7 +71,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
     <!-- 02 the house -->
     <section class="sec" ssReveal>
       <div class="wrap grid items-center gap-[clamp(32px,6vw,96px)] lg:grid-cols-2">
-        <ss-metal kind="metal-brass" class="aspect-[5/4]" caption="Photograph to come: the godown, cut ends and crane" />
+        <ss-loop-video src="/video/house-loop.mp4" poster="/video/house-poster.webp" label="In the Sun Steel Traders godown: a band saw cutting a bar, the overhead crane, and a large round bar being lifted onto the scale." />
         <div>
           <span class="label label-accent mb-4">02 · The house</span>
           <h2 class="h-xl">We cut it the way <em>you drew it.</em></h2>
