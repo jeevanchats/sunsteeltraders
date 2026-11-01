@@ -142,7 +142,7 @@ public sealed class QuoteDataService : IQuoteDataService
     {
         var s = await _db.SiteSettings.AsNoTracking().ToDictionaryAsync(x => x.SettingKey, x => x.SettingValue, ct);
         var d = QuoteService.DefaultsFrom(s);
-        return new QuoteSettingsDto(d.GstRaw, d.GstFinished, d.ValidDays, d.WeightDecimals, d.PaymentTerms, d.BankDetails, d.Terms);
+        return new QuoteSettingsDto(d.GstRaw, d.GstFinished, d.ValidDays, d.WeightDecimals, d.PaymentTerms, d.BankDetails, d.Terms, s.GetValueOrDefault("QuoteBranchAddress"));
     }
 
     public async Task<QuoteSettingsDto> SaveSettingsAsync(long actorId, QuoteSettingsDto s, CancellationToken ct = default)
@@ -159,6 +159,7 @@ public sealed class QuoteDataService : IQuoteDataService
             ["QuotePaymentTerms"] = Cut(s.PaymentTerms, 200),
             ["QuoteBankDetails"] = Cut(s.BankDetails, 600),
             ["QuoteTerms"] = Cut(s.Terms, 4000),
+            ["QuoteBranchAddress"] = Cut(s.BranchAddress, 300),
         };
         var keys = values.Keys.ToList();
         var rows = await _db.SiteSettings.Where(x => keys.Contains(x.SettingKey)).ToListAsync(ct);

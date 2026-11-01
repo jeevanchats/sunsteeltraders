@@ -78,7 +78,7 @@ public sealed partial class QuoteService : IQuoteService
         var settings = await SettingsAsync(ct);
         return new QuoteDetailDto(x.QuoteId, x.Reference, x.Status, x.QuoteType, x.LeadId, leadRef,
             x.QuoteDate, x.ValidDays, x.QuoteDate.AddDays(x.ValidDays),
-            x.CustomerName, x.Company, x.Gstin, x.Phone, x.Email, x.City, x.Address,
+            x.CustomerName, x.Company, x.Gstin, x.Phone, x.Email, x.City, x.Address, x.BuyerRef, x.DispatchedThrough,
             x.CuttingCharge, x.LoadingCharge, x.UnloadingCharge, x.TransportCharge, x.Discount, x.GstRate, x.InterState,
             x.Notes, x.PaymentTerms, x.BankDetails, x.Terms,
             x.Items.OrderBy(i => i.DisplayOrder).Select(ToDto).ToList(), TotalsOf(x), WhatsAppUrl(x, settings), x.CreatedAt);
@@ -234,6 +234,8 @@ public sealed partial class QuoteService : IQuoteService
         q.Email = Cut(r.Email, 256);
         q.City = Cut(r.City, 80);
         q.Address = Cut(r.Address, 400);
+        q.BuyerRef = Cut(r.BuyerRef, 60);
+        q.DispatchedThrough = Cut(r.DispatchedThrough, 80);
         q.QuoteDate = r.QuoteDate ?? Today();
         q.ValidDays = r.ValidDays;
         q.CuttingCharge = r.CuttingCharge;

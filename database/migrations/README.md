@@ -25,3 +25,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 016 | Quotation lines (type, brand, HSN, GST rate, weight inputs), payment terms and bank details on quotes; QuoteProducts, QuoteHsn, MsPipeSchedule (sample rows); Quote* settings |
 | 017 | Quotes.QuoteType (Project, Wholesale, Retail, CutPieces; existing quotes become Retail) |
 | 018 | Repairs the default quotation terms garbled by 016 when applied without utf8mb4 |
+| 019 | Quotes.BuyerRef, Quotes.DispatchedThrough; setting QuoteBranchAddress |

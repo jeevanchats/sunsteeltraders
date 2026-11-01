@@ -66,6 +66,10 @@ if (math) {
   check('Discount spread in proportion over the lines', disc.taxable === 1800 && disc.taxGroups.every((g) => g.taxable === 900));
   const ch = quoteTotals([{ kg: 0, amount: 1000, gstRate: 12 }], { ...none, cuttingCharge: 100 }, 18, false);
   check('Cutting and freight taxed at their own rate', ch.taxGroups.find((g) => g.rate === 18).taxable === 100);
+  // The customer's own quotation (voucher 2123, 26-Oct-26): 21.500 KG at 175.00 plus 100.00 cartage, GST 18%.
+  const real = quoteTotals([{ kg: 21.5, amount: lineAmount('ManualWeight', 21.5, 175, 1, null), gstRate: 18 }], { ...none, transportCharge: 100 }, 18, false);
+  check('Their invoice 2123: 3,762.50 + cartage 100, CGST 347.63 + SGST 347.63, round off 0.24, total 4,558',
+    real.subtotal === 3762.5 && real.taxable === 3862.5 && real.cgst === 347.63 && real.sgst === 347.63 && real.roundOff === 0.24 && real.grandTotal === 4558);
 } else console.log('SKIP  totals (qm.mjs not found next to the bundle)');
 
 console.log(`\n${pass} passed, ${fail} failed`);

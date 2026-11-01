@@ -58,11 +58,12 @@ export interface QuoteProduct {
 export interface QuoteLookups {
   materials: MaterialRef[]; sections: SectionRef[]; msPipes: MsPipeRef[]; hsn: HsnRef[]; products: QuoteProduct[]; defaults: QuoteDefaults;
 }
-export interface QuoteSettings { gstRaw: number | null; gstFinished: number | null; validDays: number; weightDecimals: number; paymentTerms: string | null; bankDetails: string | null; terms: string | null }
+export interface QuoteSettings { gstRaw: number | null; gstFinished: number | null; validDays: number; weightDecimals: number; paymentTerms: string | null; bankDetails: string | null; terms: string | null; branchAddress: string | null }
 export interface QuoteRow { quoteId: number; reference: string; status: string; quoteType: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
 export interface SaveQuote {
   quoteType: QuoteType | '';
   customerName: string; company: string | null; gstin: string | null; phone: string; email: string | null; city: string | null; address: string | null;
+  buyerRef: string | null; dispatchedThrough: string | null;
   quoteDate: string | null; validDays: number;
   cuttingCharge: number; loadingCharge: number; unloadingCharge: number; transportCharge: number; discount: number;
   gstRate: number; interState: boolean; notes: string | null; paymentTerms: string | null; bankDetails: string | null; terms: string | null; items: QuoteItemInput[];

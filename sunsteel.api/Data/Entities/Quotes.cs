@@ -18,6 +18,10 @@ public sealed class Quote
     public string? Email { get; set; }
     public string? City { get; set; }
     public string? Address { get; set; }
+    /// <summary>The buyer's order or reference number.</summary>
+    public string? BuyerRef { get; set; }
+    /// <summary>Lorry or transport the goods go by.</summary>
+    public string? DispatchedThrough { get; set; }
     public decimal CuttingCharge { get; set; }
     public decimal LoadingCharge { get; set; }
     public decimal UnloadingCharge { get; set; }

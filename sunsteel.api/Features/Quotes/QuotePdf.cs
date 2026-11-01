@@ -30,7 +30,7 @@ public static class QuotePdf
             Header(pdf, q, site);
             Customer(pdf, q);
             Lines(pdf, q, decimals);
-            Totals(pdf, q);
+            Totals(pdf, q, decimals);
             Footer(pdf, q, site);
             pdf.Close();
         }
@@ -47,6 +47,7 @@ public static class QuotePdf
         }
         Add(s.GetValueOrDefault("Tagline"), s.GetValueOrDefault("IsoCertificate"));
         Add(s.GetValueOrDefault("Address"));
+        Add(s.GetValueOrDefault("QuoteBranchAddress") is { Length: > 0 } branch ? $"Branch: {branch}" : null);
         Add(s.GetValueOrDefault("Phone1"), s.GetValueOrDefault("Phone2"), s.GetValueOrDefault("Landline"), s.GetValueOrDefault("SalesEmail"));
         Add(s.GetValueOrDefault("Gstin") is { Length: > 0 } g ? $"GSTIN {g}" : null);
 
@@ -76,8 +77,10 @@ public static class QuotePdf
         p.Y += 13;
         p.Text(q.Company ?? q.CustomerName, M, p.Y, 11, bold: true);
         p.Y += 13;
-        var rest = new List<string?> { q.Company is null ? null : $"Attn: {q.CustomerName}", q.Address, q.City,
-            string.Join(" · ", new[] { q.Phone, q.Email }.Where(x => !string.IsNullOrWhiteSpace(x))), q.Gstin is null ? null : $"GSTIN {q.Gstin}" };
+        var rest = new List<string?> { q.Company is null ? null : $"Attn: {q.CustomerName}", q.Address, q.City is null ? null : $"Destination: {q.City}",
+            string.Join(" · ", new[] { q.Phone, q.Email }.Where(x => !string.IsNullOrWhiteSpace(x))), q.Gstin is null ? null : $"GSTIN {q.Gstin}",
+            StateLine(q.Gstin),
+            string.Join(" · ", new[] { q.BuyerRef is null ? null : $"Your ref: {q.BuyerRef}", q.DispatchedThrough is null ? null : $"Dispatch through: {q.DispatchedThrough}" }.Where(x => x is not null)) };
         foreach (var l in rest.Where(l => !string.IsNullOrWhiteSpace(l)))
             foreach (var w in p.Wrap(l!, 9, 360)) { p.Text(w, M, p.Y, 9); p.Y += 12; }
         p.Y += 10;
@@ -95,6 +98,25 @@ public static class QuotePdf
         p.Text("Amount", ColAmt - 4, p.Y, 8.5f, bold: true, color: SKColors.White, align: SKTextAlign.Right);
         p.Y += 18;
     }
+
+    /// <summary>"State: Tamil Nadu, code 33", from the first two digits of the buyer's GSTIN.</summary>
+    private static string? StateLine(string? gstin)
+    {
+        if (gstin is not { Length: >= 2 }) return null;
+        var code = gstin[..2];
+        return States.TryGetValue(code, out var name) ? $"State: {name}, code {code}" : null;
+    }
+
+    private static readonly Dictionary<string, string> States = new()
+    {
+        ["01"] = "Jammu and Kashmir", ["02"] = "Himachal Pradesh", ["03"] = "Punjab", ["04"] = "Chandigarh", ["05"] = "Uttarakhand",
+        ["06"] = "Haryana", ["07"] = "Delhi", ["08"] = "Rajasthan", ["09"] = "Uttar Pradesh", ["10"] = "Bihar", ["11"] = "Sikkim",
+        ["12"] = "Arunachal Pradesh", ["13"] = "Nagaland", ["14"] = "Manipur", ["15"] = "Mizoram", ["16"] = "Tripura",
+        ["17"] = "Meghalaya", ["18"] = "Assam", ["19"] = "West Bengal", ["20"] = "Jharkhand", ["21"] = "Odisha", ["22"] = "Chhattisgarh",
+        ["23"] = "Madhya Pradesh", ["24"] = "Gujarat", ["26"] = "Dadra and Nagar Haveli and Daman and Diu", ["27"] = "Maharashtra",
+        ["29"] = "Karnataka", ["30"] = "Goa", ["31"] = "Lakshadweep", ["32"] = "Kerala", ["33"] = "Tamil Nadu", ["34"] = "Puducherry",
+        ["35"] = "Andaman and Nicobar Islands", ["36"] = "Telangana", ["37"] = "Andhra Pradesh", ["38"] = "Ladakh", ["97"] = "Other Territory",
+    };
 
     private static string TypeLabel(string type) => type switch
     {
@@ -138,17 +160,17 @@ public static class QuotePdf
         }
     }
 
-    private static void Totals(Writer p, QuoteDetailDto q)
+    private static void Totals(Writer p, QuoteDetailDto q, int decimals)
     {
         var t = q.Totals;
         // Wholesale is bought by the tonne, so the weight is also shown in tonnes.
-        var weight = q.QuoteType == "Wholesale" ? $"{Kg(t.TotalKg, 1)} kg · {(t.TotalKg / 1000).ToString("#,##0.###", In)} t" : $"{Kg(t.TotalKg, 1)} kg";
+        var weight = q.QuoteType == "Wholesale" ? $"{Kg(t.TotalKg, decimals)} kg · {(t.TotalKg / 1000).ToString("#,##0.###", In)} t" : $"{Kg(t.TotalKg, decimals)} kg";
         var rows = new List<(string Label, decimal Amount, bool Bold)> { ($"Subtotal ({weight})", t.Subtotal, false) };
         if (t.Discount > 0) rows.Add(("Less: discount", -t.Discount, false));
         if (q.CuttingCharge > 0) rows.Add(("Cutting charges", q.CuttingCharge, false));
         if (q.LoadingCharge > 0) rows.Add(("Loading charges", q.LoadingCharge, false));
         if (q.UnloadingCharge > 0) rows.Add(("Unloading charges", q.UnloadingCharge, false));
-        if (q.TransportCharge > 0) rows.Add(("Freight", q.TransportCharge, false));
+        if (q.TransportCharge > 0) rows.Add(("Cartage / freight", q.TransportCharge, false));
         rows.Add(("Taxable value", t.Taxable, true));
         // Tax listed once per rate.
         foreach (var g in t.TaxGroups)
@@ -170,7 +192,8 @@ public static class QuotePdf
         p.Text("Grand total (Rs.)", 330, p.Y + 4, 10.5f, bold: true, color: SKColors.White);
         p.Text(t.GrandTotal.ToString("#,##0.00", In), W - M - 4, p.Y + 4, 10.5f, bold: true, color: SKColors.White, align: SKTextAlign.Right);
         p.Y += 26;
-        foreach (var w in p.Wrap(QuoteMath.InWords(t.GrandTotal), 8.5f, W - 2 * M)) { p.Text(w, M, p.Y, 8.5f, color: p.Muted); p.Y += 11; }
+        p.Text("E. & O.E", W - M, p.Y, 8.5f, color: p.Muted, align: SKTextAlign.Right); // errors and omissions excepted, as on their invoices
+        foreach (var w in p.Wrap(QuoteMath.InWords(t.GrandTotal), 8.5f, W - 2 * M - 60)) { p.Text(w, M, p.Y, 8.5f, color: p.Muted); p.Y += 11; }
         p.Y += 10;
     }
 

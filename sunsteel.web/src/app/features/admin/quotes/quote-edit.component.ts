@@ -13,7 +13,7 @@ import { IconComponent } from '../../../shared/icon.component';
 import { QuoteLineComponent } from './quote-line.component';
 
 const PAYMENT_OPTIONS = [
-  '100% advance with order', '50% advance, balance before dispatch', 'Payment on delivery', 'Credit: 15 days from invoice',
+  'Immediate payment', '100% advance with order', '50% advance, balance before dispatch', 'Payment on delivery', 'Credit: 15 days from invoice',
 ];
 const CUSTOM = 'Custom';
 
@@ -77,6 +77,8 @@ const CUSTOM = 'Custom';
               <label class="alabel">Email<input class="ainput" maxlength="256" name="em" [(ngModel)]="f.email" (ngModelChange)="touch()" /></label>
               <label class="alabel">GSTIN<input class="ainput uppercase" maxlength="15" name="gst" [(ngModel)]="f.gstin" (ngModelChange)="gstinChanged()" placeholder="Optional" /></label>
               <label class="alabel">Delivery city<input class="ainput" maxlength="80" name="city" [(ngModel)]="f.city" (ngModelChange)="touch()" /></label>
+              <label class="alabel">Buyer's order / reference no.<input class="ainput" maxlength="60" name="bref" [(ngModel)]="f.buyerRef" (ngModelChange)="touch()" /></label>
+              <label class="alabel">Dispatched through<input class="ainput" maxlength="80" name="disp" [(ngModel)]="f.dispatchedThrough" (ngModelChange)="touch()" placeholder="Lorry or transport" /></label>
             </div>
             <label class="alabel">Address<textarea class="ainput" maxlength="400" name="addr" [(ngModel)]="f.address" (ngModelChange)="touch()" rows="2"></textarea></label>
           </fieldset>
@@ -139,7 +141,7 @@ const CUSTOM = 'Custom';
             @if (f.cuttingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Cutting</span><span>{{ inr(f.cuttingCharge) }}</span></div> }
             @if (f.loadingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Loading</span><span>{{ inr(f.loadingCharge) }}</span></div> }
             @if (f.unloadingCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Unloading</span><span>{{ inr(f.unloadingCharge) }}</span></div> }
-            @if (f.transportCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Freight</span><span>{{ inr(f.transportCharge) }}</span></div> }
+            @if (f.transportCharge) { <div class="flex justify-between"><span class="text-[#6B7485]">Cartage / freight</span><span>{{ inr(f.transportCharge) }}</span></div> }
             <div class="flex justify-between font-medium"><span>Taxable</span><span>{{ inr(t().taxable) }}</span></div>
             @for (g of t().taxGroups; track g.rate) {
               @if (f.interState) { <div class="flex justify-between"><span class="text-[#6B7485]">IGST {{ g.rate }}%</span><span>{{ inr(g.igst) }}</span></div> }
@@ -189,7 +191,7 @@ export class QuoteEditComponent {
   protected readonly statuses = ['Draft', 'Sent', 'Accepted', 'Rejected'];
   protected readonly paymentOptions = PAYMENT_OPTIONS;
   protected readonly charges: [string, string][] = [
-    ['cuttingCharge', 'Cutting'], ['loadingCharge', 'Loading'], ['unloadingCharge', 'Unloading'], ['transportCharge', 'Freight'], ['discount', 'Discount (less)'],
+    ['cuttingCharge', 'Cutting'], ['loadingCharge', 'Loading'], ['unloadingCharge', 'Unloading'], ['transportCharge', 'Cartage / freight'], ['discount', 'Discount (less)'],
   ];
   protected readonly inr = inr;
   protected readonly types = QUOTE_TYPES;
@@ -354,7 +356,7 @@ export class QuoteEditComponent {
   private load(q: QuoteDetail): void {
     this.saved.set(q);
     this.f = {
-      quoteType: q.quoteType as QuoteType, customerName: q.customerName, company: q.company, gstin: q.gstin, phone: q.phone, email: q.email, city: q.city, address: q.address,
+      quoteType: q.quoteType as QuoteType, customerName: q.customerName, company: q.company, gstin: q.gstin, phone: q.phone, email: q.email, city: q.city, address: q.address, buyerRef: q.buyerRef, dispatchedThrough: q.dispatchedThrough,
       quoteDate: q.quoteDate, validDays: q.validDays, cuttingCharge: q.cuttingCharge, loadingCharge: q.loadingCharge,
       unloadingCharge: q.unloadingCharge, transportCharge: q.transportCharge, discount: q.discount, gstRate: q.gstRate,
       interState: q.interState, notes: q.notes, paymentTerms: q.paymentTerms, bankDetails: q.bankDetails, terms: q.terms,
@@ -383,7 +385,7 @@ function blankLine(): QuoteItemInput {
 
 function blank(): SaveQuote {
   return {
-    quoteType: '', customerName: '', company: null, gstin: null, phone: '', email: null, city: null, address: null, quoteDate: null, validDays: 3,
+    quoteType: '', customerName: '', company: null, gstin: null, phone: '', email: null, city: null, address: null, buyerRef: null, dispatchedThrough: null, quoteDate: null, validDays: 3,
     cuttingCharge: 0, loadingCharge: 0, unloadingCharge: 0, transportCharge: 0, discount: 0, gstRate: 18, interState: false,
     notes: null, paymentTerms: null, bankDetails: null, terms: null, items: [blankLine()],
   };

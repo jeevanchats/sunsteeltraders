@@ -86,6 +86,9 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   Quote type (migration 017): Project (pure trading, supplier to customer), Wholesale (tonnes), Retail (kg), Cut pieces (includes cutting) is a
   tag with defaults, all priced per kg: cutting extra opens for Cut pieces, loading/unloading hidden for Project, tonnes shown for Wholesale; type
   prints on the PDF and filters the list. Per-type pricing rules, if the customer has any, are not built.
+  Migration 019 adds the buyer's order/reference no., "dispatched through" and a branch office line (setting QuoteBranchAddress), taken from the
+  customer's current Tally quotation. The PDF also prints the buyer's state from the GSTIN, E. & O.E, and "Cartage / freight" as they word it.
+  Their invoice 2123 (21.5 kg x 175 + 100 cartage, 18%) reproduces to the paisa and is a test case.
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

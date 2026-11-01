@@ -16,7 +16,7 @@ public sealed record QuoteItemInput(
 /// <summary>Create or replace a quote. Weights, amounts and totals are always recomputed on the server.</summary>
 public sealed record SaveQuoteRequest(
     string CustomerName, string? Company, string? Gstin, string Phone, string? Email, string? City, string? Address,
-    string QuoteType, DateOnly? QuoteDate, int ValidDays,
+    string? BuyerRef, string? DispatchedThrough, string QuoteType, DateOnly? QuoteDate, int ValidDays,
     decimal CuttingCharge, decimal LoadingCharge, decimal UnloadingCharge, decimal TransportCharge, decimal Discount,
     decimal GstRate, bool InterState, string? Notes, string? PaymentTerms, string? BankDetails, string? Terms,
     IReadOnlyList<QuoteItemInput> Items);
@@ -40,6 +40,7 @@ public sealed record QuoteDetailDto(
     long QuoteId, string Reference, string Status, string QuoteType, long? LeadId, string? LeadReference,
     DateOnly QuoteDate, int ValidDays, DateOnly ValidUntil,
     string CustomerName, string? Company, string? Gstin, string Phone, string? Email, string? City, string? Address,
+    string? BuyerRef, string? DispatchedThrough,
     decimal CuttingCharge, decimal LoadingCharge, decimal UnloadingCharge, decimal TransportCharge, decimal Discount,
     decimal GstRate, bool InterState, string? Notes, string? PaymentTerms, string? BankDetails, string? Terms,
     IReadOnlyList<QuoteItemDto> Items, QuoteTotalsDto Totals, string WhatsAppUrl, DateTime CreatedAt);
@@ -61,6 +62,6 @@ public sealed record QuoteLookupsDto(
 
 /// <summary>The quote settings the owner maintains (Site settings keys Quote*).</summary>
 public sealed record QuoteSettingsDto(
-    decimal? GstRaw, decimal? GstFinished, int ValidDays, int WeightDecimals, string? PaymentTerms, string? BankDetails, string? Terms);
+    decimal? GstRaw, decimal? GstFinished, int ValidDays, int WeightDecimals, string? PaymentTerms, string? BankDetails, string? Terms, string? BranchAddress);
 
 public sealed record UpdateQuoteStatusRequest(string Status);

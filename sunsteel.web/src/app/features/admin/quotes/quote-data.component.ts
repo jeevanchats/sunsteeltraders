@@ -53,6 +53,8 @@ const blankProduct = (): QuoteProduct => ({
                 <span class="ahint">Line weights are rounded to this many places (1 = 0.1 kg).</span></label>
             </div>
             <label class="alabel">Default payment terms<input class="ainput" maxlength="200" name="pt" [(ngModel)]="s.paymentTerms" [disabled]="!canEdit()" placeholder="e.g. 100% advance with order" /></label>
+            <label class="alabel">Branch office address<input class="ainput" maxlength="300" name="ba" [(ngModel)]="s.branchAddress" [disabled]="!canEdit()" placeholder="e.g. 102, street, area, city - pin" />
+              <span class="ahint">Printed under the main address in the quotation header. Leave empty to print none.</span></label>
             <label class="alabel">Bank details<textarea class="ainput" rows="4" maxlength="600" name="bd" [(ngModel)]="s.bankDetails" [disabled]="!canEdit()" placeholder="Account name, bank, account number, IFSC"></textarea>
               <span class="ahint">Printed on every quotation after the payment terms. Leave empty to print no bank block. Nothing is filled in for you.</span></label>
             <label class="alabel">Terms & conditions<textarea class="ainput" rows="9" maxlength="4000" name="tc" [(ngModel)]="s.terms" [disabled]="!canEdit()"></textarea>
