@@ -19,7 +19,7 @@ sketches v1–v4 (v3 "Metal atelier" chosen). Codebase forked from Queens Inn; s
 ```bash
 # Database (forward-only, idempotent; safe to re-run)
 mysql -e "CREATE DATABASE sunsteel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-for f in database/migrations/0*.sql; do mysql -u root -p sunsteel < "$f"; done
+for f in database/migrations/0*.sql; do mysql --default-character-set=utf8mb4 -u root -p sunsteel < "$f"; done
 # Regenerate the catalogue seed (010) after editing database/seed/catalog.json
 node database/seed/build-seed.mjs
 # API  → http://localhost:5090/api/health   (set Jwt:Key, ConnectionStrings:Default, Admin:DefaultPassword via user-secrets)

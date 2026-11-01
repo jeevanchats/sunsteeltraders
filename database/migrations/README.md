@@ -2,7 +2,9 @@
 
 Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core entities are hand-written to match.
 
-- Apply in order: `for f in database/migrations/0*.sql; do mysql -u root -p sunsteel < "$f"; done`
+- Apply in order: `for f in database/migrations/0*.sql; do mysql --default-character-set=utf8mb4 -u root -p sunsteel < "$f"; done`
+- **Always pass `--default-character-set=utf8mb4`.** Without it the Windows mysql client reads scripts in the console code page and garbles
+  characters such as plus-or-minus, en dash and the diameter sign. Keep new scripts plain ASCII where you can.
 - Each script is idempotent (`IF NOT EXISTS` / `INSERT IGNORE`) and records itself in `__schema_migrations`.
 - **Never edit a script that has been applied anywhere.** Add `011_*.sql`, `012_*.sql`, …
 
@@ -22,3 +24,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 015 | Quotes, QuoteItems; SiteSettings QuoteValidDays, QuoteGstRate, QuoteTerms (TO CONFIRM) |
 | 016 | Quotation lines (type, brand, HSN, GST rate, weight inputs), payment terms and bank details on quotes; QuoteProducts, QuoteHsn, MsPipeSchedule (sample rows); Quote* settings |
 | 017 | Quotes.QuoteType (Project, Wholesale, Retail, CutPieces; existing quotes become Retail) |
+| 018 | Repairs the default quotation terms garbled by 016 when applied without utf8mb4 |
