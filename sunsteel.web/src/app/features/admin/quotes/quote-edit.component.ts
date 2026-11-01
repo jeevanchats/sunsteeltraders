@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { apiError } from '../../../core/models/api.model';
 import { lineFigures } from '../../../core/quote/quote-lines';
 import { inr, inWords, isInterState, quoteTotals } from '../../../core/quote/quote-math';
-import { rememberRates, rememberText } from '../../../core/quote/quote-memory';
+import { clearDraft, loadDraft, rememberRates, rememberText, saveDraft } from '../../../core/quote/quote-memory';
 import { AdminApiService, QuoteDetail, QuoteItemDto, QuoteItemInput, QuoteLookups, SaveQuote } from '../../../core/services/admin-api.service';
 import { SeoService } from '../../../core/services/seo.service';
 import { QUOTE_TYPES, QuoteType, quoteTypeLabel, tonnes } from '../../../core/quote/quote-types';
@@ -47,6 +47,12 @@ const CUSTOM = 'Custom';
         <div class="w-full lg:hidden"><ng-container *ngTemplateOutlet="statusSelect" /></div>
       </header>
 
+      @if (restored(); as r) {
+        <p class="alert mb-4 flex flex-wrap items-center justify-between gap-2" role="status">
+          <span>Restored your unsaved changes from {{ r }}. Save to keep them.</span>
+          <button type="button" class="abtn" (click)="discardDraft()">Discard them</button>
+        </p>
+      }
       @if (message(); as m) { <p class="alert mb-4" [class.alert-ok]="m.ok" role="status">{{ m.text }}</p> }
       @if (dirty() && saved()) { <p class="ahint mb-3">Save first; the PDF and WhatsApp use the saved version.</p> }
       @if (lookups.defaults.gstRaw === null || lookups.defaults.gstFinished === null) {
@@ -205,6 +211,7 @@ export class QuoteEditComponent {
   protected readonly lk = signal<QuoteLookups | null>(null);
   protected readonly message = signal<{ ok: boolean; text: string } | null>(null);
   protected readonly rev = signal(0);
+  protected readonly restored = signal<string | null>(null);
   protected f: SaveQuote = blank();
   private pdfBlob: Blob | null = null;
 
@@ -244,8 +251,9 @@ export class QuoteEditComponent {
           };
           this.loading.set(false);
           this.touch(true);
+          this.restoreDraft();
         } else {
-          this.api.quote(Number(this.idParam)).subscribe({ next: (q) => { this.load(q); this.loading.set(false); }, error: (e) => { this.loading.set(false); this.fail(e); } });
+          this.api.quote(Number(this.idParam)).subscribe({ next: (q) => { this.load(q); this.restoreDraft(); this.loading.set(false); }, error: (e) => { this.loading.set(false); this.fail(e); } });
         }
       },
       error: (e) => { this.loading.set(false); this.fail(e); },
@@ -269,7 +277,38 @@ export class QuoteEditComponent {
       || (c[0] === 'cuttingCharge' && t === 'CutPieces') || ((c[0] === 'loadingCharge' || c[0] === 'unloadingCharge') && t !== 'Project'));
   }
 
-  protected touch(fresh = false): void { this.rev.update((v) => v + 1); if (!fresh) this.dirty.set(true); }
+  protected touch(fresh = false): void {
+    this.rev.update((v) => v + 1);
+    if (fresh) return;
+    this.dirty.set(true);
+    saveDraft(this.draftId(), this.f);
+  }
+
+  /** A draft belongs to the quotation being edited, or to "new" until it is first saved. */
+  private draftId(): string | number { return this.saved()?.quoteId ?? 'new'; }
+
+  private restoreDraft(): void {
+    const d = loadDraft<SaveQuote>(this.draftId());
+    if (!d?.form?.items?.length) return;
+    this.f = { ...blank(), ...d.form, items: d.form.items.map((l) => ({ ...blankLine(), ...l, dims: { ...(l.dims ?? {}) } })) };
+    this.restored.set(new Date(d.savedAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }));
+    this.dirty.set(true);
+    this.rev.update((v) => v + 1);
+  }
+
+  protected discardDraft(): void {
+    if (!confirm('Throw away the changes you had not saved?')) return;
+    clearDraft(this.draftId());
+    this.restored.set(null);
+    const q = this.saved();
+    if (q) this.load(q);
+    else {
+      const d = this.lk()!.defaults;
+      this.f = { ...blank(), validDays: d.validDays, gstRate: d.gstRaw ?? 0, terms: (d.terms ?? '').replace('{days}', String(d.validDays)) || null, paymentTerms: d.paymentTerms ?? PAYMENT_OPTIONS[0], bankDetails: d.bankDetails };
+      this.dirty.set(false);
+      this.touch(true);
+    }
+  }
   protected num(k: string): number { return (this.f as unknown as Record<string, number>)[k]; }
   protected setNum(k: string, v: number): void { (this.f as unknown as Record<string, number>)[k] = Number(v) || 0; this.touch(); }
   protected gstinChanged(): void { this.f.interState = isInterState(this.f.gstin); this.touch(); }
@@ -298,11 +337,14 @@ export class QuoteEditComponent {
     this.busy.set(true);
     this.message.set(null);
     const id = this.saved()?.quoteId;
+    const draftId = this.draftId();
     const body: SaveQuote = { ...this.f, paymentTerms: this.f.paymentTerms?.trim() || null, items: this.f.items.map(toInput) };
     (id ? this.api.updateQuote(id, body) : this.api.createQuote(body)).subscribe({
       next: (q) => {
         rememberRates(q.items);
         rememberText(q.items);
+        clearDraft(draftId);
+        this.restored.set(null);
         this.load(q);
         this.busy.set(false);
         this.message.set({ ok: true, text: 'Quotation saved.' });

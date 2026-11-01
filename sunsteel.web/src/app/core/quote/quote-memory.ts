@@ -24,6 +24,28 @@ function write(key: string, value: unknown): void {
   }
 }
 
+/**
+ * Unsaved quotation drafts, one per quotation (or "new"), so a half-filled form survives a refresh, a closed tab, or a
+ * trip to another screen such as the GST settings. Cleared when the quotation is saved or the draft is discarded.
+ */
+const draftKey = (id: string | number) => `sst.quote.draft.${id}`;
+
+export function saveDraft(id: string | number, form: unknown): void {
+  write(draftKey(id), { savedAt: Date.now(), form });
+}
+
+export function loadDraft<T>(id: string | number): { savedAt: number; form: T } | null {
+  return read<{ savedAt: number; form: T } | null>(draftKey(id), null);
+}
+
+export function clearDraft(id: string | number): void {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(draftKey(id));
+  } catch {
+    /* blocked: nothing to clear */
+  }
+}
+
 export const lastRates = (): Record<string, number> => read<Record<string, number>>(RATES, {});
 
 export function rememberRates(items: { materialKey: string | null; ratePerKg: number }[]): void {
