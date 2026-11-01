@@ -64,15 +64,9 @@ export class SiteService {
     style.setProperty('--color-surface', theme.surface);
   }
 
-  /** Favicon: an uploaded/linked image if FaviconUrl is set, else the sun mark on FaviconBackground. */
+  /** Favicon: an uploaded/linked image if FaviconUrl is set, else the bundled SST logo (public/brand). */
   applyFavicon(): void {
-    const bg = /^#[0-9a-fA-F]{6}$/.test(this.get('FaviconBackground')) ? this.get('FaviconBackground') : '#FFFFFF';
-    const accent = this.theme().accent.replace('#', '%23');
-    const svg =
-      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='8' fill='${bg.replace('#', '%23')}'/>` +
-      `<g transform='translate(4 4) scale(.8)' fill='none' stroke='${accent}' stroke-width='1.6'><circle cx='20' cy='20' r='16.5'/>` +
-      `<path d='M8.2 24.5a12 12 0 0 1 23.6 0z' fill='${accent}' stroke='none'/><path d='M3.5 24.5h33M7 29h26M11 33.2h18'/></g></svg>`;
-    const href = this.get('FaviconUrl') || `data:image/svg+xml,${svg}`;
+    const href = this.get('FaviconUrl') || '/brand/favicon-192.png';
     const head = this.doc.head;
     head.querySelectorAll('link[rel="icon"]').forEach((l) => l.remove());
     const link = this.doc.createElement('link');

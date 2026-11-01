@@ -15,6 +15,7 @@ export function organizationLd(s: (k: string) => string): object {
     name: s('BusinessName'),
     description: 'Multi-metal stockist: mild, alloy and stainless steel, non-ferrous metals, cast iron and engineering plastics, cut to size.',
     url: `${SITE_URL}/`,
+    logo: `${SITE_URL}/brand/sst-logo-320.webp`,
     telephone: s('Phone1'),
     email: s('SalesEmail') || undefined,
     address: { '@type': 'PostalAddress', streetAddress: '57, Tamil Sangam Road, near Bell Hotel, Simmakkal', addressLocality: 'Madurai', postalCode: '625001', addressRegion: 'Tamil Nadu', addressCountry: 'IN' },

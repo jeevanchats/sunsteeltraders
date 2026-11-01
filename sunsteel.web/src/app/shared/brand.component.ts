@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SiteService } from '../core/services/site.service';
-import { MarkComponent } from './icon.component';
 
-/** Logo lockup: sun mark + serif name + small-caps place line. Text comes from site settings. */
+/** Logo lockup: the SST logo (public/brand) + serif name + small-caps place line. Text comes from site settings. */
 @Component({
   selector: 'ss-brand',
-  imports: [RouterLink, MarkComponent],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a [routerLink]="link()" class="flex items-center gap-3 leading-none" [attr.aria-label]="site.businessName() + ' home'">
-      <ss-mark [size]="32" />
+      <img src="/brand/sst-logo-160.webp" srcset="/brand/sst-logo-160.webp 160w, /brand/sst-logo-320.webp 320w" sizes="44px"
+           width="44" height="38" alt="" class="h-[38px] w-auto flex-none" />
       <span>
         <span class="block font-serif text-[23px] font-semibold tracking-[.02em]">{{ site.businessName() }}</span>
         @if (showPlace()) {
