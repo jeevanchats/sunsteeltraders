@@ -79,6 +79,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/admin/quotes/quotes.component').then((m) => m.QuotesComponent),
       },
       {
+        path: 'customers',
+        canActivate: [permissionGuard(Perm.LeadManage)],
+        loadComponent: () => import('./features/admin/quotes/customers.component').then((m) => m.CustomersComponent),
+      },
+      {
         path: 'quote-data',
         canActivate: [permissionGuard(Perm.LeadManage)],
         loadComponent: () => import('./features/admin/quotes/quote-data.component').then((m) => m.QuoteDataComponent),

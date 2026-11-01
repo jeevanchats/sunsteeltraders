@@ -84,6 +84,7 @@ builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
 builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteService, sunsteel.api.Features.Quotes.QuoteService>();
 builder.Services.AddScoped<sunsteel.api.Features.Quotes.IQuoteDataService, sunsteel.api.Features.Quotes.QuoteDataService>();
+builder.Services.AddScoped<sunsteel.api.Features.Quotes.ICustomerService, sunsteel.api.Features.Quotes.CustomerService>();
 builder.Services.AddScoped<sunsteel.api.Features.Media.IMediaService, sunsteel.api.Features.Media.MediaService>();
 builder.Services.AddScoped<sunsteel.api.Features.Gallery.IGalleryService, sunsteel.api.Features.Gallery.GalleryService>();
 builder.Services.AddScoped<sunsteel.api.Features.Slides.ISlideService, sunsteel.api.Features.Slides.SlideService>();

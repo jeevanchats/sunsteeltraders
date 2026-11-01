@@ -6,6 +6,8 @@ public sealed class Quote
     public long QuoteId { get; set; }
     public string Reference { get; set; } = string.Empty;
     public long? LeadId { get; set; }
+    /// <summary>The customer master row (migration 020).</summary>
+    public long? CustomerId { get; set; }
     public string Status { get; set; } = "Draft";
     /// <summary>Project | Wholesale | Retail | CutPieces (migration 017).</summary>
     public string QuoteType { get; set; } = "Retail";
@@ -105,4 +107,21 @@ public sealed class MsPipeScheduleRow
     public string Schedule { get; set; } = string.Empty;
     public decimal WallMm { get; set; }
     public int DisplayOrder { get; set; }
+}
+
+/// <summary>Customer master (migration 020). Filled in from quotations, editable, importable and exportable.</summary>
+public sealed class Customer
+{
+    public long CustomerId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Company { get; set; }
+    public string? Gstin { get; set; }
+    /// <summary>Normalised "+91 XXXXX XXXXX"; one customer per phone number.</summary>
+    public string Phone { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? City { get; set; }
+    public string? Address { get; set; }
+    public string? Notes { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

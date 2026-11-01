@@ -59,6 +59,9 @@ export interface QuoteLookups {
   materials: MaterialRef[]; sections: SectionRef[]; msPipes: MsPipeRef[]; hsn: HsnRef[]; products: QuoteProduct[]; defaults: QuoteDefaults;
 }
 export interface QuoteSettings { gstRaw: number | null; gstFinished: number | null; validDays: number; weightDecimals: number; paymentTerms: string | null; bankDetails: string | null; terms: string | null; branchAddress: string | null }
+export interface Customer { id: number; name: string; company: string | null; gstin: string | null; phone: string; email: string | null; city: string | null; address: string | null; notes: string | null; quotes: number; createdAt: string }
+export type SaveCustomer = Omit<Customer, 'id' | 'quotes' | 'createdAt'>;
+export interface CustomerImportResult { created: number; updated: number; skipped: number; errors: string[] }
 export interface QuoteRow { quoteId: number; reference: string; status: string; quoteType: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
 export interface SaveQuote {
   quoteType: QuoteType | '';
@@ -230,6 +233,36 @@ export class AdminApiService {
 
   setQuoteStatus(id: number, status: string): Observable<QuoteDetail> {
     return this.http.put<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}/status`, { status }).pipe(map((r) => r.data!));
+  }
+
+  customers(q: { q?: string; page?: number }): Observable<Paged<Customer>> {
+    const params: Record<string, string> = {};
+    if (q.q) params['q'] = q.q;
+    if (q.page) params['page'] = String(q.page);
+    return this.http.get<ApiResponse<Paged<Customer>>>(`${this.base}/customers`, { params }).pipe(map((r) => r.data!));
+  }
+
+  searchCustomers(q: string): Observable<Customer[]> {
+    return this.http.get<ApiResponse<Customer[]>>(`${this.base}/customers/search`, { params: { q } }).pipe(map((r) => r.data ?? []));
+  }
+
+  saveCustomer(id: number | null, c: SaveCustomer): Observable<Customer> {
+    const url = `${this.base}/customers`;
+    return (id ? this.http.put<ApiResponse<Customer>>(`${url}/${id}`, c) : this.http.post<ApiResponse<Customer>>(url, c)).pipe(map((r) => r.data!));
+  }
+
+  deleteCustomer(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/customers/${id}`);
+  }
+
+  exportCustomers(): Observable<Blob> {
+    return this.http.get(`${this.base}/customers/export`, { responseType: 'blob' });
+  }
+
+  importCustomers(file: File): Observable<CustomerImportResult> {
+    const body = new FormData();
+    body.append('file', file);
+    return this.http.post<ApiResponse<CustomerImportResult>>(`${this.base}/customers/import`, body).pipe(map((r) => r.data!));
   }
 
   quotePdf(id: number): Observable<Blob> {

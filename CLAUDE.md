@@ -89,6 +89,9 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   Migration 019 adds the buyer's order/reference no., "dispatched through" and a branch office line (setting QuoteBranchAddress), taken from the
   customer's current Tally quotation. The PDF also prints the buyer's state from the GSTIN, E. & O.E, and "Cartage / freight" as they word it.
   Their invoice 2123 (21.5 kg x 175 + 100 cartage, 18%) reproduces to the paisa and is a test case.
+  Customer master (migration 020, `CustomerService`, admin Customers): saving a quotation adds or updates the customer by phone number (blank fields never
+  erase stored ones); the quotation form can pick a saved customer; the Customers screen edits, exports and imports CSV. The quotation form also keeps an
+  unsaved draft in the browser (localStorage) until it is saved.
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 

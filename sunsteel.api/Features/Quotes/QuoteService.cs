@@ -163,6 +163,7 @@ public sealed partial class QuoteService : IQuoteService
         _db.QuoteItems.RemoveRange(quote.Items);
         quote.Items.Clear();
         Apply(quote, r, rd);
+        await CustomerService.SyncFromQuoteAsync(_db, quote, ct);
         _audit.Record(actorId, "Update", "Quote", quote.Reference, $"₹{quote.GrandTotal:0}");
         await _db.SaveChangesAsync(ct);
         return await GetAsync(id, ct);
@@ -202,6 +203,7 @@ public sealed partial class QuoteService : IQuoteService
     private async Task<QuoteDetailDto> InsertAsync(long actorId, Quote quote, CancellationToken ct)
     {
         quote.GrandTotal = TotalsOf(quote).GrandTotal;
+        await CustomerService.SyncFromQuoteAsync(_db, quote, ct);
         _db.Quotes.Add(quote);
         await _db.SaveChangesAsync(ct);
         // Same pattern as requests: short, unique, readable over the phone.

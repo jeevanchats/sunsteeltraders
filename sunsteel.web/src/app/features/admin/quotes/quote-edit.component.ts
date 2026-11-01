@@ -6,7 +6,7 @@ import { apiError } from '../../../core/models/api.model';
 import { lineFigures } from '../../../core/quote/quote-lines';
 import { inr, inWords, isInterState, quoteTotals } from '../../../core/quote/quote-math';
 import { clearDraft, loadDraft, rememberRates, rememberText, saveDraft } from '../../../core/quote/quote-memory';
-import { AdminApiService, QuoteDetail, QuoteItemDto, QuoteItemInput, QuoteLookups, SaveQuote } from '../../../core/services/admin-api.service';
+import { AdminApiService, Customer, QuoteDetail, QuoteItemDto, QuoteItemInput, QuoteLookups, SaveQuote } from '../../../core/services/admin-api.service';
 import { SeoService } from '../../../core/services/seo.service';
 import { QUOTE_TYPES, QuoteType, quoteTypeLabel, tonnes } from '../../../core/quote/quote-types';
 import { IconComponent } from '../../../shared/icon.component';
@@ -76,6 +76,18 @@ const CUSTOM = 'Custom';
           <fieldset class="card grid gap-4">
             <legend class="sr-only">Customer</legend>
             <b class="font-medium">Customer</b>
+            <div class="relative">
+              <label class="alabel">Find a saved customer<input class="ainput" name="find" autocomplete="off" placeholder="Type a name, company or phone number" [ngModel]="find()" (ngModelChange)="findCustomer($event)" /></label>
+              @if (matches().length) {
+                <ul class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-[#E3E6EB] bg-white shadow-lg" role="listbox">
+                  @for (c of matches(); track c.id) {
+                    <li><button type="button" role="option" class="block w-full px-3 py-2 text-left text-[13.5px] hover:bg-[#F8F9FB]" (click)="useCustomer(c)">
+                      <b class="font-medium">{{ c.name }}</b><small class="block text-[#8A93A3]">{{ c.company || c.city || '' }} {{ c.phone }}</small></button></li>
+                  }
+                </ul>
+              }
+              <p class="ahint mt-1">New customers are added to the <a routerLink="/admin/customers" class="underline">Customers</a> list when you save.</p>
+            </div>
             <div class="grid gap-4 sm:grid-cols-2">
               <label class="alabel">Name *<input class="ainput" maxlength="150" name="cn" [(ngModel)]="f.customerName" (ngModelChange)="touch()" /></label>
               <label class="alabel">Company<input class="ainput" maxlength="150" name="co" [(ngModel)]="f.company" (ngModelChange)="touch()" /></label>
@@ -212,6 +224,8 @@ export class QuoteEditComponent {
   protected readonly message = signal<{ ok: boolean; text: string } | null>(null);
   protected readonly rev = signal(0);
   protected readonly restored = signal<string | null>(null);
+  protected readonly find = signal('');
+  protected readonly matches = signal<Customer[]>([]);
   protected f: SaveQuote = blank();
   private pdfBlob: Blob | null = null;
 
@@ -263,6 +277,24 @@ export class QuoteEditComponent {
   @HostListener('window:beforeunload', ['$event'])
   protected onUnload(e: BeforeUnloadEvent): void {
     if (this.dirty()) e.preventDefault();
+  }
+
+  private findTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected findCustomer(text: string): void {
+    this.find.set(text);
+    clearTimeout(this.findTimer);
+    if (text.trim().length < 2) { this.matches.set([]); return; }
+    this.findTimer = setTimeout(() => this.api.searchCustomers(text.trim()).subscribe({ next: (r) => this.matches.set(r), error: () => this.matches.set([]) }), 250);
+  }
+
+  /** Fills the customer fields from the master; the quotation's own order reference and dispatch stay as they are. */
+  protected useCustomer(c: Customer): void {
+    Object.assign(this.f, { customerName: c.name, company: c.company, gstin: c.gstin, phone: c.phone, email: c.email, city: c.city, address: c.address });
+    this.f.interState = isInterState(c.gstin);
+    this.find.set('');
+    this.matches.set([]);
+    this.touch();
   }
 
   protected setQuoteType(t: QuoteType): void { this.f.quoteType = t; this.touch(); }

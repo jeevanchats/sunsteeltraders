@@ -39,6 +39,7 @@ public sealed class SunSteelDbContext : DbContext
     public DbSet<LeadFile> LeadFiles => Set<LeadFile>();
     public DbSet<LeadNote> LeadNotes => Set<LeadNote>();
     public DbSet<ClickEvent> ClickEvents => Set<ClickEvent>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<QuoteItem> QuoteItems => Set<QuoteItem>();
     public DbSet<QuoteProduct> QuoteProducts => Set<QuoteProduct>();
@@ -161,6 +162,9 @@ public sealed class SunSteelDbContext : DbContext
         b.Entity<LeadFile>(e => { e.ToTable("LeadFiles"); e.HasKey(x => x.LeadFileId); });
         b.Entity<LeadNote>(e => { e.ToTable("LeadNotes"); e.HasKey(x => x.LeadNoteId); });
         b.Entity<ClickEvent>(e => { e.ToTable("ClickEvents"); e.HasKey(x => x.ClickEventId); });
+
+        // --- Customer master (020) -------------------------------------------
+        b.Entity<Customer>(e => { e.ToTable("Customers"); e.HasKey(x => x.CustomerId); e.HasIndex(x => x.Phone).IsUnique(); });
 
         // --- Quotations (015) ------------------------------------------------
         b.Entity<Quote>(e =>
