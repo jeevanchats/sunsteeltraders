@@ -40,6 +40,9 @@ public sealed class SunSteelDbContext : DbContext
     public DbSet<ClickEvent> ClickEvents => Set<ClickEvent>();
     public DbSet<Quote> Quotes => Set<Quote>();
     public DbSet<QuoteItem> QuoteItems => Set<QuoteItem>();
+    public DbSet<QuoteProduct> QuoteProducts => Set<QuoteProduct>();
+    public DbSet<QuoteHsn> QuoteHsnCodes => Set<QuoteHsn>();
+    public DbSet<MsPipeScheduleRow> MsPipeSchedule => Set<MsPipeScheduleRow>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -178,6 +181,28 @@ public sealed class SunSteelDbContext : DbContext
             e.HasKey(x => x.QuoteItemId);
             e.Property(x => x.Kg).HasPrecision(12, 2);
             e.Property(x => x.RatePerKg).HasPrecision(10, 2);
+            e.Property(x => x.UnitPrice).HasPrecision(10, 2);
+            e.Property(x => x.GstRate).HasPrecision(5, 2);
+            e.Property(x => x.LengthMm).HasPrecision(10, 1);
+            e.Property(x => x.PieceKg).HasPrecision(12, 4);
+            e.Property(x => x.WeightPerUnit).HasPrecision(12, 3);
+            e.Property(x => x.DimsJson).HasColumnType("json");
+        });
+        b.Entity<QuoteProduct>(e =>
+        {
+            e.ToTable("QuoteProducts");
+            e.HasKey(x => x.QuoteProductId);
+            e.Property(x => x.WeightPerUnit).HasPrecision(12, 3);
+            e.Property(x => x.GstRate).HasPrecision(5, 2);
+            e.Property(x => x.ReferenceRate).HasPrecision(10, 2);
+        });
+        b.Entity<QuoteHsn>(e => { e.ToTable("QuoteHsn"); e.HasKey(x => x.QuoteHsnId); });
+        b.Entity<MsPipeScheduleRow>(e =>
+        {
+            e.ToTable("MsPipeSchedule");
+            e.HasKey(x => x.MsPipeScheduleId);
+            e.Property(x => x.OdMm).HasPrecision(7, 2);
+            e.Property(x => x.WallMm).HasPrecision(6, 2);
         });
     }
 }

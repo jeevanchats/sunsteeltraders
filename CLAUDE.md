@@ -44,7 +44,8 @@ cd sunsteel.web && npx esbuild src/app/core/weight/weight.ts --format=esm --outf
 - **URLs are the specification's, with trailing slashes** (`/products/{silo}/{slug}/`, `/steel-suppliers-{city}/`).
   `TrailingSlashUrlSerializer` writes them; `server.ts` 301s slash-less requests. Never change a slug.
 - Weight formulas exist twice: `Features/Weight/WeightCalculator.cs` and `core/weight/weight.ts`. Change both.
-- Quote totals exist twice: `Features/Quotes/QuoteMath.cs` and `core/quote/quote-math.ts` (live preview). Change both; the server's figures win.
+- Quote totals exist twice: `Features/Quotes/QuoteMath.cs` and `core/quote/quote-math.ts` (live preview); line weights twice too:
+  `Features/Quotes/QuoteLineCalc.cs` and `core/quote/quote-lines.ts` (both reuse the weight formulas). Change both; the server's figures win.
 - RFQs are **saved before WhatsApp opens**; the server recomputes kg from catalogue densities.
 - JSON-LD: Organization/Store, Product (no Offer/rating until real prices/reviews exist), BreadcrumbList, FAQPage.
 - New migrations get the next number (011…); never edit one that has been applied anywhere.
@@ -71,14 +72,19 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
 - ✅ Stage 3 — media library (ImageSharp → WebP, `Features/Media`, admin Photographs), home sliding gallery (`Features/Gallery`, admin Home gallery, migration 013),
   product / family photos wired to the public cards and product pages
 - ✅ Stage 4 — admin Products editor, Pages & content (page SEO, FAQs, terms/privacy, families, city pages; `Features/Content/ContentAdmin.cs`)
-- ✅ Quotations — `Features/Quotes`, migration 015 (Quotes, QuoteItems + quote defaults in SiteSettings), admin Quotations list/editor,
-  "Create quotation" on a request. Priced per kg (typed per quote); cutting/loading/unloading/transport/discount on the whole quote;
-  GST as CGST+SGST, or IGST when the customer's GSTIN is outside Tamil Nadu (33). PDF drawn with SkiaSharp (`QuotePdf.cs`, "Rs." not ₹);
-  WhatsApp opens a chat with the customer and staff attach the PDF. Sent/Accepted/Rejected moves the request to Quoted/Won/Lost.
+- ✅ Quotations — `Features/Quotes`, migrations 015 + 016, admin Quotations list/editor, "Create quotation" on a request, admin Quote data
+  (product list, HSN codes, MS pipe schedule, GST/terms/bank). Each line is Calculated (material, shape, size, length, pieces → weight from the
+  catalogue densities and IS 808 sections, plus SS pipe and MS pipe shapes), By weight (qty × kg × rate) or By unit (qty × price). GST is per line
+  (raw material / finished product default, or typed), frozen on save; discount spread over lines; cutting, loading, unloading and freight at the
+  raw-material rate; CGST+SGST, or IGST when the customer's GSTIN is outside Tamil Nadu (33). PDF drawn with SkiaSharp (`QuotePdf.cs`, "Rs." not ₹),
+  A4 with HSN, tax once per rate, payment terms, bank details (omitted when empty). Send: share sheet with the PDF on phones, else PDF download +
+  wa.me. Sent/Accepted/Rejected moves the request to Quoted/Won/Lost. Customer must supply: finished-product GST rate, bank details, HSN codes,
+  full MS pipe schedule (only 5 sample sizes seeded). Browser checks: `npx esbuild src/app/core/quote/quote-lines.ts --bundle --format=esm --outfile=/tmp/ql.mjs`
+  and `quote-math.ts` → `/tmp/qm.mjs`, then `node src/app/core/quote/quote.check.mjs /tmp/ql.mjs`.
 - Stage 5 — email notification on new RFQ, sitemap.xml + robots.txt, GA4/Search Console
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 
 ## Open questions for the owner
 WhatsApp number to receive RFQs · GSTIN and Udyam · godown map pins · founding year · extra grades
-(EN36, EN41B, OHNS, SS 210, Hylam, PU rod) · permission to show mill logos · whether to publish prices · quotation terms, validity and GST rate (seeded in 015, TO CONFIRM) ·
+(EN36, EN41B, OHNS, SS 210, Hylam, PU rod) · permission to show mill logos · whether to publish prices · quotation terms, validity and raw-material GST rate (seeded, TO CONFIRM) · finished-product GST rate · seller GSTIN · bank details · HSN codes · full MS pipe schedule ·
 catalogue PDF · photography shoot.

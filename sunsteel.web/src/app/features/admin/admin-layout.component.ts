@@ -65,6 +65,7 @@ export class AdminLayoutComponent {
     { link: '/admin', label: 'Dashboard', icon: 'dash' },
     { link: '/admin/leads', label: 'Requests', icon: 'inbox', perm: Perm.LeadManage },
     { link: '/admin/quotes', label: 'Quotations', icon: 'doc', perm: Perm.LeadManage },
+    { link: '/admin/quote-data', label: 'Quote data', icon: 'list', perm: Perm.LeadManage },
     { link: '/admin/stock', label: 'Stock board', icon: 'box', perm: Perm.StockManage },
     { link: '/admin/products', label: 'Products', icon: 'list', perm: Perm.CatalogManage },
     { link: '/admin/media', label: 'Photographs', icon: 'image', perm: Perm.MediaManage },

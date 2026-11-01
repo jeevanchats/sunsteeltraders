@@ -5,7 +5,8 @@ import { API_BASE_URL } from '../api.config';
 import { ApiResponse } from '../models/api.model';
 import { MediaItem } from '../models/media.model';
 import { Theme } from '../models/site.model';
-import { QuoteTotals } from '../quote/quote-math';
+import { HsnRef, MaterialRef, MsPipeRef, SectionRef } from '../quote/quote-lines';
+import { ItemType, QuoteTotals } from '../quote/quote-math';
 
 export interface StaffUser {
   userId: number;
@@ -38,19 +39,36 @@ export interface LeadDetail extends Omit<LeadRow, 'itemCount' | 'fileCount'> {
   items: LeadItem[]; files: { leadFileId: number; fileName: string; contentType: string; sizeBytes: number }[];
   notes: { leadNoteId: number; note: string; by?: string | null; createdAt: string }[];
 }
-export interface QuoteItem { description: string; size: string | null; quantity: number; kg: number; ratePerKg: number; amount?: number }
+/** One quotation line as saved. Calculated lines send material, shape, size and length; the server works out weight. */
+export interface QuoteItemInput {
+  itemType: ItemType; brand: string | null; description: string | null; size: string | null; model: string | null;
+  quantity: number; unit: string; hsn: string | null; gstCategory: 'Raw' | 'Finished'; gstRate: number | null; remarks: string | null;
+  materialKey: string | null; form: string | null; dims: Record<string, number>; section: string | null; schedule: string | null; lengthMm: number;
+  weightPerUnit: number; ratePerKg: number; unitPrice: number | null;
+}
+export interface QuoteItemDto extends QuoteItemInput {
+  description: string; kg: number; pieceKg: number | null; kgPerMetre: number | null; amount: number | null;
+}
+export interface QuoteDefaults { validDays: number; gstRaw: number | null; gstFinished: number | null; weightDecimals: number; terms: string | null; paymentTerms: string | null; bankDetails: string | null }
+export interface QuoteProduct {
+  id: number; itemType: 'ManualWeight' | 'ManualUnit'; gstCategory: 'Raw' | 'Finished'; brand: string | null; description: string; size: string | null;
+  model: string | null; unit: string; weightPerUnit: number | null; hsn: string | null; gstRate: number | null; referenceRate: number | null; isActive: boolean;
+}
+export interface QuoteLookups {
+  materials: MaterialRef[]; sections: SectionRef[]; msPipes: MsPipeRef[]; hsn: HsnRef[]; products: QuoteProduct[]; defaults: QuoteDefaults;
+}
+export interface QuoteSettings { gstRaw: number | null; gstFinished: number | null; validDays: number; weightDecimals: number; paymentTerms: string | null; bankDetails: string | null; terms: string | null }
 export interface QuoteRow { quoteId: number; reference: string; status: string; customerName: string; company: string | null; phone: string; itemCount: number; grandTotal: number; quoteDate: string; leadReference: string | null }
 export interface SaveQuote {
   customerName: string; company: string | null; gstin: string | null; phone: string; email: string | null; city: string | null; address: string | null;
   quoteDate: string | null; validDays: number;
   cuttingCharge: number; loadingCharge: number; unloadingCharge: number; transportCharge: number; discount: number;
-  gstRate: number; interState: boolean; notes: string | null; terms: string | null; items: QuoteItem[];
+  gstRate: number; interState: boolean; notes: string | null; paymentTerms: string | null; bankDetails: string | null; terms: string | null; items: QuoteItemInput[];
 }
-export interface QuoteDetail extends SaveQuote {
-  quoteId: number; reference: string; status: string; leadId: number | null; leadReference: string | null; validUntil: string;
+export interface QuoteDetail extends Omit<SaveQuote, 'items'> {
+  items: QuoteItemDto[]; quoteId: number; reference: string; status: string; leadId: number | null; leadReference: string | null; validUntil: string;
   totals: QuoteTotals; whatsAppUrl: string; createdAt: string;
 }
-export interface QuoteDefaults { validDays: number; gstRate: number; terms: string | null }
 export interface Paged<T> { items: T[]; page: number; pageSize: number; totalCount: number; totalPages: number }
 export interface ProductRow { productId: number; slug: string; sku: string; siloKey: string; name: string; grade: string; stockStatus: string; priceNote?: string | null; isPublished: boolean; updatedAt?: string | null }
 export interface Dashboard {
@@ -152,8 +170,45 @@ export class AdminApiService {
     return this.http.get<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}`).pipe(map((r) => r.data!));
   }
 
-  quoteDefaults(): Observable<QuoteDefaults> {
-    return this.http.get<ApiResponse<QuoteDefaults>>(`${this.base}/quotes/defaults`).pipe(map((r) => r.data!));
+  quoteLookups(): Observable<QuoteLookups> {
+    return this.http.get<ApiResponse<QuoteLookups>>(`${this.base}/quotes/lookups`).pipe(map((r) => r.data!));
+  }
+
+  quoteProducts(q?: string): Observable<QuoteProduct[]> {
+    return this.http.get<ApiResponse<QuoteProduct[]>>(`${this.base}/quotes/data/products`, { params: q ? { q } : {} }).pipe(map((r) => r.data ?? []));
+  }
+
+  saveQuoteProduct(p: QuoteProduct): Observable<QuoteProduct> {
+    const url = `${this.base}/quotes/data/products`;
+    return (p.id ? this.http.put<ApiResponse<QuoteProduct>>(`${url}/${p.id}`, p) : this.http.post<ApiResponse<QuoteProduct>>(url, p)).pipe(map((r) => r.data!));
+  }
+
+  deleteQuoteProduct(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/quotes/data/products/${id}`);
+  }
+
+  quoteHsn(): Observable<HsnRef[]> {
+    return this.http.get<ApiResponse<HsnRef[]>>(`${this.base}/quotes/data/hsn`).pipe(map((r) => r.data ?? []));
+  }
+
+  saveQuoteHsn(rows: HsnRef[]): Observable<HsnRef[]> {
+    return this.http.put<ApiResponse<HsnRef[]>>(`${this.base}/quotes/data/hsn`, rows).pipe(map((r) => r.data ?? []));
+  }
+
+  quotePipes(): Observable<MsPipeRef[]> {
+    return this.http.get<ApiResponse<MsPipeRef[]>>(`${this.base}/quotes/data/pipes`).pipe(map((r) => r.data ?? []));
+  }
+
+  saveQuotePipes(rows: MsPipeRef[]): Observable<MsPipeRef[]> {
+    return this.http.put<ApiResponse<MsPipeRef[]>>(`${this.base}/quotes/data/pipes`, rows).pipe(map((r) => r.data ?? []));
+  }
+
+  quoteSettings(): Observable<QuoteSettings> {
+    return this.http.get<ApiResponse<QuoteSettings>>(`${this.base}/quotes/data/settings`).pipe(map((r) => r.data!));
+  }
+
+  saveQuoteSettings(s: QuoteSettings): Observable<QuoteSettings> {
+    return this.http.put<ApiResponse<QuoteSettings>>(`${this.base}/quotes/data/settings`, s).pipe(map((r) => r.data!));
   }
 
   createQuote(body: SaveQuote): Observable<QuoteDetail> {
@@ -220,6 +275,7 @@ export class AdminApiService {
   deleteMedia(id: number): Observable<void> {
     return this.http.delete<ApiResponse<unknown>>(`${this.base}/media/${id}`).pipe(map(() => void 0));
   }
+
 
   // --- home gallery ---
 

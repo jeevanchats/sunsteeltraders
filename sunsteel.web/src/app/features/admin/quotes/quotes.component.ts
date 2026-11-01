@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { apiError } from '../../../core/models/api.model';
 import { AdminApiService, Paged, QuoteRow } from '../../../core/services/admin-api.service';
 import { inr } from '../../../core/quote/quote-math';
+import { SeoService } from '../../../core/services/seo.service';
 import { IconComponent } from '../../../shared/icon.component';
 
 const STATUSES = ['Draft', 'Sent', 'Accepted', 'Rejected'];
@@ -64,7 +65,10 @@ export class QuotesComponent {
   protected readonly error = signal('');
   protected q = '';
 
-  constructor() { this.load(1); }
+  constructor() {
+    inject(SeoService).set({ title: 'Quotations | Sun Steel Traders admin', path: '/admin/quotes', noindex: true });
+    this.load(1);
+  }
 
   protected load(page: number): void {
     this.loading.set(true);
