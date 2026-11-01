@@ -4,7 +4,8 @@ import { ProductCard, Silo, SiloSummary } from '../models/catalog.model';
  * Photographs that ship with the site (public/materials/{name}-1200.webp), used for a product or family that has no photo
  * chosen in the admin. A photo picked in the admin (Products, Home) always wins; this only fills the gaps, so the library
  * never shows a bare gradient where we have a picture of the material. Several products share a picture when it shows the
- * same material and shape (all stainless round bars, for instance). Products not listed keep the coloured placeholder.
+ * same material and shape (all stainless round bars, for instance). Every product has one; a product added later without a photo keeps the
+ * coloured placeholder until one is chosen in the admin.
  */
 const PRODUCTS: Record<string, string> = {
   // Mild steel and structural
@@ -39,6 +40,13 @@ const PRODUCTS: Record<string, string> = {
   'ptfe-teflon-rods-tubes': 'ptfe-rod-sheet', 'ptfe-teflon-sheets': 'ptfe-rod-sheet',
   // Cutting and workshop tools
   'bimetal-bandsaw-blades': 'cutting-bandsaw',
+  'hss-tool-bits': 'hss-tool-bits', 'm42-cobalt-tool-bits': 'hss-tool-bits', 'carbide-turning-inserts': 'carbide-inserts',
+  'abrasive-cutoff-wheels': 'cutoff-wheels', 'solid-carbide-end-mills': 'end-mills', 'hss-taps-die-sets': 'taps-dies',
+  'lathe-chuck-accessories': 'chuck-accessories', 'magnetic-v-blocks-clamps': 'v-blocks-clamps',
+  // The rest of mild steel, brass, copper and the plastics
+  'ms-black-rounds': 'ms-black-round', 'ms-square-bars': 'ms-square-bar', 'ms-flat-bars': 'ms-flat-bar', 'ms-plates-sheets': 'ms-plate-stack',
+  'ms-hollow-sections': 'ms-hollow-section', 'brass-sheets-coils': 'brass-sheet-coil', 'copper-hollow-tubes': 'copper-tube',
+  'bakelite-fabric-sheets': 'bakelite-sheets', 'bakelite-paper-sheets': 'bakelite-sheets', 'acrylic-transparent-sheets': 'acrylic-sheet',
 };
 
 /** The cover for each of the seven families (the cards on the home page and the library). */
