@@ -139,6 +139,8 @@
   /* Metal "photographs": brushed gradients standing in until the macro shoot (design doc §9). */
   .metal { position: relative; overflow: hidden; background: linear-gradient(135deg, #D4D6D8, #8C9196 50%, #4E545A); }
   .metal::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(100deg, rgba(255,255,255,.075) 0 2px, transparent 2px 7px); }
+  /* A real photograph is shown as it is: no brushed-metal lines over it. */
+  .metal.photo::after { display: none; }
   .metal-steel { background: linear-gradient(135deg, #D4D6D8, #8C9196 50%, #4E545A); }
   .metal-alloy { background: linear-gradient(135deg, #C7CACC, #7D8389 50%, #3F454B); }
   .metal-ss { background: linear-gradient(135deg, #EEF0F2, #B4BAC0 45%, #6E757C); }

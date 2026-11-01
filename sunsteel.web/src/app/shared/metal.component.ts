@@ -9,7 +9,7 @@ import { absUrl } from '../core/api.config';
   selector: 'ss-metal',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <figure class="metal m-0 h-full w-full" [class]="kind()">
+    <figure class="metal m-0 h-full w-full" [class]="kind()" [class.photo]="!!src()">
       @if (src()) { <img [src]="url()" [alt]="alt()" class="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" /> }
       @if (caption() && !src()) {
         <figcaption class="absolute bottom-3 left-3 z-[1] rounded-sm bg-black/35 px-2 py-0.5 text-[10px] font-medium tracking-[.04em] text-white">{{ caption() }}</figcaption>
