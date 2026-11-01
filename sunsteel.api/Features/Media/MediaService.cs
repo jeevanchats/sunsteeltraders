@@ -5,14 +5,7 @@ using sunsteel.api.Common.Models;
 using sunsteel.api.Data;
 using sunsteel.api.Data.Entities;
 using sunsteel.api.Features.Audit;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Bmp;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
+using SkiaSharp;
 
 namespace sunsteel.api.Features.Media;
 
@@ -28,7 +21,7 @@ public interface IMediaService
 }
 
 /// <summary>
-/// Image pipeline. Anything uploaded is decoded by ImageSharp (so the file extension and
+/// Image pipeline. Anything uploaded is decoded by SkiaSharp (so the file extension and
 /// Content-Type are never trusted), rotated per EXIF, stripped of metadata and re-encoded as
 /// WebP at 480/960/1600/2400 px wide (never upscaled). The originals are not kept.
 /// </summary>
@@ -40,14 +33,9 @@ public sealed class MediaService : IMediaService
     private readonly int _webpQuality;
     private const long MaxPixels = 100_000_000;       // blocks decompression bombs
 
-    // Only the formats the admin asks for. TIFF (and anything else ImageSharp knows) is never
-    // parsed: ImageSharp 3.1.x has unpatched TIFF decoder bugs and 3.2+ needs a paid licence.
-    private static readonly DecoderOptions Decoder = new()
-    {
-        Configuration = new SixLabors.ImageSharp.Configuration(
-            new JpegConfigurationModule(), new PngConfigurationModule(), new WebpConfigurationModule(),
-            new GifConfigurationModule(), new BmpConfigurationModule()),
-    };
+    // Only the formats the admin asks for; anything else the codec could parse is rejected before decoding.
+    private static readonly HashSet<SKEncodedImageFormat> AllowedFormats =
+        [SKEncodedImageFormat.Jpeg, SKEncodedImageFormat.Png, SKEncodedImageFormat.Webp, SKEncodedImageFormat.Gif, SKEncodedImageFormat.Bmp];
 
     private readonly SunSteelDbContext _db;
     private readonly IAuditService _audit;
@@ -85,19 +73,15 @@ public sealed class MediaService : IMediaService
         if (buffer.Length == 0) throw new AppException("The file is empty.");
 
         buffer.Position = 0;
-        ImageInfo info;
-        try { info = await Image.IdentifyAsync(Decoder, buffer, ct); }
-        catch (Exception e) when (e is UnknownImageFormatException or InvalidImageContentException or NotSupportedException)
-        { throw new AppException("That file is not a supported image. Use JPG, PNG, WebP, GIF or BMP."); }
-        if ((long)info.Width * info.Height > MaxPixels) throw new AppException("Image dimensions are too large.");
+        using var codec = SKCodec.Create(buffer);
+        if (codec is null || !AllowedFormats.Contains(codec.EncodedFormat))
+            throw new AppException("That file is not a supported image. Use JPG, PNG, WebP, GIF or BMP.");
+        if ((long)codec.Info.Width * codec.Info.Height > MaxPixels) throw new AppException("Image dimensions are too large.");
 
-        buffer.Position = 0;
-        using var image = await Image.LoadAsync(Decoder, buffer, ct);
-        image.Mutate(x => x.AutoOrient());
-        image.Metadata.ExifProfile = null;
-        image.Metadata.XmpProfile = null;
-        // Dropped unread: ImageSharp only parses ICC tag data (where the CLUT bug is) on access.
-        image.Metadata.IccProfile = null;
+        // Decode first frame only; re-encoding below drops EXIF / XMP / ICC, so the metadata is never kept.
+        using var decoded = SKBitmap.Decode(codec);
+        if (decoded is null) throw new AppException("That file is not a supported image. Use JPG, PNG, WebP, GIF or BMP.");
+        using var image = AutoOrient(decoded, codec.EncodedOrigin);
 
         var now = DateTime.UtcNow;
         var folder = Path.Combine(now.ToString("yyyy"), now.ToString("MM"));
@@ -112,10 +96,9 @@ public sealed class MediaService : IMediaService
         {
             foreach (var w in widths)
             {
-                using var copy = image.Clone(x => { if (w != image.Width) x.Resize(w, 0); });
                 var file = $"{stem}-{w}.webp";
                 var full = Path.Combine(_root, folder, file);
-                await copy.SaveAsync(full, new WebpEncoder { Quality = _webpQuality, FileFormat = WebpFileFormatType.Lossy }, ct);
+                await File.WriteAllBytesAsync(full, EncodeWebp(image, w, _webpQuality), ct);
                 written.Add(full);
                 total += new FileInfo(full).Length;
                 variants[w] = $"{_requestPath}/{now:yyyy}/{now:MM}/{file}";
@@ -135,7 +118,7 @@ public sealed class MediaService : IMediaService
             FileName = Path.GetFileName(originalName).Truncate(255),
             OriginalUrl = largest,
             VariantsJson = JsonSerializer.Serialize(variants),
-            Placeholder = await MakePlaceholderAsync(image, ct),
+            Placeholder = MakePlaceholder(image),
             Width = w0,
             Height = h0,
             SizeBytes = total,
@@ -255,19 +238,61 @@ public sealed class MediaService : IMediaService
 
     // --- helpers ---
 
-    private async Task<string?> MakePlaceholderAsync(Image image, CancellationToken ct)
+    private static string? MakePlaceholder(SKBitmap image)
     {
         // A ~24 px lossy WebP (a few hundred bytes; a JPEG's fixed header alone is ~600) blurs
         // into a soft colour wash when the browser scales it up.
         foreach (var (w, q) in new[] { (24, 40), (16, 35), (10, 30) })
         {
-            using var tiny = image.Clone(x => x.Resize(w, 0));
-            using var ms = new MemoryStream();
-            await tiny.SaveAsync(ms, new WebpEncoder { Quality = q, FileFormat = WebpFileFormatType.Lossy }, ct);
-            var uri = "data:image/webp;base64," + Convert.ToBase64String(ms.ToArray());
+            var uri = "data:image/webp;base64," + Convert.ToBase64String(EncodeWebp(image, w, q));
             if (uri.Length <= 1500) return uri;
         }
         return null;
+    }
+
+    /// <summary>Lossy WebP at the given width (aspect kept, never upscaled by callers).</summary>
+    private static byte[] EncodeWebp(SKBitmap image, int width, int quality)
+    {
+        SKBitmap? resized = null;
+        try
+        {
+            if (width != image.Width)
+            {
+                var height = Math.Max(1, (int)Math.Round((double)image.Height * width / image.Width));
+                resized = image.Resize(new SKImageInfo(width, height, image.ColorType, image.AlphaType),
+                    new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+                    ?? throw new AppException("That image could not be processed.");
+            }
+            using var pixmap = (resized ?? image).PeekPixels();
+            using var data = pixmap.Encode(new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossy, quality))
+                ?? throw new AppException("That image could not be processed.");
+            return data.ToArray();
+        }
+        finally { resized?.Dispose(); }
+    }
+
+    /// <summary>Applies the EXIF orientation so the stored pixels are upright.</summary>
+    private static SKBitmap AutoOrient(SKBitmap src, SKEncodedOrigin origin)
+    {
+        if (origin is SKEncodedOrigin.TopLeft or SKEncodedOrigin.Default) return src.Copy();
+        int w = src.Width, h = src.Height;
+        var swap = origin is SKEncodedOrigin.LeftTop or SKEncodedOrigin.RightTop or SKEncodedOrigin.RightBottom or SKEncodedOrigin.LeftBottom;
+        // x' = a*x + b*y + c ; y' = d*x + e*y + f
+        var m = origin switch
+        {
+            SKEncodedOrigin.TopRight => new SKMatrix(-1, 0, w, 0, 1, 0, 0, 0, 1),
+            SKEncodedOrigin.BottomRight => new SKMatrix(-1, 0, w, 0, -1, h, 0, 0, 1),
+            SKEncodedOrigin.BottomLeft => new SKMatrix(1, 0, 0, 0, -1, h, 0, 0, 1),
+            SKEncodedOrigin.LeftTop => new SKMatrix(0, 1, 0, 1, 0, 0, 0, 0, 1),
+            SKEncodedOrigin.RightTop => new SKMatrix(0, -1, h, 1, 0, 0, 0, 0, 1),
+            SKEncodedOrigin.RightBottom => new SKMatrix(0, -1, h, -1, 0, w, 0, 0, 1),
+            _ => new SKMatrix(0, 1, 0, -1, 0, w, 0, 0, 1),   // LeftBottom
+        };
+        var dst = new SKBitmap(swap ? h : w, swap ? w : h, src.ColorType, src.AlphaType);
+        using var canvas = new SKCanvas(dst);
+        canvas.SetMatrix(m);
+        canvas.DrawBitmap(src, 0, 0);
+        return dst;
     }
 
     public static MediaDto ToDto(MediaAsset m)

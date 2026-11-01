@@ -69,7 +69,7 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
   dashboard API; v3 public site: home, material library, 7 silo pages, 93 product dossiers, the scale, concierge RFQ with
   basket + file upload, catalogue gate, atelier, 6 city pages, policies, real 404s; admin: dashboard, requests inbox,
   stock board, theme, settings, staff users
-- ✅ Stage 3 — media library (ImageSharp → WebP, `Features/Media`, admin Photographs), home sliding gallery (`Features/Gallery`, admin Home gallery, migration 013),
+- ✅ Stage 3 — media library (SkiaSharp → WebP, `Features/Media`, admin Photographs), home sliding gallery (`Features/Gallery`, admin Home gallery, migration 013),
   product / family photos wired to the public cards and product pages
 - ✅ Stage 4 — admin Products editor, Pages & content (page SEO, FAQs, terms/privacy, families, city pages; `Features/Content/ContentAdmin.cs`)
 - ✅ Quotations — `Features/Quotes`, migrations 015 + 016, admin Quotations list/editor, "Create quotation" on a request, admin Quote data
