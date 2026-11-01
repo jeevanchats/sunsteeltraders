@@ -152,7 +152,7 @@ export class ContactComponent {
   constructor() {
     inject(SeoService).set({
       title: 'Contact & Request a Quote | Sun Steel Traders, Madurai',
-      description: 'Send your cut list or drawing for a same-day quote. Call, WhatsApp or visit our godowns in Simmakkal, Madurai.',
+      description: 'Send your cut list or drawing for a same-day quote. Call, WhatsApp or visit our shop in Simmakkal, Madurai.',
       path: '/contact-us/',
       jsonLd: [organizationLd((k) => this.site.get(k)), breadcrumbLd([['/', 'Home'], ['/contact-us/', 'Contact']])],
     });

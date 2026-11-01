@@ -29,7 +29,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
         <div>
           <span class="label label-accent mb-4">{{ site.get('Tagline') }} · {{ site.get('LocationLine') }}</span>
           <h1 class="h-xl">Ninety-three grades. <em>One house.</em></h1>
-          <p class="lede mt-4 max-w-[56ch]">Mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Simmakkal godowns and dispatched the same day.</p>
+          <p class="lede mt-4 max-w-[56ch]">Mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Madurai godowns and dispatched the same day.</p>
           <div class="mt-6 flex flex-wrap gap-3">
             <a routerLink="/contact-us/" class="btn">Contact us</a>
             <a routerLink="/products/" class="btn btn-ghost">Explore the library</a>
@@ -76,7 +76,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
         <div>
           <span class="label label-accent mb-4">02 · The house</span>
           <h2 class="h-xl">We cut it the way <em>you drew it.</em></h2>
-          <p class="lede mt-6">Three godowns in Simmakkal, a band saw that holds ±1 mm and an overhead crane that loads your truck in minutes. Bring a drawing, a sketch on paper or a voice note: we'll turn it into a cut list and a quote the same day.</p>
+          <p class="lede mt-6">Three godowns in Madurai, a band saw that holds ±1 mm and an overhead crane that loads your truck in minutes. Bring a drawing, a sketch on paper or a voice note: we'll turn it into a cut list and a quote the same day.</p>
           <div class="mt-8 grid gap-6 sm:grid-cols-2">
             @for (s of steps; track s.n) {
               <div class="card-rule"><span class="font-serif text-[30px] leading-none text-accent">{{ s.n }}</span><b class="mt-2 block font-serif text-[20px] font-medium">{{ s.t }}</b><p class="mt-1 text-[14px] text-muted">{{ s.d }}</p></div>
@@ -175,7 +175,7 @@ export class HomeComponent {
   protected readonly total = computed(() => this.catalog.index().silos.reduce((s, x) => s + x.productCount, 0) || 93);
 
   protected readonly numbers = [
-    { value: '3', label: 'Godowns in Simmakkal' },
+    { value: '3', label: 'Godowns in Madurai' },
     { value: '93', label: 'Grades in stock' },
     { value: '±1', label: 'mm band-saw cut' },
     { value: 'MTC', label: 'With every mill lot' },

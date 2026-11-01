@@ -16,7 +16,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
     <section class="wrap grid items-end gap-[clamp(32px,6vw,96px)] pb-[clamp(56px,7vw,96px)] pt-[clamp(120px,14vw,168px)] lg:grid-cols-2">
       <div>
         <span class="label label-accent mb-4">About us</span>
-        <h1 class="h-xxl">Three godowns in <em>Simmakkal.</em></h1>
+        <h1 class="h-xxl">Three godowns in <em>Madurai.</em></h1>
         <p class="lede mt-6">Sun Steel Traders is a multi-metal stockist on Tamil Sangam Road in Madurai's old trading quarter. We keep the grades South India's machine shops, fabricators and maintenance teams use every day, and we cut them to size before they leave.</p>
       </div>
       <ss-metal kind="metal-steel" class="aspect-[4/3]" caption="Photograph to come: godown interior, crane and bar racks" />
@@ -54,9 +54,9 @@ export class AboutComponent {
   protected readonly site = inject(SiteService);
   protected readonly catalog = inject(CatalogService);
   protected readonly godowns = [
-    { n: 'I', t: 'Main godown', d: 'Alloy, engineering and mild steel bars, the sales desk and the counter. Open Monday to Saturday.' },
-    { n: 'II', t: 'Cutting & dispatch', d: 'Band saws holding ±1 mm, plate cutting on request, and the overhead crane that loads every truck.' },
-    { n: 'III', t: 'Non-ferrous & plastics', d: 'Brass, copper, gunmetal and bronze, aluminium, and engineering plastics, kept apart from steel.' },
+    { n: 'I', t: 'Aarapalayam', d: 'Godown with built-in cutting and material-handling facilities, apart from our shop in Simmakkal.' },
+    { n: 'II', t: 'New Jail Road', d: 'Godown with built-in cutting and material-handling facilities.' },
+    { n: 'III', t: 'Vilangudi', d: 'Godown with built-in cutting and material-handling facilities.' },
   ];
   protected readonly promises = [
     { t: 'The grade on the tag', d: 'Mill material with test certificates on request, traceable to the heat number.' },
@@ -69,7 +69,7 @@ export class AboutComponent {
     this.catalog.loadIndex().subscribe();
     inject(SeoService).set({
       title: 'About Us | Sun Steel Traders, Madurai',
-      description: "Three godowns in Simmakkal, Madurai, with band-saw cutting and overhead crane loading. Steel and metals for South India's workshops.",
+      description: "Three godowns in Madurai (Aarapalayam, New Jail Road, Vilangudi), with band-saw cutting and overhead crane loading. Steel and metals for South India's workshops.",
       path: '/about-us/',
       jsonLd: [organizationLd((k) => this.site.get(k)), breadcrumbLd([['/', 'Home'], ['/about-us/', 'About us']])],
     });

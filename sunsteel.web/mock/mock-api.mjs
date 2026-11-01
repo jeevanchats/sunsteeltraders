@@ -127,7 +127,7 @@ function productDto(p) {
     sizeRange: p.sizeRange, applications: p.applications,
     summary: p.silo === 'cutting-workshop-tools' ? `${p.name} stocked in Madurai for lathe, milling and fabrication shops. Counter pickup or same-day dispatch with your steel order.`
       : p.silo === 'engineering-plastics' ? `${p.name} in ready stock: ${p.sizeRange}. Cut to length or sheet size on request.`
-      : `${p.name} in ready stock at our Simmakkal godowns, ${(p.condition || 'as rolled').toLowerCase()}, ${p.sizeRange}. Band-saw cut to your sizes with mill test certificates on request.`,
+      : `${p.name} in ready stock at our Madurai godowns, ${(p.condition || 'as rolled').toLowerCase()}, ${p.sizeRange}. Band-saw cut to your sizes with mill test certificates on request.`,
     condition: p.condition, machinability: p.machinability, chemistry: p.chemistry, mechanical: p.mechanical, equivalents: eq,
     stockStatus: p.stock, priceNote: null, heroUrl: null,
     metaTitle: `${p.name} Stockist & Supplier in Madurai | ${BRAND}`,
@@ -208,7 +208,7 @@ createServer(async (req, res) => {
     const files = readdirSync(join(here, '../public/materials')).filter((f) => f.endsWith('-1200.webp')).slice(0, 39);
     const pretty = (f) => f.replace('-1200.webp', '').replace(/-/g, ' ').replace(/^./, (x) => x.toUpperCase());
     const items = files.map((f, i) => ({
-      id: i + 1, title: pretty(f), caption: i % 3 === 0 ? 'Cut to your size in our Simmakkal godowns.' : null, linkUrl: i === 1 ? '/products/' : null,
+      id: i + 1, title: pretty(f), caption: i % 3 === 0 ? 'Cut to your size in our Madurai godowns.' : null, linkUrl: i === 1 ? '/products/' : null,
       media: { id: i + 1, kind: 'image', fileName: f, url: `/materials/${f}`, variants: { '640': `/materials/${f}`, '1200': `/materials/${f}` }, placeholder: null, width: 1200, height: 900, sizeBytes: 0, altText: pretty(f), caption: null, category: null, createdAt: '' },
     }));
     return ok(res, { settings: { show: true, kicker: 'The gallery', heading: 'A look inside Sun Steel Traders', speed: 50 }, items });

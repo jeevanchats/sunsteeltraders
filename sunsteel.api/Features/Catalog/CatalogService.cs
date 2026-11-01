@@ -309,7 +309,7 @@ public sealed class CatalogService : ICatalogService
             return
             [
                 new($"Which sizes of {p.Name.ToLowerInvariant()} do you stock?", $"{p.SizeRange}. Ask on WhatsApp for brands and current stock."),
-                new("Can I collect from the counter?", "Yes, from our Simmakkal godown, Monday to Saturday, or we send them with your steel order."),
+                new("Can I collect from the counter?", "Yes, from our shop in Simmakkal, Monday to Saturday, or we send them with your steel order."),
             ];
         return
         [
@@ -324,7 +324,7 @@ public sealed class CatalogService : ICatalogService
     {
         "cutting-workshop-tools" => $"{p.Name} stocked in Madurai for lathe, milling and fabrication shops. Counter pickup or same-day dispatch with your steel order.",
         "engineering-plastics" => $"{p.Name} in ready stock: {p.SizeRange}. Cut to length or sheet size on request.",
-        _ => $"{p.Name} in ready stock at our Simmakkal godowns, {(p.Condition ?? "as rolled").ToLowerInvariant()}, {p.SizeRange}. Band-saw cut to your sizes with mill test certificates on request.",
+        _ => $"{p.Name} in ready stock at our Madurai godowns, {(p.Condition ?? "as rolled").ToLowerInvariant()}, {p.SizeRange}. Band-saw cut to your sizes with mill test certificates on request.",
     };
 
     private SiloSummaryDto ToSummary(Silo s, int count) => new(s.SiloKey, s.Name, s.ShortName, s.Glyph, s.Intro, s.TopGrades, count, HeroOf(s.HeroMediaId));
