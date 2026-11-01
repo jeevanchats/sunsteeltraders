@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, NgZone, PLATFORM_ID, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, NgZone, PLATFORM_ID, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { apiError } from '../../../core/models/api.model';
@@ -21,6 +21,8 @@ export class AdminLoginComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly zone = inject(NgZone);
   protected readonly site = inject(SiteService);
+  /** Only the address and phone numbers are shown here; nothing about what the admin does. */
+  protected readonly phones = computed(() => ['Phone1', 'Phone2', 'Landline'].map((k) => this.site.get(k)).filter(Boolean));
 
   private readonly googleHost = viewChild<ElementRef<HTMLElement>>('googleBtn');
 

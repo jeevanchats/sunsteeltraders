@@ -2,9 +2,10 @@
   <aside class="on-dark relative flex min-h-[220px] flex-col justify-end overflow-hidden bg-primary p-8 text-on-primary md:p-14">
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_80%,color-mix(in_srgb,var(--color-accent)_35%,transparent),transparent_60%)]"></div>
     <div class="relative"><ss-brand link="/" /></div>
-    <p class="relative mt-5 max-w-[36ch] font-light text-on-primary-muted">
-      Manage requests for quotation, stock, products, colours and settings for sunsteeltraders.com.
-    </p>
+    <address class="relative mt-5 grid max-w-[40ch] gap-1 text-[14px] font-light not-italic text-on-primary-muted">
+      @if (site.get('Address')) { <span>{{ site.get('Address') }}</span> }
+      @if (phones().length) { <span>{{ phones().join(' · ') }}</span> }
+    </address>
   </aside>
 
   <section class="flex items-center justify-center bg-surface p-10">
@@ -29,7 +30,7 @@
       </form>
 
       <p class="mt-6 text-[12.5px] text-[#8A93A3]">
-        Forgotten your password? Ask a Super Admin to set a temporary one from Staff users.
+        Forgotten your password? Ask your administrator.
       </p>
     </div>
   </section>
