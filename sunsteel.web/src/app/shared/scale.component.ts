@@ -73,7 +73,7 @@ export interface ScaleProduct {
             </label>
             <p class="border-b border-white/25 py-2 text-[15px] sm:col-span-2">@if (pipeRow(); as r) { OD {{ r.odMm }} mm · wall {{ r.wallMm }} mm <span class="opacity-70">(ASME B36.10M)</span> } @else { Choose a size and schedule. }</p>
           } @else {
-            @if (form() === 'tube' || form() === 'rect') {
+            @if (form() === 'tube' || hollow()) {
               <div class="flex flex-wrap items-center gap-2 sm:col-span-2" role="radiogroup" aria-label="How the wall is given">
                 <span class="label mr-1">Wall given as</span>
                 @for (m of wallModes(); track m[0]) {
@@ -90,6 +90,11 @@ export interface ScaleProduct {
             @if (form() === 'tube' && pipeMode() === 'id') {
               <label class="fld"><span>Inside dia. (mm)</span>
                 <input type="number" inputmode="decimal" min="0" step="any" [ngModel]="inner()['ID']" (ngModelChange)="setInner('ID', $event)" name="dID" />
+              </label>
+            }
+            @if (form() === 'sqpipe' && rectMode() === 'inside') {
+              <label class="fld"><span>Inside size (mm)</span>
+                <input type="number" inputmode="decimal" min="0" step="any" [ngModel]="inner()['a']" (ngModelChange)="setInner('a', $event)" name="da" />
               </label>
             }
             @if (form() === 'rect' && rectMode() === 'inside') {
@@ -149,6 +154,8 @@ export class ScaleComponent {
   protected readonly pipeMode = signal<'wall' | 'id' | 'sch'>('wall');
   /** Hollow section: the wall is typed, or worked out from the inside sizes. */
   protected readonly rectMode = signal<'wall' | 'inside'>('wall');
+  /** Square pipe and rectangular pipe share the hollow-section maths and the wall / inside-size switch. */
+  protected readonly hollow = computed(() => this.form() === 'rect' || this.form() === 'sqpipe');
   /** Inside diameter (ID) and inside sizes (a, b) when those are what the person knows. */
   protected readonly inner = signal<Record<string, number>>({ ID: 52.5, a: 92, b: 42 });
   protected readonly nps = signal('2 in.');
@@ -164,7 +171,7 @@ export class ScaleComponent {
   protected readonly shownFields = computed(() => {
     const f = this.fields();
     if (this.form() === 'tube' && this.pipeMode() === 'id') return f.filter((x) => x[0] === 'OD');
-    if (this.form() === 'rect' && this.rectMode() === 'inside') return f.filter((x) => x[0] !== 'WT');
+    if (this.hollow() && this.rectMode() === 'inside') return f.filter((x) => x[0] !== 'WT');
     return f;
   });
   protected readonly wallMode = computed<'wall' | 'id' | 'inside'>(() => (this.form() === 'tube' ? (this.pipeMode() === 'id' ? 'id' : 'wall') : this.rectMode() === 'inside' ? 'inside' : 'wall'));
@@ -182,11 +189,12 @@ export class ScaleComponent {
     const d = this.dims();
     if (this.form() === 'tube' && this.pipeMode() === 'id') return { OD: d['OD'], WT: wallFromId(d['OD'], this.inner()['ID']) };
     if (this.form() === 'tube' && this.pipeMode() === 'sch') { const r = this.pipeRow(); return r ? { OD: r.odMm, WT: r.wallMm } : { OD: 0, WT: 0 }; }
+    if (this.form() === 'sqpipe' && this.rectMode() === 'inside') return { A: d['A'], WT: rectWallFromInside(d['A'], d['A'], this.inner()['a'], this.inner()['a']) };
     if (this.form() === 'rect' && this.rectMode() === 'inside') return { A: d['A'], B: d['B'], WT: rectWallFromInside(d['A'], d['B'], this.inner()['a'], this.inner()['b']) };
     return d;
   });
   /** The wall to show under the inputs when it was worked out rather than typed. */
-  protected readonly wallShown = computed(() => (this.pipeMode() === 'id' && this.form() === 'tube') || (this.rectMode() === 'inside' && this.form() === 'rect') ? this.eff()['WT'] ?? 0 : 0);
+  protected readonly wallShown = computed(() => (this.pipeMode() === 'id' && this.form() === 'tube') || (this.rectMode() === 'inside' && this.hollow()) ? this.eff()['WT'] ?? 0 : 0);
   protected readonly sections = computed(() => this.catalog.index().sections.filter((s) => s.kind === this.form()));
   protected readonly density = computed(() => this.catalog.density(this.product()?.materialKey ?? this.materialKey()));
   protected readonly sectionKgM = computed(() => this.catalog.index().sections.find((s) => s.designation === this.section())?.kgPerMetre ?? 0);
@@ -194,6 +202,7 @@ export class ScaleComponent {
     const d = this.dims(), i = this.inner();
     if (this.form() === 'tube' && this.pipeMode() === 'id' && !(i['ID'] > 0 && i['ID'] < d['OD'])) return 'The inside diameter must be smaller than the outside diameter.';
     if (this.form() === 'tube' && this.pipeMode() === 'sch' && !this.pipeRow()) return 'Choose a nominal size and a schedule.';
+    if (this.form() === 'sqpipe' && this.rectMode() === 'inside' && !(this.eff()['WT'] > 0)) return 'The inside size must be smaller than the outside size.';
     if (this.form() === 'rect' && this.rectMode() === 'inside' && !(this.eff()['WT'] > 0)) return 'The inside sizes must be smaller than the outside sizes and leave the same wall all round: (A − a) ÷ 2 must equal (B − b) ÷ 2.';
     return validate(this.form(), this.eff());
   });
@@ -244,7 +253,8 @@ export class ScaleComponent {
       this.pipeMode.set(m === 'id' ? 'id' : 'wall');
     } else {
       const d = this.dims();
-      if (m === 'inside' && d['A'] > 0 && d['B'] > 0 && d['WT'] > 0) this.inner.set({ ...this.inner(), a: d['A'] - 2 * d['WT'], b: d['B'] - 2 * d['WT'] });
+      if (m === 'inside' && this.form() === 'sqpipe' && d['A'] > 0 && d['WT'] > 0) this.inner.set({ ...this.inner(), a: d['A'] - 2 * d['WT'] });
+      else if (m === 'inside' && d['A'] > 0 && d['B'] > 0 && d['WT'] > 0) this.inner.set({ ...this.inner(), a: d['A'] - 2 * d['WT'], b: d['B'] - 2 * d['WT'] });
       this.rectMode.set(m === 'inside' ? 'inside' : 'wall');
     }
     this.added.set(false);

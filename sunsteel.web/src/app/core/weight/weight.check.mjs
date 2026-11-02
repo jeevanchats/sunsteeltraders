@@ -19,6 +19,11 @@ assert.equal(w.wallFromId(50, 50), 0);                                     // in
 assert.equal(w.rectWallFromInside(100, 50, 92, 42), 4);                    // 100 x 50 outside, 92 x 42 inside -> wall 4
 near(w.pieceKg('rect', { A: 100, B: 50, WT: w.rectWallFromInside(100, 50, 92, 42) }, 1000, 7.85), 8.92, 0.01);
 assert.equal(w.rectWallFromInside(100, 50, 92, 40), 0);                    // unequal walls are refused
+near(w.pieceKg('sqpipe', { A: 50, WT: 3 }, 1000, 7.85), 4.43, 0.01);        // 50 x 50 x 3 square pipe = 4.43 kg/m
+near(w.pieceKg('sqpipe', { A: 50, WT: 3 }, 1000, 7.85), w.pieceKg('rect', { A: 50, B: 50, WT: 3 }, 1000, 7.85), 1e-9); // square = rectangular with equal sides
+near(w.pieceKg('sqpipe', { A: 50, WT: w.rectWallFromInside(50, 50, 44, 44) }, 1000, 7.85), 4.43, 0.01); // inside size 44 -> wall 3
+assert.equal(w.validate('sqpipe', { A: 50, WT: 25 }), 'Wall thickness must be less than half the side.');
+assert.equal(w.dimText('sqpipe', { A: 50, WT: 3 }), '50 sq × 3 wall');
 assert.equal(w.validate('angle', { A: 50, B: 50, T: 60 }), 'Thickness must be less than the shorter leg.');
 assert.equal(w.dimText('flat', { W: 75, T: 12 }), '75 × 12');
 assert.deepEqual(w.rangeOf('Ø 6–150 mm, h9/h11'), [6, 150]);

@@ -7,7 +7,7 @@ namespace sunsteel.api.Features.Weight;
 /// </summary>
 public static class WeightCalculator
 {
-    public static readonly string[] Forms = ["round", "square", "hex", "flat", "plate", "tube", "rect", "angle", "beam", "channel"];
+    public static readonly string[] Forms = ["round", "square", "hex", "flat", "plate", "tube", "sqpipe", "rect", "angle", "beam", "channel"];
 
     /// <summary>Weight of one piece, or 0 when the dimensions are incomplete or impossible.</summary>
     /// <param name="sectionKgPerMetre">IS 808 kg/m, required for beam and channel.</param>
@@ -24,6 +24,7 @@ public static class WeightCalculator
             "hex" => 0.866025 * V("AF") * V("AF") * lengthMm * density / 1_000_000,
             "flat" or "plate" => V("T") * V("W") * lengthMm * density / 1_000_000,
             "tube" => Math.PI * (V("OD") - V("WT")) * V("WT") * lengthMm * density / 1_000_000,
+            "sqpipe" => (4 * V("A") - 4 * V("WT")) * V("WT") * lengthMm * density / 1_000_000,
             "rect" => (2 * (V("A") + V("B")) - 4 * V("WT")) * V("WT") * lengthMm * density / 1_000_000,
             "angle" => (V("A") + V("B") - V("T")) * V("T") * lengthMm * density / 1_000_000,
             "beam" or "channel" => (sectionKgPerMetre ?? 0) * lengthMm / 1000,
@@ -39,6 +40,7 @@ public static class WeightCalculator
         return form switch
         {
             "tube" when V("WT") * 2 >= V("OD") => "Wall thickness must be less than half the outside diameter.",
+            "sqpipe" when V("WT") * 2 >= V("A") => "Wall thickness must be less than half the side.",
             "rect" when V("WT") * 2 >= Math.Min(V("A"), V("B")) => "Wall thickness must be less than half the smaller side.",
             "angle" when V("T") >= Math.Min(V("A"), V("B")) => "Thickness must be less than the shorter leg.",
             _ => null,
@@ -57,6 +59,7 @@ public static class WeightCalculator
             "flat" => $"{F("W")} × {F("T")}",
             "plate" => $"{F("T")} × {F("W")}",
             "tube" => $"OD {F("OD")} × {F("WT")} wall",
+            "sqpipe" => $"{F("A")} sq × {F("WT")} wall",
             "rect" => $"{F("A")} × {F("B")} × {F("WT")}",
             "angle" => $"{F("A")} × {F("B")} × {F("T")}",
             _ => section ?? "",

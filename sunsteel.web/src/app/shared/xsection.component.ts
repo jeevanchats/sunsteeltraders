@@ -76,12 +76,14 @@ export function drawSection(form: Form, d: Dims, sec?: string): string {
         dimH(cx - r, cx + r, cy + r + 9, `OD ${n('OD')}`) + t(cx, cy + 2.5, `WT ${n('WT')}`);
       break;
     }
+    case 'sqpipe':
     case 'rect': {
-      const k = sc([n('A'), n('B')]) * 1.2;
-      const W = n('A') * k, H = n('B') * k, w = Math.max(n('WT') * k, 1.5);
+      const bb = form === 'sqpipe' ? n('A') : n('B');
+      const k = sc([n('A'), bb]) * 1.2;
+      const W = n('A') * k, H = bb * k, w = Math.max(n('WT') * k, 1.5);
       g = `<rect x="${cx - W / 2}" y="${cy - H / 2}" width="${W}" height="${H}" fill="url(#ssx)" stroke="${L}" stroke-width="1.1"/>` +
         `<rect x="${cx - W / 2 + w}" y="${cy - H / 2 + w}" width="${Math.max(W - 2 * w, 1)}" height="${Math.max(H - 2 * w, 1)}" fill="${BG}" stroke="${L}" stroke-width="1.1"/>` +
-        dimH(cx - W / 2, cx + W / 2, cy + H / 2 + 9, `${n('A')}`) + dimV(cy - H / 2, cy + H / 2, cx + W / 2 + 6, `${n('B')} × ${n('WT')}`);
+        dimH(cx - W / 2, cx + W / 2, cy + H / 2 + 9, `${n('A')}`) + dimV(cy - H / 2, cy + H / 2, cx + W / 2 + 6, `${bb} × ${n('WT')}`);
       break;
     }
     case 'angle': {

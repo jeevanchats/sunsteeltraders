@@ -30,7 +30,7 @@ export const MS_PIPE_KEYS = ['ms', 'alloy'];
 
 export const SHAPES: { key: QuoteShape; label: string }[] = [
   { key: 'round', label: 'Round' }, { key: 'square', label: 'Square' }, { key: 'hex', label: 'Hex' },
-  { key: 'flat', label: 'Flat' }, { key: 'plate', label: 'Plate / sheet' }, { key: 'rect', label: 'Hollow section' },
+  { key: 'flat', label: 'Flat' }, { key: 'plate', label: 'Plate / sheet' }, { key: 'sqpipe', label: 'Square pipe' }, { key: 'rect', label: 'Rectangular pipe' },
   { key: 'angle', label: 'Angle' }, { key: 'beam', label: 'Beam (ISMB)' }, { key: 'channel', label: 'Channel (ISMC)' },
   { key: 'sspipe', label: 'SS pipe' }, { key: 'mspipe', label: 'MS pipe' }, { key: 'tube', label: 'Tube (other metals)' },
 ];
@@ -48,12 +48,13 @@ export function materialsFor(shape: string | null, materials: MaterialRef[]): Ma
  * switches (the value may still be empty), so the choice survives while nothing is typed yet. ID = inside diameter; a, b = inside sizes.
  */
 export function insideMode(l: { form: string | null; dims: Record<string, number> }): boolean {
-  return (l.form === 'tube' && 'ID' in l.dims) || (l.form === 'rect' && ('a' in l.dims || 'b' in l.dims));
+  return (l.form === 'tube' && 'ID' in l.dims) || (l.form === 'sqpipe' && 'a' in l.dims) || (l.form === 'rect' && ('a' in l.dims || 'b' in l.dims));
 }
 
 /** The size inputs for a line: as dimFields, with the inside-size inputs in place of the wall when that is how it is given. */
 export function dimFieldsFor(l: { form: string | null; dims: Record<string, number> }): [string, string][] {
   if (l.form === 'tube' && insideMode(l)) return [['OD', 'Outside dia.'], ['ID', 'Inside dia.']];
+  if (l.form === 'sqpipe' && insideMode(l)) return [['A', 'Side'], ['a', 'Inside size']];
   if (l.form === 'rect' && insideMode(l)) return [['A', 'Side A'], ['B', 'Side B'], ['a', 'Inside A'], ['b', 'Inside B']];
   return dimFields(l.form);
 }
@@ -117,6 +118,12 @@ export function calcLine(l: LineInputs, materials: MaterialRef[], sections: Sect
       if (d['ID'] >= od) return EMPTY('Inside diameter must be less than the outside diameter.');
       d['WT'] = (od - d['ID']) / 2;
       derived.id = d['ID']; derived.wt = d['WT'];
+    } else if (form === 'sqpipe' && num(d['a'])) {
+      const A = num(d['A']), a = num(d['a']);
+      if (!A) return EMPTY();
+      if (a >= A) return EMPTY('The inside size must be smaller than the outside size.');
+      d['WT'] = (A - a) / 2;
+      derived.wt = d['WT'];
     } else if (form === 'rect' && (num(d['a']) || num(d['b']))) {
       const A = num(d['A']), B = num(d['B']), a = num(d['a']), b = num(d['b']);
       if (!(A && B && a && b)) return EMPTY();
@@ -166,5 +173,5 @@ export function lineFigures(l: FigureInputs, ref: RefData, d: RateDefaults): { k
 export function resolveHsn(rows: HsnRef[], form: string | null, materialKey: string | null): string {
   if (!form) return '';
   const find = (f: string) => rows.find((h) => h.form === f && h.materialKey === (materialKey ?? ''))?.hsn ?? rows.find((h) => h.form === f && h.materialKey === '')?.hsn;
-  return find(form) ?? (form === 'sspipe' || form === 'mspipe' ? find('tube') : undefined) ?? '';
+  return find(form) ?? (form === 'sspipe' || form === 'mspipe' ? find('tube') : form === 'sqpipe' ? find('rect') : undefined) ?? '';
 }

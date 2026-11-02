@@ -3,15 +3,15 @@
  * result in kg. Mirrors sunsteel.api Features/Weight/WeightCalculator.cs; keep both in step.
  * The server recomputes every RFQ line, so this copy is for instant feedback only.
  */
-export type Form = 'round' | 'square' | 'hex' | 'flat' | 'plate' | 'tube' | 'rect' | 'angle' | 'beam' | 'channel';
+export type Form = 'round' | 'square' | 'hex' | 'flat' | 'plate' | 'tube' | 'sqpipe' | 'rect' | 'angle' | 'beam' | 'channel';
 export type Dims = Record<string, number>;
 
 export const FORM_NAMES: Record<Form, string> = {
   round: 'Round', square: 'Square', hex: 'Hex', flat: 'Flat', plate: 'Plate / sheet', tube: 'Tube / pipe',
-  rect: 'Hollow section', angle: 'Angle', beam: 'Beam (ISMB)', channel: 'Channel (ISMC)',
+  sqpipe: 'Square pipe', rect: 'Rectangular pipe', angle: 'Angle', beam: 'Beam (ISMB)', channel: 'Channel (ISMC)',
 };
 
-export const CALC_FORMS: Form[] = ['round', 'square', 'hex', 'flat', 'plate', 'tube', 'rect', 'angle', 'beam', 'channel'];
+export const CALC_FORMS: Form[] = ['round', 'square', 'hex', 'flat', 'plate', 'tube', 'sqpipe', 'rect', 'angle', 'beam', 'channel'];
 
 /** The inputs each shape needs: [key, label, default]. Beams and channels pick an IS 808 section instead. */
 export const DIMS: Partial<Record<Form, [string, string, number][]>> = {
@@ -21,11 +21,12 @@ export const DIMS: Partial<Record<Form, [string, string, number][]>> = {
   flat: [['W', 'Width', 75], ['T', 'Thickness', 12]],
   plate: [['T', 'Thickness', 10], ['W', 'Width', 1250]],
   tube: [['OD', 'Outside dia.', 60.3], ['WT', 'Wall', 3.9]],
+  sqpipe: [['A', 'Side', 50], ['WT', 'Wall', 3]],
   rect: [['A', 'Side A', 100], ['B', 'Side B', 50], ['WT', 'Wall', 4]],
   angle: [['A', 'Leg A', 50], ['B', 'Leg B', 50], ['T', 'Thickness', 6]],
 };
 
-export const DEFAULT_LENGTH: Partial<Record<Form, number>> = { plate: 2500, beam: 6000, channel: 6000, angle: 6000, rect: 6000, tube: 6000 };
+export const DEFAULT_LENGTH: Partial<Record<Form, number>> = { plate: 2500, beam: 6000, channel: 6000, angle: 6000, sqpipe: 6000, rect: 6000, tube: 6000 };
 
 export const FORMULA_TEXT: Record<Form, string> = {
   round: 'W = π × D² × L × ρ ÷ 4,000,000',
@@ -34,6 +35,7 @@ export const FORMULA_TEXT: Record<Form, string> = {
   flat: 'W = T × W × L × ρ ÷ 1,000,000',
   plate: 'W = T × W × L × ρ ÷ 1,000,000',
   tube: 'W = π × (OD − WT) × WT × L × ρ ÷ 1,000,000   (with an inside diameter, WT = (OD − ID) ÷ 2)',
+  sqpipe: 'W = 4 × (A − WT) × WT × L × ρ ÷ 1,000,000   (with an inside size, WT = (A − a) ÷ 2)',
   rect: 'W = (2(A + B) − 4·WT) × WT × L × ρ ÷ 1,000,000   (with inside sizes, WT = (A − a) ÷ 2 = (B − b) ÷ 2)',
   angle: 'W = (A + B − T) × T × L × ρ ÷ 1,000,000',
   beam: 'W = IS 808 kg/m × L ÷ 1,000',
@@ -57,6 +59,7 @@ export function rectWallFromInside(A: number, B: number, a: number, b: number): 
 /** Plain-language problem with the dimensions, or '' when they are valid. */
 export function validate(form: Form, d: Dims): string {
   if (form === 'tube' && v(d, 'WT') * 2 >= v(d, 'OD')) return 'Wall thickness must be less than half the outside diameter.';
+  if (form === 'sqpipe' && v(d, 'WT') * 2 >= v(d, 'A')) return 'Wall thickness must be less than half the side.';
   if (form === 'rect' && v(d, 'WT') * 2 >= Math.min(v(d, 'A'), v(d, 'B'))) return 'Wall thickness must be less than half the smaller side.';
   if (form === 'angle' && v(d, 'T') >= Math.min(v(d, 'A'), v(d, 'B'))) return 'Thickness must be less than the shorter leg.';
   return '';
@@ -73,6 +76,7 @@ export function pieceKg(form: Form, d: Dims, lengthMm: number, density: number, 
     case 'flat':
     case 'plate': kg = (v(d, 'T') * v(d, 'W') * lengthMm * density) / 1e6; break;
     case 'tube': kg = (Math.PI * (v(d, 'OD') - v(d, 'WT')) * v(d, 'WT') * lengthMm * density) / 1e6; break;
+    case 'sqpipe': kg = ((4 * v(d, 'A') - 4 * v(d, 'WT')) * v(d, 'WT') * lengthMm * density) / 1e6; break;
     case 'rect': kg = ((2 * (v(d, 'A') + v(d, 'B')) - 4 * v(d, 'WT')) * v(d, 'WT') * lengthMm * density) / 1e6; break;
     case 'angle': kg = ((v(d, 'A') + v(d, 'B') - v(d, 'T')) * v(d, 'T') * lengthMm * density) / 1e6; break;
     case 'beam':
@@ -91,6 +95,7 @@ export function dimText(form: Form, d: Dims, section?: string): string {
     case 'flat': return `${f('W')} × ${f('T')}`;
     case 'plate': return `${f('T')} × ${f('W')}`;
     case 'tube': return `OD ${f('OD')} × ${f('WT')} wall`;
+    case 'sqpipe': return `${f('A')} sq × ${f('WT')} wall`;
     case 'rect': return `${f('A')} × ${f('B')} × ${f('WT')}`;
     case 'angle': return `${f('A')} × ${f('B')} × ${f('T')}`;
     default: return section ?? '';
@@ -112,6 +117,7 @@ export const STD_SIZES = {
   flat: [[20, 3], [25, 5], [32, 6], [40, 6], [50, 8], [65, 10], [75, 12], [100, 12], [125, 16], [150, 20], [200, 25]] as [number, number][],
   plate: [0.8, 1, 1.6, 2, 3, 5, 6, 8, 10, 12, 16, 20, 25, 32, 40, 50, 63, 80, 100],
   tube: [[21.3, 2.6, '½″'], [26.9, 2.6, '¾″'], [33.7, 3.2, '1″'], [48.3, 3.2, '1½″'], [60.3, 3.6, '2″'], [88.9, 4, '3″'], [114.3, 4.5, '4″'], [168.3, 5.4, '6″'], [219.1, 6.3, '8″']] as [number, number, string][],
+  sqpipe: [[20, 1.6], [25, 2], [40, 2.6], [50, 2.9], [60, 3.2], [80, 4], [100, 4], [150, 5], [200, 6]] as [number, number][],
   rect: [[40, 40, 2.6], [50, 25, 2.9], [60, 60, 3.2], [80, 40, 3.2], [100, 50, 4], [100, 100, 4], [150, 100, 5], [200, 200, 6]] as [number, number, number][],
   angle: [[25, 25, 3], [40, 40, 5], [50, 50, 6], [65, 65, 6], [75, 75, 8], [90, 90, 8], [100, 100, 10]] as [number, number, number][],
 };
@@ -145,6 +151,8 @@ export function sizeChart(form: Form, density: number, sizeRange: string | null 
       return { head: ['Thickness mm', 'kg / m²', 'kg / sheet 1250 × 2500'], rows: STD_SIZES.plate.filter((t) => t >= lo && t <= hi).map((t) => ({ size: `${t}`, kgPerM: t * density, kgPer: t * density * 3.125, form, dims: { T: t, W: 1250 } })) };
     case 'tube':
       return { head: ['NB · OD × WT mm', 'kg / metre', 'kg / 6 m'], rows: STD_SIZES.tube.map(([od, wt, nb]) => { const d = { OD: od, WT: wt }; const m = per('tube', d); return { size: `${nb} · ${od} × ${wt}`, kgPerM: m, kgPer: m * 6, form, dims: d }; }) };
+    case 'sqpipe':
+      return { head: ['Side × WT mm', 'kg / metre', 'kg / 6 m'], rows: STD_SIZES.sqpipe.map(([a, w]) => { const d = { A: a, WT: w }; const m = per('sqpipe', d); return { size: `${a} × ${a} × ${w}`, kgPerM: m, kgPer: m * 6, form, dims: d }; }) };
     case 'rect':
       return { head: ['A × B × WT mm', 'kg / metre', 'kg / 6 m'], rows: STD_SIZES.rect.map(([a, b, w]) => { const d = { A: a, B: b, WT: w }; const m = per('rect', d); return { size: `${a} × ${b} × ${w}`, kgPerM: m, kgPer: m * 6, form, dims: d }; }) };
     case 'angle':

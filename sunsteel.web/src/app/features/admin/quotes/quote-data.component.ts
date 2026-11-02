@@ -10,7 +10,7 @@ import { IconComponent } from '../../../shared/icon.component';
 
 type Tab = 'settings' | 'products' | 'hsn' | 'pipes';
 const UNITS = ['nos', 'pcs', 'set', 'sheet', 'metre', 'ft', 'kg'];
-const SHAPES = ['round', 'square', 'hex', 'flat', 'plate', 'rect', 'angle', 'beam', 'channel', 'sspipe', 'mspipe', 'tube'];
+const SHAPES = ['round', 'square', 'hex', 'flat', 'plate', 'sqpipe', 'rect', 'angle', 'beam', 'channel', 'sspipe', 'mspipe', 'tube'];
 
 const blankProduct = (): QuoteProduct => ({
   id: 0, itemType: 'ManualUnit', gstCategory: 'Finished', brand: null, description: '', size: null, model: null, unit: 'nos',

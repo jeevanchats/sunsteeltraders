@@ -144,6 +144,7 @@ function pieceKg(form, d, L, rho, kgm) {
     case 'hex': return (0.866025 * v('AF') ** 2 * L * rho) / 1e6;
     case 'flat': case 'plate': return (v('T') * v('W') * L * rho) / 1e6;
     case 'tube': return (Math.PI * (v('OD') - v('WT')) * v('WT') * L * rho) / 1e6;
+    case 'sqpipe': return ((4 * v('A') - 4 * v('WT')) * v('WT') * L * rho) / 1e6;
     case 'rect': return ((2 * (v('A') + v('B')) - 4 * v('WT')) * v('WT') * L * rho) / 1e6;
     case 'angle': return ((v('A') + v('B') - v('T')) * v('T') * L * rho) / 1e6;
     default: return ((kgm ?? 0) * L) / 1000;

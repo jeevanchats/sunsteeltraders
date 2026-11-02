@@ -41,6 +41,11 @@ check('Tube by wall still works: OD 100 x wall 20 = 42.73 kg', near(calc({ form:
 const h1 = calc({ form: 'rect', materialKey: 'ms', dims: { A: 100, B: 50, a: 92, b: 42 }, lengthMm: 1000 });
 check('Hollow section by inside size: 100 x 50 outside, 92 x 42 inside = wall 4, 8.92 kg', near(h1.pieceKg, 8.92, 0.01) && h1.derived.wt === 4);
 check('Hollow section: unequal walls are refused', calc({ form: 'rect', materialKey: 'ms', dims: { A: 100, B: 50, a: 92, b: 40 }, lengthMm: 1000 }).error !== '');
+const sq1 = calc({ form: 'sqpipe', materialKey: 'ms', dims: { A: 50, WT: 3 }, lengthMm: 1000 });
+check('Square pipe 50 x 3 wall = 4.43 kg/m', near(sq1.pieceKg, 4.43, 0.01));
+const sq2 = calc({ form: 'sqpipe', materialKey: 'ms', dims: { A: 50, a: 44 }, lengthMm: 1000 });
+check('Square pipe by inside size: 50 outside, 44 inside = wall 3, 4.43 kg', near(sq2.pieceKg, 4.43, 0.01) && sq2.derived.wt === 3);
+check('Square pipe: inside size not smaller than outside is refused', calc({ form: 'sqpipe', materialKey: 'ms', dims: { A: 50, a: 50 }, lengthMm: 1000 }).error !== '');
 check('Switching mode with nothing typed yet gives no price and no error', (() => { const r = calc({ form: 'tube', materialKey: 'brass', dims: { OD: 100, ID: 0 }, lengthMm: 1000 }); return r.kg === 0 && r.error === ''; })());
 check('Beam: kg/m from the IS 808 table', calc({ form: 'beam', materialKey: 'ms', section: 'ISMB 300', lengthMm: 6000, quantity: 2 }).kg === 530.4);
 check('Empty inputs: no price, no error', (() => { const r = calc({ form: 'round', materialKey: 'ms', lengthMm: 500 }); return r.kg === 0 && r.error === ''; })());

@@ -324,7 +324,7 @@ public sealed partial class QuoteService : IQuoteService
     {
         string? Find(string f) =>
             rd.Hsn.FirstOrDefault(h => h.Form == f && h.MaterialKey == materialKey)?.Hsn ?? rd.Hsn.FirstOrDefault(h => h.Form == f && h.MaterialKey == "")?.Hsn;
-        return Find(form) ?? (form is "sspipe" or "mspipe" ? Find("tube") : null);
+        return Find(form) ?? (form is "sspipe" or "mspipe" ? Find("tube") : form == "sqpipe" ? Find("rect") : null);
     }
 
     // --- reference data and settings -------------------------------------------

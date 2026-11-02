@@ -222,7 +222,7 @@ export class QuoteLineComponent {
   protected readonly materials = computed(() => { this.rev(); return materialsFor(this.line().form, this.lookups().materials); });
   protected readonly dims = computed(() => { this.rev(); return dimFieldsFor(this.line()); });
   /** Tubes and hollow sections can be given by their inside size instead of the wall. */
-  protected readonly canInside = computed(() => { this.rev(); const f = this.line().form; return f === 'tube' || f === 'rect'; });
+  protected readonly canInside = computed(() => { this.rev(); const f = this.line().form; return f === 'tube' || f === 'sqpipe' || f === 'rect'; });
   protected readonly inside = computed(() => { this.rev(); return insideMode(this.line()); });
   protected readonly sections = computed(() => { this.rev(); return this.lookups().sections.filter((s) => s.kind === this.line().form); });
   protected readonly pipeSizes = computed(() => [...new Set(this.lookups().msPipes.map((p) => p.nominalSize))]);
@@ -295,6 +295,9 @@ export class QuoteLineComponent {
     if (l.form === 'tube') {
       if (on) { d['ID'] = d['OD'] > 0 && d['WT'] > 0 ? r2(d['OD'] - 2 * d['WT']) : 0; delete d['WT']; }
       else { if (d['OD'] > 0 && d['ID'] > 0 && d['ID'] < d['OD']) d['WT'] = r2((d['OD'] - d['ID']) / 2); delete d['ID']; }
+    } else if (l.form === 'sqpipe') {
+      if (on) { d['a'] = d['A'] > 0 && d['WT'] > 0 ? r2(d['A'] - 2 * d['WT']) : 0; delete d['WT']; }
+      else { if (d['A'] > 0 && d['a'] > 0 && d['a'] < d['A']) d['WT'] = r2((d['A'] - d['a']) / 2); delete d['a']; }
     } else if (l.form === 'rect') {
       if (on) { d['a'] = d['A'] > 0 && d['WT'] > 0 ? r2(d['A'] - 2 * d['WT']) : 0; d['b'] = d['B'] > 0 && d['WT'] > 0 ? r2(d['B'] - 2 * d['WT']) : 0; delete d['WT']; }
       else { if (d['A'] > 0 && d['a'] > 0 && d['a'] < d['A']) d['WT'] = r2((d['A'] - d['a']) / 2); delete d['a']; delete d['b']; }

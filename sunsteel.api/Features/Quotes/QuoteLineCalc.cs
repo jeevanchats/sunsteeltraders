@@ -74,6 +74,18 @@ public static class QuoteLineCalc
                 break;
             }
 
+            case "sqpipe" when d.GetValueOrDefault("a") > 0:
+            {
+                // Square pipe given by its outside and inside size.
+                double A = d.GetValueOrDefault("A"), a = d["a"];
+                if (A <= 0) throw new AppException("Enter the outside size.");
+                if (a >= A) throw new AppException("The inside size must be smaller than the outside size.");
+                d["WT"] = (A - a) / 2;
+                desc = $"Square pipe {N(A)} × {N(A)} outside, {N(a)} × {N(a)} inside";
+                dimsText = $"{N(A)} sq outside, {N(a)} sq inside ({N(d["WT"])} wall)";
+                break;
+            }
+
             case "rect" when d.GetValueOrDefault("a") > 0 || d.GetValueOrDefault("b") > 0:
             {
                 // Hollow section given by outside and inside sizes: both directions must leave the same wall.
@@ -128,7 +140,7 @@ public static class QuoteLineCalc
     public static string FormName(string form) => form switch
     {
         "round" => "Round", "square" => "Square", "hex" => "Hex", "flat" => "Flat", "plate" => "Plate",
-        "tube" => "Tube", "rect" => "Hollow section", "angle" => "Angle", "beam" => "Beam", "channel" => "Channel",
+        "tube" => "Tube", "sqpipe" => "Square pipe", "rect" => "Rectangular pipe", "angle" => "Angle", "beam" => "Beam", "channel" => "Channel",
         _ => form,
     };
 
