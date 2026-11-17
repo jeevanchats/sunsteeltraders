@@ -1,6 +1,7 @@
 import { AngularNodeAppEngine, createNodeRequestHandler, isMainModule, writeResponseToNodeResponse } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { robotsTxt, sitemapXml } from './sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -32,6 +33,22 @@ const angularApp = new AngularNodeAppEngine({ allowedHosts: allowedHosts(), trus
 app.get('/config.js', (_req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(join(browserDistFolder, 'config.js'));
+});
+
+const siteUrl = (process.env['SITE_URL'] || 'http://localhost:4200').replace(/\/$/, '');
+const apiBaseUrl = (process.env['API_BASE_URL'] || 'http://localhost:5090/api').replace(/\/$/, '');
+
+app.get('/sitemap.xml', (_req, res) => {
+  sitemapXml(apiBaseUrl, siteUrl)
+    .then((xml) => res.type('application/xml').setHeader('Cache-Control', 'public, max-age=3600').send(xml))
+    .catch((e) => {
+      console.error('[sitemap]', e);
+      res.status(503).setHeader('Retry-After', '600').send('Sitemap temporarily unavailable');
+    });
+});
+
+app.get('/robots.txt', (_req, res) => {
+  res.type('text/plain').setHeader('Cache-Control', 'public, max-age=3600').send(robotsTxt(siteUrl));
 });
 
 app.use(express.static(browserDistFolder, { maxAge: '1y', index: false, redirect: false }));
