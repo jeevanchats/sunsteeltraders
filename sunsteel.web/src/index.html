@@ -12,6 +12,18 @@
   <link rel="apple-touch-icon" href="/brand/favicon-192.png">
   <!-- Per-environment runtime config (API URL, site URL). Written by deploy; see deploy/README.md. -->
   <script src="/config.js"></script>
+  <!-- Google Analytics 4. Staff pages (/admin) are not measured. -->
+  <script>
+    if (!location.pathname.startsWith('/admin')) {
+      var s = document.createElement('script');
+      s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=G-9SQT8LZT8K';
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag('js', new Date());
+      gtag('config', 'G-9SQT8LZT8K');
+    }
+  </script>
 </head>
 <body>
   <app-root></app-root>
