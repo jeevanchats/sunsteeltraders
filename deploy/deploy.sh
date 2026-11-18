@@ -24,6 +24,7 @@ render() { sed -e "s#__DOMAIN__#$DOMAIN#g" -e "s#__SCHEME__#$SCHEME#g" "$1"; }
 render "$ROOT/deploy/sunsteel-ssr.service"  > "$OUT/sunsteel-ssr.service"
 render "$ROOT/deploy/nginx-sunsteel.conf"  > "$OUT/nginx-sunsteel.conf"
 cp "$ROOT/deploy/sunsteel-api.service" "$OUT/"
+cp "$ROOT/deploy/backup-sunsteel.sh" "$ROOT/deploy/sunsteel-security.conf" "$OUT/"
 
 echo "==> upload"
 tar -C "$OUT" -czf - . | ssh "$HOST" "rm -rf /tmp/ss-release && mkdir /tmp/ss-release && tar -xzf - -C /tmp/ss-release"
@@ -73,11 +74,27 @@ cp $S/sunsteel-api.service $S/sunsteel-ssr.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now sunsteel-api sunsteel-ssr
 
+# Security headers: the snippet is ours and is refreshed every run. The Nginx site file is never overwritten
+# (certbot edits it), so on an older install the two include lines are added once, and undone if nginx -t objects.
+mkdir -p /etc/nginx/snippets
+install -m 644 $S/sunsteel-security.conf /etc/nginx/snippets/sunsteel-security.conf
+
 if [ ! -f /etc/nginx/sites-available/sunsteel ]; then
   cp $S/nginx-sunsteel.conf /etc/nginx/sites-available/sunsteel
   ln -sf /etc/nginx/sites-available/sunsteel /etc/nginx/sites-enabled/sunsteel
+elif ! grep -q sunsteel-security /etc/nginx/sites-available/sunsteel; then
+  cp /etc/nginx/sites-available/sunsteel /root/sunsteel.nginx.pre-headers.bak
+  sed -i -e '/add_header X-Cache \$upstream_cache_status;/a\        include /etc/nginx/snippets/sunsteel-security.conf;'          -e '/add_header Cache-Control "no-store";/a\        include /etc/nginx/snippets/sunsteel-security.conf;' /etc/nginx/sites-available/sunsteel
+  if nginx -t 2>/dev/null; then echo "   security headers added to the Nginx site"
+  else cp /root/sunsteel.nginx.pre-headers.bak /etc/nginx/sites-available/sunsteel; echo "   WARNING: could not add security headers, Nginx site left as it was"; fi
 fi
 nginx -t && systemctl reload nginx
+
+# Nightly backup (02:30, kept 14 days). Run once now so a broken setup shows up in this deploy, not in a crisis.
+install -m 755 $S/backup-sunsteel.sh /usr/local/sbin/sunsteel-backup.sh
+echo '30 2 * * * root /usr/local/sbin/sunsteel-backup.sh >> /var/log/sunsteel/backup.log 2>&1' > /etc/cron.d/sunsteel-backup
+chmod 644 /etc/cron.d/sunsteel-backup
+/usr/local/sbin/sunsteel-backup.sh | sed 's/^/   backup: /' || echo "   WARNING: backup failed, see /var/log/sunsteel/backup.log"
 
 sleep 4
 echo "   api: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5290/api/health)   ssr: $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4130/)"
