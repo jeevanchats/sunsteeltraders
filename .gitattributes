@@ -1,0 +1,3 @@
+# Deploy files are shipped to a Linux server: keep Unix line endings even when checked out on Windows
+*.sh text eol=lf
+deploy/** text eol=lf
