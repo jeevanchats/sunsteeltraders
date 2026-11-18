@@ -35,6 +35,20 @@ public sealed class CatalogService : ICatalogService
 {
     public static readonly string[] StockStatuses = ["In stock", "Limited", "On order"];
     private const string Brand = "Sun Steel Traders";
+    private const string BrandShort = "Sun Steel";
+
+    /// <summary>
+    /// Default page title "{subject} Dealers in {place} | Sun Steel Traders". The customer's keywords are all "dealers in Madurai",
+    /// so those words come first; the brand is shortened, then dropped, to keep the title near the ~60 characters Google shows.
+    /// A MetaTitle saved in the admin still wins over this default.
+    /// </summary>
+    internal static string DealerTitle(string subject, string place)
+    {
+        var core = $"{subject} Dealers in {place}";
+        foreach (var brand in new[] { Brand, BrandShort })
+            if (core.Length + 3 + brand.Length <= 60) return $"{core} | {brand}";
+        return core;
+    }
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     private readonly SunSteelDbContext _db;
@@ -106,7 +120,7 @@ public sealed class CatalogService : ICatalogService
         var faqs = await FaqsAsync("silo", key, ct);
         if (faqs.Count == 0) faqs = DefaultSiloFaqs(silo, products);
         return new SiloDto(summary,
-            silo.MetaTitle ?? $"{silo.Name} Wholesale Stockist & Dealers | {Brand}",
+            silo.MetaTitle ?? DealerTitle(silo.Name, "Madurai"),
             silo.MetaDescription ?? $"Leading supplier of {silo.TopGrades} in Madurai. Ready stock with cut-to-size service, MTC provided and fast dispatch across Tamil Nadu.",
             products.Select(p => ToCard(p, key)).ToList(), faqs);
     }
@@ -162,7 +176,7 @@ public sealed class CatalogService : ICatalogService
         return new CityDto(c.Slug, c.Name, c.DistanceKm, c.LeadTime, c.Zones, c.Intro,
             Parse<List<string>>(c.IndustriesJson) ?? [],
             popular.OrderBy(p => popularSlugs.IndexOf(p.Slug)).Select(p => ToCard(p, p.Silo.SiloKey)).ToList(),
-            c.MetaTitle ?? $"Industrial Steel & Metal Suppliers in {c.Name} | {Brand}",
+            c.MetaTitle ?? DealerTitle("Steel & Metal", c.Name),
             c.MetaDescription ?? $"Direct factory supply of Mild Steel, Alloy Steel, Stainless Steel, Brass & Copper to {c.Name} industrial zones. Fast dispatch from Madurai godowns.");
     }
 
@@ -282,7 +296,7 @@ public sealed class CatalogService : ICatalogService
             p.Condition, p.Machinability,
             Parse<List<ChemistryRow>>(p.ChemistryJson) ?? [], Parse<List<PropertyRow>>(p.MechanicalJson) ?? [], eq,
             p.StockStatus, p.PriceNote, HeroOf(p.HeroMediaId),
-            p.MetaTitle ?? $"{p.Name} Stockist & Supplier in Madurai | {Brand}",
+            p.MetaTitle ?? DealerTitle(p.Name, "Madurai"),
             p.MetaDescription ?? $"Buy cut-to-size {p.Name}{(firstEq is null ? "" : $" ({firstEq})")} from {Brand} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.",
             faqs, related.Select(x => ToCard(x, key)).ToList(), p.HeroMediaId, p.IsPublished);
     }

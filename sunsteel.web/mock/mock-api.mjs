@@ -104,6 +104,12 @@ const msPipes = [
   ['12 in.', 323.90, 'SCH 160', 33.32, 140],
 ].map(([nominalSize, odMm, schedule, wallMm]) => ({ nominalSize, odMm, schedule, wallMm }));
 const BRAND = 'Sun Steel Traders';
+// Same rule as CatalogService.DealerTitle in the API.
+const dealerTitle = (subject, place) => {
+  const core = `${subject} Dealers in ${place}`;
+  for (const b of [BRAND, 'Sun Steel']) if (core.length + 3 + b.length <= 60) return `${core} | ${b}`;
+  return core;
+};
 const silo = (k) => c.silos.find((s) => s.key === k);
 const density = (k) => c.materials.find((m) => m.key === k)?.density;
 const sections = [...c.sections.beam.map(([d, w], i) => ({ designation: d, kind: 'beam', kgPerMetre: w, i })), ...c.sections.channel.map(([d, w], i) => ({ designation: d, kind: 'channel', kgPerMetre: w, i }))];
@@ -130,7 +136,7 @@ function productDto(p) {
       : `${p.name} in ready stock at our Madurai godowns, ${(p.condition || 'as rolled').toLowerCase()}, ${p.sizeRange}. Band-saw cut to your sizes with mill test certificates on request.`,
     condition: p.condition, machinability: p.machinability, chemistry: p.chemistry, mechanical: p.mechanical, equivalents: eq,
     stockStatus: p.stock, priceNote: null, heroUrl: null,
-    metaTitle: `${p.name} Stockist & Supplier in Madurai | ${BRAND}`,
+    metaTitle: dealerTitle(p.name, 'Madurai'),
     metaDescription: `Buy cut-to-size ${p.name}${eq[0] ? ` (${eq[0]})` : ''} from ${BRAND} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.`,
     faqs, related, path: `/products/${p.silo}/${p.slug}/`,
   };
@@ -180,7 +186,7 @@ createServer(async (req, res) => {
     const s = silo(m[1]); if (!s) return notFound(res, 'Category not found.');
     const ps = c.products.filter((x) => x.silo === s.key);
     const sh = s.short.toLowerCase();
-    return ok(res, { silo: summary(s), metaTitle: `${s.name} Wholesale Stockist & Dealers | ${BRAND}`, metaDescription: `Leading supplier of ${s.top} in Madurai. Ready stock with cut-to-size service, MTC provided and fast dispatch across Tamil Nadu.`, products: ps.map(card),
+    return ok(res, { silo: summary(s), metaTitle: dealerTitle(s.name, 'Madurai'), metaDescription: `Leading supplier of ${s.top} in Madurai. Ready stock with cut-to-size service, MTC provided and fast dispatch across Tamil Nadu.`, products: ps.map(card),
       faqs: [{ question: `Which ${sh} grades do you keep in stock?`, answer: `${ps.length} products, including ${[...new Set(ps.slice(0, 6).map((x) => x.grade))].join(', ')}, listed above with size ranges and stock status.` }, { question: `Can you cut ${sh} material to size?`, answer: 'Yes. Rounds, flats and blocks are band-saw cut to ±1 mm; pipes and sections are cut to length. Cutting is quoted with the material.' }, { question: 'How quickly can you deliver?', answer: 'Same day in Madurai, 1 day to Tirunelveli, Tuticorin and Trichy, 1–2 days to Coimbatore and Salem, 2–3 days to Chennai.' }] });
   }
   if ((m = p.match(/^\/api\/catalog\/products\/([^/]+)\/([^/]+)$/))) {
@@ -200,7 +206,7 @@ createServer(async (req, res) => {
   }
   if ((m = p.match(/^\/api\/catalog\/cities\/([^/]+)$/))) {
     const x = c.cities.find((y) => y.slug === m[1].toLowerCase()); if (!x) return notFound(res, 'City not found.');
-    return ok(res, { slug: x.slug, name: x.name, distanceKm: x.km, leadTime: x.lead, zones: x.zones, intro: x.intro, industries: x.inds, popular: x.pop.map((s) => c.products.find((y) => y.slug === s)).filter(Boolean).map(card), metaTitle: `Industrial Steel & Metal Suppliers in ${x.name} | ${BRAND}`, metaDescription: `Direct factory supply of Mild Steel, Alloy Steel, Stainless Steel, Brass & Copper to ${x.name} industrial zones. Fast dispatch from Madurai godowns.` });
+    return ok(res, { slug: x.slug, name: x.name, distanceKm: x.km, leadTime: x.lead, zones: x.zones, intro: x.intro, industries: x.inds, popular: x.pop.map((s) => c.products.find((y) => y.slug === s)).filter(Boolean).map(card), metaTitle: dealerTitle('Steel & Metal', x.name), metaDescription: `Direct factory supply of Mild Steel, Alloy Steel, Stainless Steel, Brass & Copper to ${x.name} industrial zones. Fast dispatch from Madurai godowns.` });
   }
   if ((m = p.match(/^\/api\/pages\/?(.*)$/))) return pages[m[1]] ? ok(res, pages[m[1]]) : notFound(res);
   if ((m = p.match(/^\/api\/policies\/([^/]+)$/))) return policies[m[1]] ? ok(res, policies[m[1]]) : notFound(res);
