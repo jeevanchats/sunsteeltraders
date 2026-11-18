@@ -48,7 +48,8 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
           <p class="lede mt-5">Every grade a machine shop, fabricator or maintenance team in South India asks for, with chemistry, equivalents and live stock on its own page.</p>
           <a routerLink="/products/" class="lnk mt-7">View all {{ total() }} materials <ss-icon name="arrow" [size]="14" /></a>
         </div>
-        <div class="-mx-[var(--pad)] flex scroll-pl-[var(--pad)] snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--pad)] pb-2 [scrollbar-width:none] lg:-mr-[var(--pad)] lg:ml-0 lg:pl-0 lg:pr-[var(--pad)] lg:[mask-image:linear-gradient(90deg,#000_90%,transparent)]">
+        <div class="min-w-0">
+        <div #rail (scroll)="railMoved(rail)" class="-mx-[var(--pad)] flex scroll-pl-[var(--pad)] snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--pad)] pb-2 [scrollbar-width:none] lg:-mr-[var(--pad)] lg:ml-0 lg:pl-0 lg:pr-[var(--pad)] lg:[mask-image:linear-gradient(90deg,#000_90%,transparent)]">
           @for (s of catalog.index().silos; track s.key) {
             <a [routerLink]="'/products/' + s.key + '/'" class="group w-[210px] flex-none snap-start">
               <ss-metal [kind]="metal(s.key)" [src]="s.heroUrl" class="aspect-[4/5] transition-transform duration-700 ease-lux group-hover:scale-[1.02]" />
@@ -56,6 +57,14 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
               <span class="label mt-1">{{ s.productCount }} grades</span>
             </a>
           }
+        </div>
+        <!-- the scrollbar is hidden, so mouse users need buttons; touch users swipe -->
+        <div class="mt-5 hidden gap-2 md:flex">
+          <button type="button" (click)="slide(rail, -1)" [disabled]="atStart()" aria-label="Previous families"
+            class="grid h-11 w-11 place-items-center rounded-full border border-line text-ink transition hover:border-ink disabled:opacity-30 disabled:hover:border-line"><ss-icon name="arrow" [size]="16" class="rotate-180" /></button>
+          <button type="button" (click)="slide(rail, 1)" [disabled]="atEnd()" aria-label="Next families"
+            class="grid h-11 w-11 place-items-center rounded-full border border-line text-ink transition hover:border-ink disabled:opacity-30 disabled:hover:border-line"><ss-icon name="arrow" [size]="16" /></button>
+        </div>
         </div>
       </div>
     </section>
@@ -215,6 +224,20 @@ export class HomeComponent {
         jsonLd: compact([organizationLd((k) => this.site.get(k)), faqLd(p.faqs)]),
       });
     });
+  }
+
+  protected readonly atStart = signal(true);
+  protected readonly atEnd = signal(false);
+
+  /** Moves the library rail by about one view, snapping to a card. */
+  protected slide(rail: HTMLElement, dir: 1 | -1): void {
+    rail.scrollBy({ left: dir * Math.max(226, rail.clientWidth * 0.8), behavior: 'smooth' });
+  }
+
+  protected railMoved(rail: HTMLElement): void {
+    this.atStart.set(rail.scrollLeft <= 4);
+    // snapping to the last card stops short of the end by the rail's right padding
+    this.atEnd.set(rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - parseFloat(getComputedStyle(rail).paddingRight) - 4);
   }
 
   protected metal(key: string): string { return SILO_METAL[key] ?? 'metal-steel'; }
