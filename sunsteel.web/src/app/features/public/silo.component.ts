@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { SILO_METAL, Silo, metalClass, stockClass } from '../../core/models/catalog.model';
 import { SeoService } from '../../core/services/seo.service';
+import { shareImage } from '../../core/services/share-image';
 import { breadcrumbLd, compact, faqLd } from '../../core/services/structured-data';
 import { FORM_NAMES, Form } from '../../core/weight/weight';
 import { FaqListComponent } from '../../shared/faq-list.component';
@@ -78,7 +79,7 @@ export class SiloComponent {
       const path = `/products/${d.silo.key}/`;
       this.shape.set(null);
       this.seo.set({
-        title: d.metaTitle, description: d.metaDescription, path,
+        title: d.metaTitle, description: d.metaDescription, path, image: shareImage(d.silo.key),
         jsonLd: compact([breadcrumbLd([['/', 'Home'], ['/products/', 'Products'], [path, d.silo.name]]), faqLd(d.faqs)]),
       });
     });

@@ -2,12 +2,14 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { SITE_URL } from '../api.config';
+import { SHARE_IMAGE_HEIGHT, SHARE_IMAGE_WIDTH, shareImage } from './share-image';
 
 export interface SeoData {
   title: string;
   description?: string;
   /** Path such as '/products/stainless-steel/'. Canonical is always SITE_URL + path, never the request URL. */
   path: string;
+  /** Link-preview picture: a path such as '/og/bars.jpg' or a full URL. Defaults to the site card. */
   image?: string;
   noindex?: boolean;
   /** Structured data blocks (Organization, Product, BreadcrumbList, FAQPage...). Replaced on every call. */
@@ -32,8 +34,16 @@ export class SeoService {
     this.tag('property', 'og:type', 'website');
     this.tag('property', 'og:site_name', 'Sun Steel Traders');
     this.tag('property', 'og:locale', 'en_IN');
-    this.tag('property', 'og:image', data.image);
-    this.tag('name', 'twitter:card', data.image ? 'summary_large_image' : 'summary');
+    // WhatsApp and Facebook need an absolute https URL. Every page gets a picture: the site card unless the page names one.
+    const picture = data.image ?? shareImage();
+    const image = /^https?:\/\//.test(picture) ? picture : SITE_URL + picture;
+    const ours = image.startsWith(SITE_URL + '/og/');
+    this.tag('property', 'og:image', image);
+    this.tag('property', 'og:image:alt', data.title);
+    this.tag('property', 'og:image:width', ours ? String(SHARE_IMAGE_WIDTH) : undefined);
+    this.tag('property', 'og:image:height', ours ? String(SHARE_IMAGE_HEIGHT) : undefined);
+    this.tag('name', 'twitter:card', 'summary_large_image');
+    this.tag('name', 'twitter:image', image);
 
     let link = this.doc.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!link) {

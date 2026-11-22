@@ -6,6 +6,7 @@ import { map } from 'rxjs';
 import { Product, metalClass, stockClass } from '../../core/models/catalog.model';
 import { CatalogService } from '../../core/services/catalog.service';
 import { SeoService } from '../../core/services/seo.service';
+import { shareImage } from '../../core/services/share-image';
 import { SiteService } from '../../core/services/site.service';
 import { breadcrumbLd, compact, faqLd, productLd } from '../../core/services/structured-data';
 import { ChartRow, Dims, Form, formatKg, sizeChart } from '../../core/weight/weight';
@@ -222,6 +223,7 @@ export class ProductComponent {
         title: p.metaTitle,
         description: p.metaDescription,
         path: p.path,
+        image: shareImage(p.siloKey),
         jsonLd: compact([
           productLd(p),
           breadcrumbLd([['/', 'Home'], ['/products/', 'Products'], [`/products/${p.siloKey}/`, p.siloName], [p.path, p.name]]),
