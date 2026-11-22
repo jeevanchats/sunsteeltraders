@@ -21,7 +21,7 @@ export interface Product {
   slug: string; sku: string; siloKey: string; siloName: string; name: string; grade: string;
   materialKey?: string | null; materialName?: string | null; density?: number | null; forms: Form[];
   sizeRange?: string | null; applications?: string | null; summary: string; condition?: string | null; machinability?: string | null;
-  chemistry: ChemistryRow[]; mechanical: PropertyRow[]; equivalents: string[];
+  chemistry: ChemistryRow[]; mechanical: PropertyRow[]; equivalents: string[]; aliases: string[];
   stockStatus: StockStatus; priceNote?: string | null; heroUrl?: string | null; metaTitle: string; metaDescription: string;
   faqs: Faq[]; related: ProductCard[]; path: string;
 }

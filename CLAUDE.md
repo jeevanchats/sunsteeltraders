@@ -22,6 +22,8 @@ mysql -e "CREATE DATABASE sunsteel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 for f in database/migrations/0*.sql; do mysql --default-character-set=utf8mb4 -u root -p sunsteel < "$f"; done
 # Regenerate the catalogue seed (010) after editing database/seed/catalog.json
 node database/seed/build-seed.mjs
+# Regenerate migration 026 (product trade names / "Also called") after editing database/seed/aliases.json; the web mock reads it too
+node database/seed/build-aliases.mjs
 # API  → http://localhost:5090/api/health   (set Jwt:Key, ConnectionStrings:Default, Admin:DefaultPassword via user-secrets)
 dotnet run --project sunsteel.api
 # Web  → http://localhost:4200

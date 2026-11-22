@@ -53,6 +53,8 @@ const STATES = ['In stock', 'Limited', 'On order'];
             </div>
             <label class="alabel">Applications<input class="ainput" maxlength="400" name="apps" [(ngModel)]="f.applications" (ngModelChange)="touch()" placeholder="Shafts, gears, bolts…" /></label>
             <label class="alabel">Equivalent grades (one per line)<textarea class="ainput" name="eq" [(ngModel)]="equivalents" (ngModelChange)="touch()"></textarea></label>
+            <label class="alabel">Also called: trade names customers search for (one per line)<textarea class="ainput" name="aliases" [(ngModel)]="aliases" (ngModelChange)="touch()" placeholder="MS polish rod&#10;MS polish flat"></textarea>
+              <span class="ahint">Shown on the product page, in its FAQ and in the site search. Use the words customers type, e.g. "I beam". Under 400 characters in total.</span></label>
           </fieldset>
 
           <fieldset class="card grid gap-3">
@@ -144,6 +146,7 @@ export class ProductEditComponent {
 
   protected f!: SaveProduct;
   protected equivalents = '';
+  protected aliases = '';
 
   constructor() {
     this.api.product(this.id).subscribe({
@@ -161,10 +164,11 @@ export class ProductEditComponent {
     this.p.set(p);
     this.f = {
       name: p.name, sizeRange: p.sizeRange, applications: p.applications, summary: p.summary, condition: p.condition, machinability: p.machinability,
-      chemistry: p.chemistry.map((c) => ({ ...c })), mechanical: p.mechanical.map((m) => ({ ...m })), equivalents: p.equivalents,
+      chemistry: p.chemistry.map((c) => ({ ...c })), mechanical: p.mechanical.map((m) => ({ ...m })), equivalents: p.equivalents, aliases: p.aliases,
       stockStatus: p.stockStatus, priceNote: p.priceNote, metaTitle: p.metaTitle, metaDescription: p.metaDescription, isPublished: p.isPublished, heroMediaId: p.heroMediaId,
     };
     this.equivalents = p.equivalents.join('\n');
+    this.aliases = p.aliases.join('\n');
     this.photoUrl.set(p.heroUrl ? absUrl(p.heroUrl) : null);
     this.dirty.set(false);
   }
@@ -196,6 +200,7 @@ export class ProductEditComponent {
     const body: SaveProduct = {
       ...this.f,
       equivalents: this.equivalents.split('\n').map((s) => s.trim()).filter(Boolean),
+      aliases: this.aliases.split('\n').map((s) => s.trim()).filter(Boolean),
       chemistry: this.f.chemistry.filter((c) => c.el.trim()),
       mechanical: this.f.mechanical.filter((m) => m.k.trim()),
     };

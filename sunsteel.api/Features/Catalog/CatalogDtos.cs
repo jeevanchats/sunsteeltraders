@@ -17,7 +17,7 @@ public sealed record ProductDto(
     string Slug, string Sku, string SiloKey, string SiloName, string Name, string Grade,
     string? MaterialKey, string? MaterialName, decimal? Density, IReadOnlyList<string> Forms,
     string? SizeRange, string? Applications, string Summary, string? Condition, string? Machinability,
-    IReadOnlyList<ChemistryRow> Chemistry, IReadOnlyList<PropertyRow> Mechanical, IReadOnlyList<string> Equivalents,
+    IReadOnlyList<ChemistryRow> Chemistry, IReadOnlyList<PropertyRow> Mechanical, IReadOnlyList<string> Equivalents, IReadOnlyList<string> Aliases,
     string StockStatus, string? PriceNote, string? HeroUrl, string MetaTitle, string MetaDescription,
     IReadOnlyList<FaqDto> Faqs, IReadOnlyList<ProductCardDto> Related, long? HeroMediaId = null, bool IsPublished = true)
 {
@@ -60,7 +60,8 @@ public sealed record AdminProductRowDto(long ProductId, string Slug, string Sku,
 public sealed record UpdateProductRequest(
     string Name, string? SizeRange, string? Applications, string? Summary, string? Condition, string? Machinability,
     IReadOnlyList<ChemistryRow>? Chemistry, IReadOnlyList<PropertyRow>? Mechanical, IReadOnlyList<string>? Equivalents,
-    string StockStatus, string? PriceNote, string? MetaTitle, string? MetaDescription, bool IsPublished, long? HeroMediaId = null);
+    string StockStatus, string? PriceNote, string? MetaTitle, string? MetaDescription, bool IsPublished, long? HeroMediaId = null,
+    IReadOnlyList<string>? Aliases = null);
 
 public sealed record UpdateStockRequest(string StockStatus);
 public sealed record UpdateDensityRequest(decimal Density);

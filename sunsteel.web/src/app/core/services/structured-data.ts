@@ -49,6 +49,7 @@ export function productLd(p: Product): object {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: p.name,
+    ...(p.aliases.length ? { alternateName: p.aliases } : {}),
     sku: p.sku,
     mpn: p.grade,
     category: p.siloName,

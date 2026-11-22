@@ -42,6 +42,8 @@ public sealed class Product
     public string Forms { get; set; } = string.Empty;
     public string? SizeRange { get; set; }
     public string? Applications { get; set; }
+    /// <summary>Trade names customers search for ("MS polish rod"), comma separated. Shown as "Also called".</summary>
+    public string? Aliases { get; set; }
     public string? Summary { get; set; }
     public string? Condition { get; set; }
     public string? Machinability { get; set; }
