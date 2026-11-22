@@ -66,7 +66,7 @@ export class CatalogueComponent {
 
   constructor() {
     inject(SeoService).set({
-      title: 'Download Steel Catalogue & Weight Chart (PDF) | Sun Steel Traders',
+      title: 'Steel Catalogue & Weight Chart (PDF) | Sun Steel Traders',
       description: 'Download the Sun Steel Traders product catalogue and metal weight chart: 93 grades with equivalents, chemistry, size ranges and kg/m tables.',
       path: '/catalogue-download/',
       jsonLd: [breadcrumbLd([['/', 'Home'], ['/catalogue-download/', 'Catalogue']])],

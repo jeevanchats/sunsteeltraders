@@ -300,7 +300,6 @@ public sealed class CatalogService : ICatalogService
         var faqs = await FaqsAsync("product", p.Slug, ct);
         var aliases = SplitList(p.Aliases);
         if (faqs.Count == 0) faqs = DefaultProductFaqs(p, eq, aliases);
-        var firstEq = eq.FirstOrDefault();
         return new ProductDto(
             p.Slug, p.Sku, key, p.Silo.Name, p.Name, p.Grade, p.MaterialKey, p.Material?.Name, p.Material?.Density,
             SplitForms(p.Forms), p.SizeRange, p.Applications, p.Summary ?? DefaultSummary(p, key),
@@ -308,7 +307,7 @@ public sealed class CatalogService : ICatalogService
             Parse<List<ChemistryRow>>(p.ChemistryJson) ?? [], Parse<List<PropertyRow>>(p.MechanicalJson) ?? [], eq, aliases,
             p.StockStatus, p.PriceNote, HeroOf(p.HeroMediaId),
             p.MetaTitle ?? DealerTitle(p.Name, "Madurai"),
-            p.MetaDescription ?? $"Buy cut-to-size {p.Name}{(firstEq is null ? "" : $" ({firstEq})")} from {Brand} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.",
+            p.MetaDescription ?? DealerDescription(p.Name, aliases),
             faqs, related.Select(x => ToCard(x, key)).ToList(), p.HeroMediaId, p.IsPublished);
     }
 
@@ -367,6 +366,22 @@ public sealed class CatalogService : ICatalogService
         new(p.Slug, siloKey, p.Name, p.Grade, p.MaterialKey, SplitForms(p.Forms), p.SizeRange, p.StockStatus, Parse<List<string>>(p.EquivalentsJson) ?? [], HeroOf(p.HeroMediaId));
 
     private static List<string> SplitForms(string forms) => forms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    /// <summary>
+    /// Default meta description: "{name} ({trade names}) dealers in Madurai. Cut to size, MTC on request, ...". It used to repeat the grade
+    /// ("(817M40) (BS 817M40)") and ran past the ~155 characters Google shows for 60 of the 93 products. Trade names are added only while it fits.
+    /// </summary>
+    internal static string DealerDescription(string name, IReadOnlyList<string> aliases)
+    {
+        const string tail = " dealers in Madurai. Cut to size, MTC on request, same-day dispatch across Tamil Nadu.";
+        // A name that already has brackets ("MS Channels (ISMC)") gets no second pair.
+        for (var n = name.Contains('(') ? 0 : Math.Min(aliases.Count, 2); n >= 0; n--)
+        {
+            var text = name + (n > 0 ? $" ({string.Join(", ", aliases.Take(n))})" : "") + tail;
+            if (text.Length <= 155) return text;
+        }
+        return name + " dealers in Madurai. Cut to size, MTC on request, same-day dispatch.";
+    }
 
     private static List<string> SplitList(string? csv) => string.IsNullOrWhiteSpace(csv) ? [] : SplitForms(csv);
 

@@ -28,8 +28,8 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
       <div class="wrap grid items-center gap-8 py-[clamp(28px,4vw,56px)] lg:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)]">
         <div>
           <span class="label label-accent mb-4">{{ site.get('Tagline') }} · {{ site.get('LocationLine') }}</span>
-          <h1 class="h-xl">Ninety-three grades. <em>One house.</em></h1>
-          <p class="lede mt-4 max-w-[56ch]">Mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Madurai godowns and dispatched the same day.</p>
+          <h1 class="h-xl">Steel, stainless, brass &amp; copper <em>dealers in Madurai.</em></h1>
+          <p class="lede mt-4 max-w-[56ch]">Ninety-three grades, one house: mild, alloy and stainless steel, brass, copper, cast iron and engineering plastics. Cut to your size in our Madurai godowns and dispatched the same day.</p>
           <div class="mt-6 flex flex-wrap gap-3">
             <a routerLink="/contact-us/" class="btn">Contact us</a>
             <a routerLink="/products/" class="btn btn-ghost">Explore the library</a>

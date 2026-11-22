@@ -7,6 +7,12 @@ import { SeoService } from '../../core/services/seo.service';
 import { PageHeaderComponent } from '../../shared/page-header.component';
 import { NotFoundComponent } from './not-found.component';
 
+/** Google shows these when a policy page has no description of its own. */
+const DESCRIPTIONS: Record<string, string> = {
+  'terms-conditions': 'Terms and conditions for orders, quotations, cutting and delivery from Sun Steel Traders, steel and metal dealers in Madurai.',
+  'privacy-policy': 'How Sun Steel Traders, Madurai, collects and uses your details when you request a quote, send a drawing or contact us.',
+};
+
 /** /terms-conditions/ and /privacy-policy/: HTML from the PolicyPages table (sanitised by Angular). */
 @Component({
   selector: 'ss-policy',
@@ -28,7 +34,7 @@ export class PolicyComponent {
   constructor() {
     effect(() => {
       const p = this.p();
-      if (p) this.seo.set({ title: `${p.title} | Sun Steel Traders`, path: `/${p.slug}/` });
+      if (p) this.seo.set({ title: `${p.title} | Sun Steel Traders`, description: DESCRIPTIONS[p.slug] ?? `${p.title} of Sun Steel Traders, steel and metal dealers in Madurai.`, path: `/${p.slug}/` });
     });
   }
 }
