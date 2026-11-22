@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const c = JSON.parse(readFileSync(join(here, '../../database/seed/catalog.json'), 'utf8'));
+const aliases = JSON.parse(readFileSync(join(here, '../../database/seed/aliases.json'), 'utf8'));
 // MS pipe schedule (ASME B36.10M), the same rows migration 024 seeds, for the weight calculator.
 const msPipes = [
   ['1/2 in.', 21.30, 'SCH 10', 2.11, 10],
@@ -126,6 +127,8 @@ function productDto(p) {
     { question: 'What sizes are in stock?', answer: `${p.sizeRange}. For large tonnage, message us to reserve material.` },
     { question: `What are the equivalents of ${p.grade}?`, answer: eq.length ? `${eq.join(', ')}. Equivalents are close matches; confirm against your drawing's specification.` : 'Ask our sales team for the nearest equivalent.' },
   ] : [{ question: `Which sizes of ${p.name.toLowerCase()} do you stock?`, answer: `${p.sizeRange}. Ask on WhatsApp for brands and current stock.` }];
+  const al = aliases[p.slug] || [];
+  if (al.length) faqs.push({ question: `What else is ${p.name} called?`, answer: `It is also sold as ${al.join(', ')}. Whichever name you use, send your sizes and we will quote the same day.` });
   const related = c.products.filter((x) => x.silo === p.silo && x.slug !== p.slug).sort((a, b) => Math.abs(a.sort - p.sort) - Math.abs(b.sort - p.sort)).slice(0, 4).map(card);
   return {
     slug: p.slug, sku: p.sku, siloKey: p.silo, siloName: s.name, name: p.name, grade: p.grade, materialKey: p.material,
@@ -134,7 +137,7 @@ function productDto(p) {
     summary: p.silo === 'cutting-workshop-tools' ? `${p.name} stocked in Madurai for lathe, milling and fabrication shops. Counter pickup or same-day dispatch with your steel order.`
       : p.silo === 'engineering-plastics' ? `${p.name} in ready stock: ${p.sizeRange}. Cut to length or sheet size on request.`
       : `${p.name} in ready stock at our Madurai godowns, ${(p.condition || 'as rolled').toLowerCase()}, ${p.sizeRange}. Band-saw cut to your sizes with mill test certificates on request.`,
-    condition: p.condition, machinability: p.machinability, chemistry: p.chemistry, mechanical: p.mechanical, equivalents: eq,
+    condition: p.condition, machinability: p.machinability, chemistry: p.chemistry, mechanical: p.mechanical, equivalents: eq, aliases: al,
     stockStatus: p.stock, priceNote: null, heroUrl: null,
     metaTitle: dealerTitle(p.name, 'Madurai'),
     metaDescription: `Buy cut-to-size ${p.name}${eq[0] ? ` (${eq[0]})` : ''} from ${BRAND} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.`,
@@ -197,10 +200,11 @@ createServer(async (req, res) => {
     const q = (url.searchParams.get('q') || '').trim().toLowerCase(); const terms = q.split(/\s+/).filter(Boolean);
     if (q.length < 2) return ok(res, []);
     const hits = c.products.map((x) => {
-      const hay = `${x.name} ${x.grade} ${x.applications} ${x.equivalents.join(' ')}`.toLowerCase();
+      const al = aliases[x.slug] || [];
+      const hay = `${x.name} ${x.grade} ${x.applications} ${x.equivalents.join(' ')} ${al.join(' ')}`.toLowerCase();
       if (!terms.every((t) => hay.includes(t))) return null;
       const score = (x.grade.toLowerCase() === q ? 100 : 0) + (x.grade.toLowerCase().startsWith(q) ? 50 : 0) + (x.name.toLowerCase().includes(q) ? 20 : 0) + 1;
-      return { score, hit: { slug: x.slug, siloKey: x.silo, name: x.name, grade: x.grade, siloName: silo(x.silo).short, stockStatus: x.stock, match: x.equivalents.find((e) => e.toLowerCase().includes(q)) ?? null, path: `/products/${x.silo}/${x.slug}/` } };
+      return { score, hit: { slug: x.slug, siloKey: x.silo, name: x.name, grade: x.grade, siloName: silo(x.silo).short, stockStatus: x.stock, match: x.equivalents.find((e) => e.toLowerCase().includes(q)) ?? al.find((e) => e.toLowerCase().includes(q)) ?? null, path: `/products/${x.silo}/${x.slug}/` } };
     }).filter(Boolean).sort((a, b) => b.score - a.score).slice(0, +(url.searchParams.get('limit') || 8)).map((h) => h.hit);
     return ok(res, hits);
   }

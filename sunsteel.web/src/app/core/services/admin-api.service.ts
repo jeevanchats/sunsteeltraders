@@ -102,13 +102,13 @@ export interface ProductFull {
   slug: string; sku: string; siloKey: string; siloName: string; name: string; grade: string;
   materialKey: string | null; materialName: string | null; density: number | null; forms: string[];
   sizeRange: string | null; applications: string | null; summary: string; condition: string | null; machinability: string | null;
-  chemistry: { el: string; min: string | null; max: string | null }[]; mechanical: { k: string; v: string }[]; equivalents: string[];
+  chemistry: { el: string; min: string | null; max: string | null }[]; mechanical: { k: string; v: string }[]; equivalents: string[]; aliases: string[];
   stockStatus: string; priceNote: string | null; heroUrl: string | null; metaTitle: string; metaDescription: string;
   heroMediaId: number | null; isPublished: boolean;
 }
 export interface SaveProduct {
   name: string; sizeRange: string | null; applications: string | null; summary: string | null; condition: string | null; machinability: string | null;
-  chemistry: { el: string; min: string | null; max: string | null }[]; mechanical: { k: string; v: string }[]; equivalents: string[];
+  chemistry: { el: string; min: string | null; max: string | null }[]; mechanical: { k: string; v: string }[]; equivalents: string[]; aliases: string[];
   stockStatus: string; priceNote: string | null; metaTitle: string | null; metaDescription: string | null; isPublished: boolean; heroMediaId: number | null;
 }
 export interface AdminPage { id: number; slug: string; title: string; metaTitle: string | null; metaDescription: string | null }

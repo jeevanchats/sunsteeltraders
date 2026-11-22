@@ -37,6 +37,7 @@ import { NotFoundComponent } from './not-found.component';
           <span class="label label-accent mb-4">{{ p.siloName }} · Dossier</span>
           <h1 class="h-xxl">{{ p.grade }} <em>{{ restOfName(p) }}</em></h1>
           @if (p.equivalents.length) { <p class="mt-4 text-[13.5px] text-muted">{{ p.equivalents.join(' · ') }}</p> }
+          @if (p.aliases.length) { <p class="mt-2 text-[13.5px] text-muted">Also called: {{ p.aliases.join(' · ') }}</p> }
           <p class="lede mt-5">{{ p.summary }}</p>
 
           <div class="mt-8 grid grid-cols-3 gap-5">

@@ -154,12 +154,14 @@ public sealed class CatalogService : ICatalogService
         return rows.Select<Product, (int score, SearchHitDto? hit)>(p =>
             {
                 var eq = Parse<List<string>>(p.EquivalentsJson) ?? [];
-                var hay = $"{p.Name} {p.Grade} {p.Applications} {string.Join(' ', eq)}".ToLowerInvariant();
+                var al = SplitList(p.Aliases);
+                var hay = $"{p.Name} {p.Grade} {p.Applications} {string.Join(' ', eq)} {string.Join(' ', al)}".ToLowerInvariant();
                 if (!terms.All(hay.Contains)) return (0, null);
                 var score = (p.Grade.Equals(q, StringComparison.OrdinalIgnoreCase) ? 100 : 0)
                     + (p.Grade.StartsWith(q, StringComparison.OrdinalIgnoreCase) ? 50 : 0)
                     + (p.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ? 20 : 0) + 1;
-                var match = eq.FirstOrDefault(e => e.Contains(q, StringComparison.OrdinalIgnoreCase));
+                var match = eq.FirstOrDefault(e => e.Contains(q, StringComparison.OrdinalIgnoreCase))
+                    ?? al.FirstOrDefault(a => a.Contains(q, StringComparison.OrdinalIgnoreCase));
                 return (score, new SearchHitDto(p.Slug, p.Silo.SiloKey, p.Name, p.Grade, p.Silo.ShortName, p.StockStatus, match));
             })
             .Where(x => x.hit is not null).OrderByDescending(x => x.score).Take(limit).Select(x => x.hit!).ToList();
@@ -235,6 +237,14 @@ public sealed class CatalogService : ICatalogService
         p.Machinability = Clean(r.Machinability);
         if (r.Chemistry is not null) p.ChemistryJson = JsonSerializer.Serialize(r.Chemistry, Json);
         if (r.Mechanical is not null) p.MechanicalJson = JsonSerializer.Serialize(r.Mechanical, Json);
+        if (r.Aliases is not null)
+        {
+            // One per line in the editor; stored comma separated, so a comma typed inside a name becomes a space.
+            var names = r.Aliases.Select(a => string.Join(' ', (a ?? "").Replace(',', ' ').Split(' ', StringSplitOptions.RemoveEmptyEntries))).Where(a => a.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var joined = string.Join(", ", names);
+            if (joined.Length > 400) throw new AppException("The trade names are too long: keep them under 400 characters in total.");
+            p.Aliases = Clean(joined);
+        }
         if (r.Equivalents is not null) p.EquivalentsJson = JsonSerializer.Serialize(r.Equivalents.Where(e => !string.IsNullOrWhiteSpace(e)).Select(e => e.Trim()), Json);
         p.StockStatus = r.StockStatus;
         p.PriceNote = Clean(r.PriceNote);
@@ -288,13 +298,14 @@ public sealed class CatalogService : ICatalogService
             .Where(x => x.SiloId == p.SiloId && x.ProductId != p.ProductId && x.IsPublished)
             .OrderBy(x => Math.Abs(x.DisplayOrder - p.DisplayOrder)).Take(4).ToListAsync(ct);
         var faqs = await FaqsAsync("product", p.Slug, ct);
-        if (faqs.Count == 0) faqs = DefaultProductFaqs(p, eq);
+        var aliases = SplitList(p.Aliases);
+        if (faqs.Count == 0) faqs = DefaultProductFaqs(p, eq, aliases);
         var firstEq = eq.FirstOrDefault();
         return new ProductDto(
             p.Slug, p.Sku, key, p.Silo.Name, p.Name, p.Grade, p.MaterialKey, p.Material?.Name, p.Material?.Density,
             SplitForms(p.Forms), p.SizeRange, p.Applications, p.Summary ?? DefaultSummary(p, key),
             p.Condition, p.Machinability,
-            Parse<List<ChemistryRow>>(p.ChemistryJson) ?? [], Parse<List<PropertyRow>>(p.MechanicalJson) ?? [], eq,
+            Parse<List<ChemistryRow>>(p.ChemistryJson) ?? [], Parse<List<PropertyRow>>(p.MechanicalJson) ?? [], eq, aliases,
             p.StockStatus, p.PriceNote, HeroOf(p.HeroMediaId),
             p.MetaTitle ?? DealerTitle(p.Name, "Madurai"),
             p.MetaDescription ?? $"Buy cut-to-size {p.Name}{(firstEq is null ? "" : $" ({firstEq})")} from {Brand} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.",
@@ -317,7 +328,16 @@ public sealed class CatalogService : ICatalogService
         ];
     }
 
-    private static List<FaqDto> DefaultProductFaqs(Product p, List<string> eq)
+    private static List<FaqDto> DefaultProductFaqs(Product p, List<string> eq, List<string> aliases)
+    {
+        var faqs = BaseProductFaqs(p, eq);
+        // The names customers actually type ("MS polish rod") rarely match the catalogue name, so say so in a question they would ask.
+        if (aliases.Count > 0)
+            faqs.Add(new($"What else is {p.Name} called?", $"It is also sold as {string.Join(", ", aliases)}. Whichever name you use, send your sizes and we will quote the same day."));
+        return faqs;
+    }
+
+    private static List<FaqDto> BaseProductFaqs(Product p, List<string> eq)
     {
         if (p.MaterialKey is null)
             return
@@ -347,6 +367,8 @@ public sealed class CatalogService : ICatalogService
         new(p.Slug, siloKey, p.Name, p.Grade, p.MaterialKey, SplitForms(p.Forms), p.SizeRange, p.StockStatus, Parse<List<string>>(p.EquivalentsJson) ?? [], HeroOf(p.HeroMediaId));
 
     private static List<string> SplitForms(string forms) => forms.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private static List<string> SplitList(string? csv) => string.IsNullOrWhiteSpace(csv) ? [] : SplitForms(csv);
 
     private static T? Parse<T>(string? json) where T : class
     {
