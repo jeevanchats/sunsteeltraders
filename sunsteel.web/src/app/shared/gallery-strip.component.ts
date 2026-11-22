@@ -40,10 +40,10 @@ interface RowState {
           <ul #track class="gs-track">
             @for (c of row; track $index) {
               <li class="gs-card" [attr.aria-hidden]="c.copy ? 'true' : null">
-                <button type="button" class="gs-btn" [attr.tabindex]="c.copy ? -1 : 0" [attr.aria-label]="c.item.title || 'Open photo ' + (c.index + 1)" (click)="open(c.index, $event)">
+                <button type="button" class="gs-btn" [attr.tabindex]="c.copy ? -1 : 0" [attr.aria-label]="alt(c.item) ? 'View photo: ' + alt(c.item) : 'Open photo ' + (c.index + 1)" (click)="open(c.index, $event)">
                   <span class="gs-ph" [style.background-image]="c.item.media?.placeholder ? 'url(' + c.item.media!.placeholder + ')' : null" aria-hidden="true"></span>
                   <img class="gs-img" [src]="card(c.item)" [attr.srcset]="set(c.item)" sizes="(min-width: 1100px) 250px, (min-width: 640px) 200px, 170px"
-                       [alt]="c.item.title || ''" width="250" height="312" draggable="false" [attr.loading]="warm() || $index < 8 ? 'eager' : 'lazy'" decoding="async" />
+                       [alt]="alt(c.item)" width="250" height="312" draggable="false" [attr.loading]="warm() || $index < 8 ? 'eager' : 'lazy'" decoding="async" />
                   @if (c.item.title) { <span class="gs-cap">{{ c.item.title }}</span> }
                 </button>
               </li>
@@ -157,6 +157,8 @@ export class GalleryStripComponent {
     effect(() => { this.rows(); this.reduced(); if (this.browser) setTimeout(() => this.measure(), 80); });
   }
 
+  /** What the photo shows: the card's title if staff set one, else the alt text saved with the photo in the media library. */
+  protected alt(it: GalleryCard): string { return it.title || it.media?.altText || ''; }
   protected card(it: GalleryCard): string { return variantUrl(it.media, 520); }
   protected set(it: GalleryCard): string | null { return variantSet(it.media); }
 

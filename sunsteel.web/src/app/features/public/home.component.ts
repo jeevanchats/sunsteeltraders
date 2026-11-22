@@ -52,7 +52,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
         <div #rail (scroll)="railMoved(rail)" class="-mx-[var(--pad)] flex scroll-pl-[var(--pad)] snap-x snap-mandatory gap-4 overflow-x-auto px-[var(--pad)] pb-2 [scrollbar-width:none] lg:-mr-[var(--pad)] lg:ml-0 lg:pl-0 lg:pr-[var(--pad)] lg:[mask-image:linear-gradient(90deg,#000_90%,transparent)]">
           @for (s of catalog.index().silos; track s.key) {
             <a [routerLink]="'/products/' + s.key + '/'" class="group w-[210px] flex-none snap-start">
-              <ss-metal [kind]="metal(s.key)" [src]="s.heroUrl" class="aspect-[4/5] transition-transform duration-700 ease-lux group-hover:scale-[1.02]" />
+              <ss-metal [kind]="metal(s.key)" [src]="s.heroUrl" [alt]="s.name" class="aspect-[4/5] transition-transform duration-700 ease-lux group-hover:scale-[1.02]" />
               <b class="mt-3 block font-serif text-[21px] font-medium leading-tight">{{ s.shortName }}</b>
               <span class="label mt-1">{{ s.productCount }} grades</span>
             </a>
