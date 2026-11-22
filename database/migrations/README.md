@@ -32,3 +32,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 023 | Email settings (Brevo SMTP, Mock/Live, alert addresses) for new-request emails |
 | 024 | Standard MS pipe schedule (ASME B36.10M, NPS 1/2 to 12) for the weight calculator and quotations; only added while the table still holds the 10 sample rows |
 | 026 | Products.Aliases (trade names such as "MS polish rod", "I beam", "Teflon bush"), seeded for 45 products only when the column is first added. **Generated** by `node database/seed/build-aliases.mjs` from `seed/aliases.json` |
+| 027 | Alt text for the 39 home-gallery photos (fills a blank AltText on the exact media id and file name only; never replaces staff-written text) |
