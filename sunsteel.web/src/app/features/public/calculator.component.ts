@@ -66,7 +66,7 @@ export class CalculatorComponent {
   constructor() {
     this.catalog.loadIndex().subscribe();
     inject(SeoService).set({
-      title: 'Metal Weight Calculator (Round, Flat, Plate, Pipe) | Sun Steel Traders',
+      title: 'Metal Weight Calculator: Bar, Plate, Pipe | Sun Steel Traders',
       description: 'Calculate the weight of steel, stainless, brass, copper and aluminium rounds, flats, plates, tubes and sections in kg. Free, instant, with formulas shown.',
       path: '/metal-weight-calculator/',
       jsonLd: [breadcrumbLd([['/', 'Home'], ['/metal-weight-calculator/', 'Metal weight calculator']]), faqLd(FAQS)!],

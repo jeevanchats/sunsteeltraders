@@ -34,7 +34,7 @@ import { NotFoundComponent } from './not-found.component';
         <div class="grid grid-cols-2 gap-x-5 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           @for (p of visible(); track p.slug) {
             <a [routerLink]="p.path" class="group min-w-0">
-              <ss-metal [kind]="metal(p.materialKey, p.siloKey)" [src]="p.heroUrl" [caption]="p.grade" class="aspect-[4/3] transition-transform duration-700 ease-lux group-hover:scale-[1.015]" />
+              <ss-metal [kind]="metal(p.materialKey, p.siloKey)" [src]="p.heroUrl" [alt]="p.name" [caption]="p.grade" class="aspect-[4/3] transition-transform duration-700 ease-lux group-hover:scale-[1.015]" />
               <div class="mt-3 flex items-start justify-between gap-3">
                 <b class="font-serif text-[19px] font-medium leading-snug">{{ p.name }}</b>
               </div>

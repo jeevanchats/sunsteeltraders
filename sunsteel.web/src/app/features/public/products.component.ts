@@ -40,7 +40,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
           <div class="grid grid-cols-2 gap-x-5 gap-y-9 md:grid-cols-3 lg:grid-cols-4">
             @for (p of g.items; track p.slug) {
               <a [routerLink]="p.path" class="group min-w-0">
-                <ss-metal [kind]="metal(p)" [src]="p.heroUrl" [caption]="p.grade" class="aspect-[4/3] transition-transform duration-700 ease-lux group-hover:scale-[1.015]" />
+                <ss-metal [kind]="metal(p)" [src]="p.heroUrl" [alt]="p.name" [caption]="p.grade" class="aspect-[4/3] transition-transform duration-700 ease-lux group-hover:scale-[1.015]" />
                 <b class="mt-3 block font-serif text-[19px] font-medium leading-snug">{{ p.name }}</b>
                 <span class="mt-1 block truncate text-[12px] text-muted">{{ p.equivalents.slice(0, 2).join(' · ') || p.sizeRange }}</span>
                 <span class="mt-2 inline-flex" [class]="stock(p)">{{ p.stockStatus }}</span>
@@ -66,8 +66,8 @@ export class ProductsComponent {
   constructor() {
     this.catalog.loadIndex().subscribe();
     inject(SeoService).set({
-      title: 'Steel & Metal Products: 93 Grades in Stock | Sun Steel Traders',
-      description: 'Browse 93 grades across seven material families: mild and structural steel, alloy and tool steel, stainless, non-ferrous, cast iron, plastics and workshop tools.',
+      title: 'Steel & Metal Products: 93 Grades | Sun Steel Traders',
+      description: 'Browse 93 grades in seven families: mild and structural steel, alloy and tool steel, stainless, non-ferrous, cast iron, plastics and workshop tools.',
       path: '/products/',
       jsonLd: [breadcrumbLd([['/', 'Home'], ['/products/', 'Products']])],
     });

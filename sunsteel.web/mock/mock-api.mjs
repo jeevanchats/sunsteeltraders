@@ -105,6 +105,15 @@ const msPipes = [
   ['12 in.', 323.90, 'SCH 160', 33.32, 140],
 ].map(([nominalSize, odMm, schedule, wallMm]) => ({ nominalSize, odMm, schedule, wallMm }));
 const BRAND = 'Sun Steel Traders';
+// Same rules as CatalogService.DealerDescription in the API.
+const dealerDescription = (name, al) => {
+  const tail = ' dealers in Madurai. Cut to size, MTC on request, same-day dispatch across Tamil Nadu.';
+  for (let n = name.includes('(') ? 0 : Math.min(al.length, 2); n >= 0; n--) {
+    const t = name + (n > 0 ? ` (${al.slice(0, n).join(', ')})` : '') + tail;
+    if (t.length <= 155) return t;
+  }
+  return name + ' dealers in Madurai. Cut to size, MTC on request, same-day dispatch.';
+};
 // Same rule as CatalogService.DealerTitle in the API.
 const dealerTitle = (subject, place) => {
   const core = `${subject} Dealers in ${place}`;
@@ -140,7 +149,7 @@ function productDto(p) {
     condition: p.condition, machinability: p.machinability, chemistry: p.chemistry, mechanical: p.mechanical, equivalents: eq, aliases: al,
     stockStatus: p.stock, priceNote: null, heroUrl: null,
     metaTitle: dealerTitle(p.name, 'Madurai'),
-    metaDescription: `Buy cut-to-size ${p.name}${eq[0] ? ` (${eq[0]})` : ''} from ${BRAND} Madurai. MTC provided, overhead crane loading, fast dispatch across Tamil Nadu.`,
+    metaDescription: dealerDescription(p.name, aliases[p.slug] || []),
     faqs, related, path: `/products/${p.silo}/${p.slug}/`,
   };
 }

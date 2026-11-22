@@ -161,7 +161,7 @@ import { NotFoundComponent } from './not-found.component';
           <div class="grid grid-cols-2 gap-5 md:grid-cols-4">
             @for (r of p.related; track r.slug) {
               <a [routerLink]="r.path" class="group min-w-0">
-                <ss-metal [kind]="metalOf(r.materialKey, r.siloKey)" [src]="r.heroUrl" [caption]="r.grade" class="aspect-[4/3]" />
+                <ss-metal [kind]="metalOf(r.materialKey, r.siloKey)" [src]="r.heroUrl" [alt]="r.name" [caption]="r.grade" class="aspect-[4/3]" />
                 <b class="mt-3 block font-serif text-[18px] font-medium leading-snug">{{ r.name }}</b>
               </a>
             }
