@@ -151,7 +151,7 @@ export class AboutComponent {
     this.catalog.loadIndex().subscribe();
     inject(SeoService).set({
       title: 'About Us | Sun Steel Traders, Madurai',
-      description: "Three godowns in Madurai (Aarapalayam, New Jail Road, Vilangudi), with band-saw cutting and overhead crane loading. Steel and metals for South India's workshops.",
+      description: "Three godowns in Madurai (Aarapalayam, New Jail Road, Vilangudi) with band-saw cutting and crane loading. Steel and metals for South India's workshops.",
       path: '/about-us/',
       jsonLd: [organizationLd((k) => this.site.get(k)), breadcrumbLd([['/', 'Home'], ['/about-us/', 'About us']])],
     });
