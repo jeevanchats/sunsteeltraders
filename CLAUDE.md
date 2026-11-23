@@ -107,6 +107,6 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
 - Stage 6 — performance pass against CWV targets, content review by sales, go-live
 
 ## Open questions for the owner
-WhatsApp number to receive RFQs · GSTIN and Udyam · godown map pins · founding year · extra grades
+WhatsApp number to receive RFQs · GSTIN and Udyam · godown map pins · extra grades
 (EN36, EN41B, OHNS, SS 210, Hylam, PU rod) · permission to show mill logos · whether to publish prices · quotation terms, validity and raw-material GST rate (seeded, TO CONFIRM) · finished-product GST rate · seller GSTIN · bank details · HSN codes · full MS pipe schedule ·
 catalogue PDF · photography shoot.

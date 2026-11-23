@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CatalogService } from '../../core/services/catalog.service';
 import { SeoService } from '../../core/services/seo.service';
@@ -15,7 +15,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
   template: `
     <section class="wrap grid items-end gap-[clamp(32px,6vw,96px)] pb-[clamp(56px,7vw,96px)] pt-[clamp(120px,14vw,168px)] lg:grid-cols-2">
       <div>
-        <span class="label label-accent mb-4">About us</span>
+        <span class="label label-accent mb-4">About us@if (site.get('FoundedYear')) { · Since {{ site.get('FoundedYear') }} }</span>
         <h1 class="h-xxl">Certified steel stockists in the <em>Temple City.</em></h1>
         <p class="lede mt-6">Sun Steel Traders supplies the factories, workshops and builders of southern Tamil Nadu with the right material, in the right size, when it is needed. We are certified dealers and stockists in Madurai, and we serve every kind of manufacturing industry.</p>
       </div>
@@ -23,7 +23,7 @@ import { RevealDirective } from '../../shared/reveal.directive';
     </section>
 
     <section class="wrap grid grid-cols-2 gap-6 pb-[var(--sec)] md:grid-cols-4" ssReveal>
-      @for (f of facts; track f.l) {
+      @for (f of facts(); track f.l) {
         <div class="card-rule"><b class="block font-serif text-[clamp(34px,4vw,48px)] font-light leading-none text-accent">{{ f.v }}</b><span class="mt-2 block text-[14px] text-muted">{{ f.l }}</span></div>
       }
     </section>
@@ -119,12 +119,15 @@ import { RevealDirective } from '../../shared/reveal.directive';
 export class AboutComponent {
   protected readonly site = inject(SiteService);
   protected readonly catalog = inject(CatalogService);
-  protected readonly facts = [
-    { v: '25+', l: 'years of hands-on experience' },
+  /** The first figure is the year founded (admin Settings → Year founded); without one it falls back to the years of experience. */
+  protected readonly facts = computed(() => [
+    this.site.get('FoundedYear')
+      ? { v: this.site.get('FoundedYear'), l: 'founded in Madurai, 25+ years in steel' }
+      : { v: '25+', l: 'years of hands-on experience' },
     { v: '93', l: 'products in stock, seven families' },
     { v: '3', l: 'godowns in Madurai' },
     { v: 'ISO 9001', l: ':2015 certified quality management' },
-  ];
+  ]);
   protected readonly specialities = [
     { t: 'Your size, your quality', d: 'Material in the specific size and grade you ask for, even in small quantities.' },
     { t: 'Stock availability', d: 'Big warehouses holding a wide range, including rare compositions.' },
