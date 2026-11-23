@@ -34,3 +34,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 026 | Products.Aliases (trade names such as "MS polish rod", "I beam", "Teflon bush"), seeded for 45 products only when the column is first added. **Generated** by `node database/seed/build-aliases.mjs` from `seed/aliases.json` |
 | 027 | Alt text for the 39 home-gallery photos (fills a blank AltText on the exact media id and file name only; never replaces staff-written text) |
 | 028 | About page description shortened to fit (only if it still has the seeded text) |
+| 029 | Settings: Year founded = 2000 (only while empty or still 1999) |
