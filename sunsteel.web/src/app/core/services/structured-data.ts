@@ -21,7 +21,7 @@ export function organizationLd(s: (k: string) => string): object {
     address: { '@type': 'PostalAddress', streetAddress: '57, Tamil Sangam Road, near Bell Hotel, Simmakkal', addressLocality: 'Madurai', postalCode: '625001', addressRegion: 'Tamil Nadu', addressCountry: 'IN' },
     geo: s('Latitude') ? { '@type': 'GeoCoordinates', latitude: +s('Latitude'), longitude: +s('Longitude') } : undefined,
     openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], opens: '09:00', closes: '19:30' }],
-    areaServed: ['Madurai', 'Tirunelveli', 'Virudhunagar', 'Sivakasi', 'Kovilpatti', 'Tuticorin', 'Tamil Nadu'],
+    areaServed: ['Madurai', 'Tirunelveli', 'Virudhunagar', 'Sivakasi', 'Kovilpatti', 'Tuticorin', 'Dindigul', 'Rajapalayam', 'Theni', 'Karaikudi', 'Pudukkottai', 'Thanjavur', 'Nagercoil', 'Tamil Nadu'],
     foundingDate: s('FoundedYear') || undefined,
     taxID: s('Gstin') || undefined,
     sameAs: sameAs.length ? sameAs : undefined,

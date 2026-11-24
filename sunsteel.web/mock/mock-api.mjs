@@ -10,6 +10,8 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const c = JSON.parse(readFileSync(join(here, '../../database/seed/catalog.json'), 'utf8'));
 const aliases = JSON.parse(readFileSync(join(here, '../../database/seed/aliases.json'), 'utf8'));
+// Migration 030's extra city pages (generated from the same file).
+for (const x of JSON.parse(readFileSync(join(here, '../../database/seed/cities-030.json'), 'utf8'))) { c.cities.push(x); c.leadTimes.push({ city: x.name, lead: x.lead }); }
 // MS pipe schedule (ASME B36.10M), the same rows migration 024 seeds, for the weight calculator.
 const msPipes = [
   ['1/2 in.', 21.30, 'SCH 10', 2.11, 10],
