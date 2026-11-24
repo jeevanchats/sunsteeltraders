@@ -35,3 +35,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 027 | Alt text for the 39 home-gallery photos (fills a blank AltText on the exact media id and file name only; never replaces staff-written text) |
 | 028 | About page description shortened to fit (only if it still has the seeded text) |
 | 029 | Settings: Year founded = 2000 (only while empty or still 1999) |
+| 030 | Seven more south Tamil Nadu city pages (Dindigul, Rajapalayam, Theni, Karaikudi, Pudukkottai, Thanjavur, Nagercoil) and their delivery lead times; INSERT IGNORE, distances and lead times TO CONFIRM. **Generated** by `node database/seed/build-cities.mjs` from `seed/cities-030.json` |

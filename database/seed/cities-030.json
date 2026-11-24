@@ -1,0 +1,51 @@
+[
+  {
+    "slug": "dindigul", "name": "Dindigul", "km": 65, "lead": "Same day",
+    "zones": "Dindigul SIDCO, Nagal Nagar, Vedasandur, Nilakottai",
+    "inds": ["Lock making", "Spinning mills", "Leather tanning machinery", "Engineering job shops"],
+    "pop": ["free-cutting-brass-rods", "ms-flat-bars", "en8-steel-round-bars", "ss-304-sheets-plates"],
+    "intro": "An hour and a half up NH 44 from Madurai: free-cutting brass and flat bars for Dindigul's lock makers, and EN8 shafting for the spinning mills of Vedasandur and Nilakottai, delivered the same day."
+  },
+  {
+    "slug": "rajapalayam", "name": "Rajapalayam", "km": 85, "lead": "Same day",
+    "zones": "Rajapalayam, Srivilliputhur, Sankarankovil road",
+    "inds": ["Spinning mills", "Surgical cotton and gauze", "Textile machinery repair"],
+    "pop": ["en31-bearing-steel-rounds", "en8d-carbon-steel-bars", "nylon-6-rods", "phosphor-bronze-pb1-rods"],
+    "intro": "Rollers, spindles and bushes for the spinning and surgical-cotton mills of Rajapalayam and Srivilliputhur, sent down on our Sivakasi-route truck the same day."
+  },
+  {
+    "slug": "theni", "name": "Theni", "km": 75, "lead": "Same day",
+    "zones": "Theni, Bodinayakanur, Cumbum, Andipatti",
+    "inds": ["Spinning mills", "Farm and irrigation equipment", "Spice and food processing"],
+    "pop": ["ms-erw-black-pipes", "ms-equal-angles", "en8-steel-round-bars", "ss-304-sheets-plates"],
+    "intro": "Pipes, angles and shafting for the mills, pump-set and farm-equipment workshops of Theni, Bodi and Cumbum, with stainless sheet for the spice and food processors of the valley."
+  },
+  {
+    "slug": "karaikudi", "name": "Karaikudi", "km": 90, "lead": "1 day",
+    "zones": "Karaikudi SIDCO, Kottaiyur, Devakottai",
+    "inds": ["Structural fabrication", "Building construction", "General engineering"],
+    "pop": ["ms-beams-ismb", "ms-channels-ismc", "chequered-plates", "ms-hollow-sections"],
+    "intro": "Beams, channels and hollow sections for the fabricators and builders of Karaikudi and the Chettinad belt, crane-loaded at our Madurai godowns and delivered next day."
+  },
+  {
+    "slug": "pudukkottai", "name": "Pudukkottai", "km": 110, "lead": "1 day",
+    "zones": "SIPCOT Pudukkottai, Mathur, Thirumayam",
+    "inds": ["Foundries", "Engineering units", "Structural fabrication"],
+    "pop": ["fg-250-continuous-cast-bars", "ms-plates-sheets", "en19-alloy-steel-rounds", "ms-black-rounds"],
+    "intro": "Cast iron bars, plates and alloy rounds for the foundries and engineering units around SIPCOT Pudukkottai and Mathur, delivered next day."
+  },
+  {
+    "slug": "thanjavur", "name": "Thanjavur", "km": 160, "lead": "1 day",
+    "zones": "Thanjavur, Kumbakonam, Pattukkottai, Orathanadu",
+    "inds": ["Rice mill machinery", "Farm equipment", "Sugar mills"],
+    "pop": ["ms-plates-sheets", "en8-steel-round-bars", "gunmetal-hollow-bushes", "uhmwpe-sheets-rods"],
+    "intro": "Plates, shafts and bushes for the rice-mill, farm-equipment and sugar-mill workshops of the Cauvery delta, from Thanjavur to Kumbakonam and Pattukkottai."
+  },
+  {
+    "slug": "nagercoil", "name": "Nagercoil", "km": 245, "lead": "1 day",
+    "zones": "Nagercoil, Konam industrial estate, Marthandam, Colachel",
+    "inds": ["Building construction", "Fishing boat and marine fabrication", "Coir processing machinery"],
+    "pop": ["ss-316-plates-sheets", "aluminium-5083-plates", "ms-hollow-sections", "ms-erw-black-pipes"],
+    "intro": "Marine-grade 316 and 5083 aluminium for the boatyards of Colachel, and sections and pipes for the builders of Kanyakumari district, on our Tirunelveli-route truck."
+  }
+]
