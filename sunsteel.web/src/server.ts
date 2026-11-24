@@ -53,6 +53,37 @@ app.get('/robots.txt', (_req, res) => {
 
 app.use(express.static(browserDistFolder, { maxAge: '1y', index: false, redirect: false }));
 
+// Addresses from the earlier sites (WordPress 2018–22, then the 2024 site) that Google still lists.
+// Each gets one permanent redirect straight to its new page, so no visitor lands on a 404 and the
+// old listing's history moves to the new address. Found in the Wayback Machine; extend from Search
+// Console's "Not found (404)" report. Keys are lowercase, without the trailing slash.
+const LEGACY: Record<string, string> = {
+  '/about': '/about-us/',
+  '/contact': '/contact-us/',
+  '/card': '/contact-us/',
+  '/home': '/',
+  '/members-area': '/',
+  '/gallery': '/',
+  '/bwg_gallery/coils': '/products/',
+  '/bwg_gallery/products': '/products/',
+  '/author/admin': '/about-us/',
+  '/category/uncategorized': '/',
+  '/feed': '/',
+  '/comments/feed': '/',
+};
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const [path, query] = req.originalUrl.split(/\?(.*)/s, 2);
+  const key = path.toLowerCase().replace(/\/+$/, '');
+  const to = LEGACY[key] ?? (key.startsWith('/members-area/') ? '/' : undefined)
+    ?? (key === '' && /^p=\d+$/.test(query ?? '') ? '/' : undefined); // WordPress ?p=8 post links
+  if (to) {
+    res.redirect(301, to);
+    return;
+  }
+  next();
+});
+
 // One URL per page: every public path in the specification ends with "/", so slash-less
 // requests get a permanent redirect (query string kept). Files and the admin are left alone.
 app.use((req, res, next) => {
