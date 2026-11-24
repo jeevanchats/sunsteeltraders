@@ -12,6 +12,9 @@ const c = JSON.parse(readFileSync(join(here, '../../database/seed/catalog.json')
 const aliases = JSON.parse(readFileSync(join(here, '../../database/seed/aliases.json'), 'utf8'));
 // Extra city pages from migrations 030+ (generated from the same seed/cities-0NN.json files).
 for (const x of readdirSync(join(here, '../../database/seed')).filter((f) => /^cities-\d{3}\.json$/.test(f)).sort().flatMap((f) => JSON.parse(readFileSync(join(here, '../../database/seed', f), 'utf8')))) { c.cities.push(x); c.leadTimes.push({ city: x.name, lead: x.lead }); }
+// Migration 032: only Madurai is same day; every other city is next day.
+for (const x of [...c.cities, ...c.leadTimes]) if ((x.slug ?? x.city.toLowerCase()) !== 'madurai' && x.lead === 'Same day') x.lead = '1 day';
+for (const x of c.cities) if (x.slug !== 'madurai' && x.intro) x.intro = x.intro.replace('delivered the same day.', 'delivered next day.').replace('send them down the same day.', 'send them down next day.').replace('truck the same day.', 'truck next day.');
 // MS pipe schedule (ASME B36.10M), the same rows migration 024 seeds, for the weight calculator.
 const msPipes = [
   ['1/2 in.', 21.30, 'SCH 10', 2.11, 10],
