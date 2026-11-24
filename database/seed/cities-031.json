@@ -1,0 +1,23 @@
+[
+  {
+    "slug": "tenkasi", "name": "Tenkasi", "km": 160, "lead": "1 day",
+    "zones": "Tenkasi, Kadayanallur, Sankarankovil, Puliyangudi",
+    "inds": ["Power looms", "Rice and oil mills", "Building construction"],
+    "pop": ["en8-steel-round-bars", "ms-flat-bars", "nylon-6-rods", "ms-equal-angles"],
+    "intro": "Shafts, flats and nylon parts for the power looms of Kadayanallur and Sankarankovil, and angles for the builders around Tenkasi, on our Rajapalayam-route truck next day."
+  },
+  {
+    "slug": "ramanathapuram", "name": "Ramanathapuram", "km": 115, "lead": "1 day",
+    "zones": "Ramanathapuram, Paramakudi, Keelakarai, Mandapam",
+    "inds": ["Fishing boat and marine fabrication", "Handloom and weaving", "Building construction", "Salt and seaweed processing"],
+    "pop": ["ss-316-round-bars", "gunmetal-hollow-bushes", "ms-hollow-sections", "ms-channels-ismc"],
+    "intro": "Stainless 316 shafting and gunmetal bushes for the boats of Mandapam and Keelakarai, and sections for the builders of Ramanathapuram and Paramakudi, delivered next day."
+  },
+  {
+    "slug": "sivaganga", "name": "Sivaganga", "km": 48, "lead": "Same day",
+    "zones": "Sivaganga, Manamadurai, Tiruppuvanam, Ilayangudi",
+    "inds": ["Gate and grill fabrication", "Agricultural implements", "Building construction"],
+    "pop": ["ms-square-bars", "ms-equal-angles", "chequered-plates", "ms-black-rounds"],
+    "intro": "Under an hour east of Madurai: square bars, angles and chequered plate for the gate, grill and farm-implement workshops of Sivaganga, Manamadurai and Tiruppuvanam, delivered the same day."
+  }
+]

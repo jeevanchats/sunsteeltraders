@@ -24,7 +24,7 @@ for f in database/migrations/0*.sql; do mysql --default-character-set=utf8mb4 -u
 node database/seed/build-seed.mjs
 # Regenerate migration 026 (product trade names / "Also called") after editing database/seed/aliases.json; the web mock reads it too
 node database/seed/build-aliases.mjs
-# Regenerate migration 030 (seven more city pages) after editing database/seed/cities-030.json; the web mock reads it too
+# Regenerate migrations 030+ (extra city pages) after adding database/seed/cities-0NN.json (never edit an applied one); the web mock reads them too
 node database/seed/build-cities.mjs
 # API  → http://localhost:5090/api/health   (set Jwt:Key, ConnectionStrings:Default, Admin:DefaultPassword via user-secrets)
 dotnet run --project sunsteel.api
@@ -71,7 +71,7 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
 - ✅ Stage 1 — design doc, sketches v1–v4 (v3 chosen); the HTML prototype was superseded by building the real site
 - ✅ Stage 2 — solution forked from Queens Inn; schema 001–010 (93 products seeded); catalogue, weight, leads, stock and
   dashboard API; v3 public site: home, material library, 7 silo pages, 93 product dossiers, the scale, concierge RFQ with
-  basket + file upload, catalogue gate, atelier, 13 city pages (7 added by migration 030: Dindigul, Rajapalayam, Theni, Karaikudi, Pudukkottai, Thanjavur, Nagercoil; distances and lead times TO CONFIRM), policies, real 404s; admin: dashboard, requests inbox,
+  basket + file upload, catalogue gate, atelier, 16 city pages (030 adds Dindigul, Rajapalayam, Theni, Karaikudi, Pudukkottai, Thanjavur, Nagercoil; 031 adds Tenkasi, Ramanathapuram, Sivaganga; distances and lead times TO CONFIRM), policies, real 404s; admin: dashboard, requests inbox,
   stock board, theme, settings, staff users
 - ✅ Stage 3 — media library (SkiaSharp → WebP, `Features/Media`, admin Photographs), home sliding gallery (`Features/Gallery`, admin Home gallery, migration 013),
   product / family photos wired to the public cards and product pages

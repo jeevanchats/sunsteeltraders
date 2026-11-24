@@ -36,3 +36,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 028 | About page description shortened to fit (only if it still has the seeded text) |
 | 029 | Settings: Year founded = 2000 (only while empty or still 1999) |
 | 030 | Seven more south Tamil Nadu city pages (Dindigul, Rajapalayam, Theni, Karaikudi, Pudukkottai, Thanjavur, Nagercoil) and their delivery lead times; INSERT IGNORE, distances and lead times TO CONFIRM. **Generated** by `node database/seed/build-cities.mjs` from `seed/cities-030.json` |
+| 031 | Three more city pages (Tenkasi, Ramanathapuram, Sivaganga) and their lead times; same pattern as 030. **Generated** by `node database/seed/build-cities.mjs` from `seed/cities-031.json` |
