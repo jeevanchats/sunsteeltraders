@@ -137,7 +137,7 @@ import { SearchBoxComponent } from '../../shared/search-box.component';
         <div>
           <span class="label label-accent mb-4">05 · Dispatch</span>
           <h2 class="h-xl">From Madurai, <em>across the south.</em></h2>
-          <p class="lede mt-5">Same day across Madurai, Dindigul, Theni, Virudhunagar and Sivakasi. Next day to Tirunelveli, Tuticorin and Trichy.</p>
+          <p class="lede mt-5">Same day across Madurai. Next day to Dindigul, Virudhunagar, Sivakasi, Tirunelveli, Tuticorin, Nagercoil and the rest of south Tamil Nadu.</p>
         </div>
         <div class="scroll-x">
           <table class="dtable">
