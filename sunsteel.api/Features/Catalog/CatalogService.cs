@@ -323,7 +323,7 @@ public sealed class CatalogService : ICatalogService
             new($"Which {shortName} grades do you keep in stock?", $"{ps.Count} products, including {string.Join(", ", ps.Take(6).Select(p => p.Grade).Distinct())}, listed above with size ranges and stock status."),
             new($"Can you cut {shortName} material to size?", "Yes. Rounds, flats and blocks are band-saw cut to ±1 mm; pipes and sections are cut to length. Cutting is quoted with the material."),
             new("Do you supply mill test certificates?", "Mill material is supplied with an MTC on request, traceable to the heat number. Mention it on your request."),
-            new("How quickly can you deliver?", "Same day in Madurai, next day across south Tamil Nadu (Dindigul, Virudhunagar, Sivakasi, Tirunelveli, Tuticorin, Trichy and more), 1–2 days to Coimbatore and Salem, 2–3 days to Chennai."),
+            new("How quickly can you deliver?", "Same day in Madurai, and next day across south Tamil Nadu: Dindigul, Virudhunagar, Sivakasi, Tirunelveli, Tuticorin, Nagercoil and more."),
         ];
     }
 
