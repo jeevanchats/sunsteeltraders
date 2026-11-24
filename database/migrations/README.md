@@ -40,3 +40,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 032 | Only Madurai is same-day: every other city and delivery lead time still on "Same day" becomes "1 day", and city intros promising same-day delivery are reworded (exact phrases only) |
 | 033 | Delivery list: removes Trichy, Coimbatore, Salem, Chennai and Hosur (first run only, so a city added back in the admin stays) |
 | 034 | Home FAQ "How fast can you deliver?": same day in Madurai, next day across south Tamil Nadu (only if still the seeded answer) |
+| 035 | Deletes Trichy, Coimbatore, Salem, Chennai and Hosur from the delivery list on every run (010 re-inserts them on each deploy, which undid 033) |
