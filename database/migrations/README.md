@@ -39,3 +39,4 @@ Forward-only, numbered SQL scripts. **SQL is the source of truth**; EF Core enti
 | 031 | Three more city pages (Tenkasi, Ramanathapuram, Sivaganga) and their lead times; same pattern as 030. **Generated** by `node database/seed/build-cities.mjs` from `seed/cities-031.json` |
 | 032 | Only Madurai is same-day: every other city and delivery lead time still on "Same day" becomes "1 day", and city intros promising same-day delivery are reworded (exact phrases only) |
 | 033 | Delivery list: removes Trichy, Coimbatore, Salem, Chennai and Hosur (first run only, so a city added back in the admin stays) |
+| 034 | Home FAQ "How fast can you deliver?": same day in Madurai, next day across south Tamil Nadu (only if still the seeded answer) |
