@@ -35,7 +35,7 @@ const STATUSES = ['Draft', 'Sent', 'Accepted', 'Rejected'];
     @if (error()) { <p class="alert mb-4">{{ error() }}</p> }
     <div class="card overflow-x-auto !p-0">
       <table class="tbl">
-        <thead><tr><th>Reference</th><th>Type</th><th>Customer</th><th>Lines</th><th class="text-right">Total (₹)</th><th>Status</th><th>Date</th></tr></thead>
+        <thead><tr><th>Reference</th><th>Type</th><th>Customer</th><th>Lines</th><th class="text-right">Total (₹)</th><th>Status</th><th>Date</th><th><span class="sr-only">Delete</span></th></tr></thead>
         <tbody>
           @for (r of page()?.items ?? []; track r.quoteId) {
             <tr class="cursor-pointer hover:bg-[#F8F9FB]" [routerLink]="['/admin/quotes', r.quoteId]">
@@ -46,9 +46,12 @@ const STATUSES = ['Draft', 'Sent', 'Accepted', 'Rejected'];
               <td class="text-right tabular-nums">{{ inr(r.grandTotal) }}</td>
               <td><span class="pill" [class.pill-warn]="r.status === 'Draft'" [class.pill-ok]="r.status === 'Accepted'">{{ r.status }}</span></td>
               <td class="whitespace-nowrap text-[#6B7485]">{{ r.quoteDate | date: 'd MMM y' }}</td>
+              <td class="text-right">@if (r.status === 'Draft') {
+                <button type="button" class="abtn abtn-sm" [attr.aria-label]="'Delete ' + r.reference" title="Delete draft" (click)="$event.stopPropagation(); remove(r)"><ss-icon name="trash" [size]="14" /></button>
+              }</td>
             </tr>
           } @empty {
-            <tr><td colspan="7" class="py-10 text-center text-[#8A93A3]">{{ loading() ? 'Loading…' : 'No quotations yet.' }}</td></tr>
+            <tr><td colspan="8" class="py-10 text-center text-[#8A93A3]">{{ loading() ? 'Loading…' : 'No quotations yet.' }}</td></tr>
           }
         </tbody>
       </table>
@@ -77,6 +80,15 @@ export class QuotesComponent {
   constructor() {
     inject(SeoService).set({ title: 'Quotations | Sun Steel Traders admin', path: '/admin/quotes', noindex: true });
     this.load(1);
+  }
+
+  protected remove(r: QuoteRow): void {
+    if (!confirm(`Delete ${r.reference} (${r.customerName})? This can't be undone.`)) return;
+    this.error.set('');
+    const p = this.page();
+    // Deleting the only row of a later page would leave it empty, so step back one.
+    const next = p && p.items.length === 1 && p.page > 1 ? p.page - 1 : (p?.page ?? 1);
+    this.api.deleteQuote(r.quoteId).subscribe({ next: () => this.load(next), error: (e) => this.error.set(apiError(e)) });
   }
 
   protected load(page: number): void {

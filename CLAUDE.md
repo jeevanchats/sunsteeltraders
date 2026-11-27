@@ -78,7 +78,7 @@ SSR server with host allowlist. Deploy: deploy.sh, systemd units, Nginx.
 - ✅ Home slideshow — top-of-page banners (`Features/Slides`, `HomeSlides` table, migration 014, admin Home slideshow). With none saved the
   site shows four built-in banners from `sunsteel.web/public/hero/`; images come from the media library (wide 3840×1400)
 - ✅ Stage 4 — admin Products editor, Pages & content (page SEO, FAQs, terms/privacy, families, city pages; `Features/Content/ContentAdmin.cs`)
-- ✅ Quotations — `Features/Quotes`, migrations 015 + 016, admin Quotations list/editor, "Create quotation" on a request, admin Quote data
+- ✅ Quotations — `Features/Quotes`, migrations 015 + 016, admin Quotations list/editor, "Create quotation" on a request (reopens that request's open draft rather than making another; only Drafts can be deleted), admin Quote data
   (product list, HSN codes, MS pipe schedule, GST/terms/bank). Each line is Calculated (material, shape, size, length, pieces → weight from the
   catalogue densities and IS 808 sections, plus SS pipe and MS pipe shapes), By weight (qty × kg × rate) or By unit (qty × price). GST is per line
   (raw material / finished product default, or typed), frozen on save; discount spread over lines; cutting, loading, unloading and freight at the
