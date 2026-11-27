@@ -23,6 +23,7 @@ public interface IQuoteService
     Task<QuoteDetailDto> UpdateAsync(long actorId, long id, SaveQuoteRequest r, CancellationToken ct = default);
     Task<QuoteDetailDto> SetStatusAsync(long actorId, long id, string status, CancellationToken ct = default);
     Task<(byte[] Pdf, string FileName)> PdfAsync(long id, CancellationToken ct = default);
+    Task DeleteAsync(long actorId, long id, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -111,6 +112,10 @@ public sealed partial class QuoteService : IQuoteService
     {
         var lead = await _db.Leads.AsNoTracking().Include(l => l.Items).FirstOrDefaultAsync(l => l.LeadId == leadId, ct)
             ?? throw new AppException("Request not found.", StatusCodes.Status404NotFound);
+        // One open draft per request: pressing "Create quotation" again reopens it instead of piling up copies.
+        var draftId = await _db.Quotes.Where(q => q.LeadId == leadId && q.Status == "Draft")
+            .OrderByDescending(q => q.QuoteId).Select(q => (long?)q.QuoteId).FirstOrDefaultAsync(ct);
+        if (draftId is { } existing) return await GetAsync(existing, ct);
         var rd = await LoadRefAsync(ct);
         var d = rd.Defaults;
         var productIds = lead.Items.Where(i => i.ProductId != null).Select(i => i.ProductId!.Value).Distinct().ToList();
@@ -187,6 +192,18 @@ public sealed partial class QuoteService : IQuoteService
         _audit.Record(actorId, "Status", "Quote", quote.Reference, status);
         await _db.SaveChangesAsync(ct);
         return await GetAsync(id, ct);
+    }
+
+    /// <summary>Drafts only: a quotation that has gone to the customer stays on record.</summary>
+    public async Task DeleteAsync(long actorId, long id, CancellationToken ct = default)
+    {
+        var quote = await _db.Quotes.Include(q => q.Items).FirstOrDefaultAsync(q => q.QuoteId == id, ct)
+            ?? throw new AppException("Quotation not found.", StatusCodes.Status404NotFound);
+        if (quote.Status != "Draft") throw new AppException("Only draft quotations can be deleted.");
+        _db.QuoteItems.RemoveRange(quote.Items);
+        _db.Quotes.Remove(quote);
+        _audit.Record(actorId, "Delete", "Quote", quote.Reference, quote.CustomerName);
+        await _db.SaveChangesAsync(ct);
     }
 
     public async Task<(byte[] Pdf, string FileName)> PdfAsync(long id, CancellationToken ct = default)

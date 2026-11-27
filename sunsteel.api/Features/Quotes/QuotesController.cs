@@ -52,7 +52,7 @@ public sealed class QuotesController : ControllerBase
     [HttpPost("from-lead/{leadId:long}")]
     [Authorize(Policy = Perm.LeadManage)]
     public async Task<IActionResult> FromLead(long leadId, CancellationToken ct)
-        => Ok(ApiResponse<QuoteDetailDto>.Ok(await _quotes.CreateFromLeadAsync(User.UserId(), leadId, ct), "Draft created. Add today's rates."));
+        => Ok(ApiResponse<QuoteDetailDto>.Ok(await _quotes.CreateFromLeadAsync(User.UserId(), leadId, ct), "Draft ready. Add today's rates."));
 
     [HttpPut("{id:long}")]
     [Authorize(Policy = Perm.LeadManage)]
@@ -63,6 +63,14 @@ public sealed class QuotesController : ControllerBase
     [Authorize(Policy = Perm.LeadManage)]
     public async Task<IActionResult> Status(long id, UpdateQuoteStatusRequest request, CancellationToken ct)
         => Ok(ApiResponse<QuoteDetailDto>.Ok(await _quotes.SetStatusAsync(User.UserId(), id, request.Status, ct), "Status updated."));
+
+    [HttpDelete("{id:long}")]
+    [Authorize(Policy = Perm.LeadManage)]
+    public async Task<IActionResult> Delete(long id, CancellationToken ct)
+    {
+        await _quotes.DeleteAsync(User.UserId(), id, ct);
+        return NoContent();
+    }
 
     [HttpGet("{id:long}/pdf")]
     [Authorize(Policy = Perm.LeadManage)]

@@ -256,6 +256,10 @@ export class AdminApiService {
     return this.http.put<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}`, body).pipe(map((r) => r.data!));
   }
 
+  deleteQuote(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/quotes/${id}`);
+  }
+
   setQuoteStatus(id: number, status: string): Observable<QuoteDetail> {
     return this.http.put<ApiResponse<QuoteDetail>>(`${this.base}/quotes/${id}/status`, { status }).pipe(map((r) => r.data!));
   }
